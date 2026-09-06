@@ -6,7 +6,7 @@ attachments, nerve supply and, where relevant, a clinical note.
 
 ![The model seen from the front](docs/preview.png)
 
-**Live:** https://amanbaid99.github.io/HumanAnatomy/
+**Live:** https://amanbaid99.github.io/HumanAnatomy/ (once Pages is switched on, see below)
 
 ## What it does
 
@@ -32,6 +32,17 @@ Development helpers (need `npm install` first):
 ```
 npm run shot       # render views headlessly to tools/shots/
 ```
+
+## Deploying
+
+`.github/workflows/pages.yml` publishes the repo root to GitHub Pages on every
+push. It needs Pages turned on once, by hand: the Actions token is not allowed
+to create a Pages site that has never existed.
+
+**Settings → Pages → Build and deployment → Source: GitHub Actions.**
+
+Then re-run the workflow (Actions tab → Deploy to GitHub Pages → Re-run jobs),
+or just push again. After that every push deploys on its own.
 
 ## How the geometry works
 
