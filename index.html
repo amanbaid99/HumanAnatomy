@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Human Anatomy Explorer</title>
+<meta name="description" content="An interactive 3D model of human musculoskeletal anatomy. Peel back muscle layers, click any muscle for its origin, insertion, action and nerve supply.">
+<meta name="theme-color" content="#0d1116">
+<meta property="og:title" content="Human Anatomy Explorer">
+<meta property="og:description" content="Interactive 3D muscle and skeletal anatomy you can rotate, peel and search.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#129452;</text></svg>">
+<style>
+  :root{
+    --bg:#0d1116;
+    --bg-2:#131a22;
+    --panel:#141b24;
+    --panel-2:#0f151c;
+    --line:#243040;
+    --line-soft:#1b242f;
+    --text:#e9e6df;
+    --text-2:#9aa7b4;
+    --text-3:#66717e;
+    --accent:#43b3a7;
+    --accent-dim:#2b7a72;
+    --l1:#b0463c;
+    --l2:#983428;
+    --l3:#7d2823;
+    --bone:#e6ded0;
+    --radius:9px;
+    --panel-w:352px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;}
+  body{
+    background:var(--bg); color:var(--text);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;}
+  input{font:inherit;}
+
+  #app{position:fixed;inset:0;display:flex;}
+  #stage{position:relative;flex:1;min-width:0;height:100%;}
+  #stage canvas{display:block;width:100%;height:100%;cursor:grab;}
+  #stage canvas:active{cursor:grabbing;}
+
+  /* ---------- masthead ---------- */
+  #masthead{
+    position:absolute;top:0;left:0;padding:20px 24px;pointer-events:none;z-index:4;
+    max-width:min(52ch,calc(100% - 40px));
+  }
+  #masthead h1{
+    margin:0;font:400 21px/1.2 Georgia,"Iowan Old Style","Times New Roman",serif;
+    letter-spacing:.2px;
+  }
+  #masthead p{
+    margin:5px 0 0;font-size:12.5px;color:var(--text-3);letter-spacing:.2px;
+  }
+
+  /* ---------- floating controls ---------- */
+  .dock{
+    position:absolute;z-index:4;display:flex;gap:6px;align-items:center;
+    background:rgba(16,22,30,.82);backdrop-filter:blur(12px);
+    border:1px solid var(--line-soft);border-radius:11px;padding:5px;
+  }
+  #view-dock{bottom:20px;left:24px;}
+  #view-dock button{
+    padding:7px 11px;border-radius:7px;font-size:12.5px;color:var(--text-2);
+    transition:background .15s,color .15s;white-space:nowrap;
+  }
+  #view-dock button:hover{background:var(--bg-2);color:var(--text);}
+  #view-dock .sep{width:1px;height:18px;background:var(--line);margin:0 3px;}
+  #cuff-view{color:var(--accent) !important;font-weight:500;}
+  #cuff-view:hover{background:rgba(67,179,167,.12) !important;}
+
+  #stats{
+    position:absolute;bottom:22px;right:calc(var(--panel-w) + 24px);z-index:4;
+    font-size:11.5px;color:var(--text-3);letter-spacing:.3px;text-align:right;
+    pointer-events:none;
+  }
+
+  #tooltip{
+    position:fixed;z-index:20;pointer-events:none;
+    transform:translate(14px,-50%);
+    background:rgba(10,14,19,.94);border:1px solid var(--line);
+    padding:5px 10px;border-radius:6px;font-size:12.5px;white-space:nowrap;
+    box-shadow:0 6px 22px rgba(0,0,0,.5);
+  }
+  #tooltip[hidden]{display:none;}
+
+  /* ---------- panel ---------- */
+  #panel{
+    width:var(--panel-w);flex-shrink:0;height:100%;
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border-left:1px solid var(--line);
+    display:flex;flex-direction:column;z-index:10;overflow:hidden;
+  }
+  .sec{padding:15px 18px;border-bottom:1px solid var(--line-soft);}
+  .sec h2{
+    margin:0 0 11px;font-size:10.5px;font-weight:600;letter-spacing:1.3px;
+    text-transform:uppercase;color:var(--text-3);
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+  }
+  .sec h2 .tools{display:flex;gap:9px;letter-spacing:.4px;text-transform:none;font-size:11px;}
+  .sec h2 .tools button{color:var(--text-3);}
+  .sec h2 .tools button:hover{color:var(--accent);}
+
+  /* search */
+  .search-wrap{position:relative;}
+  #search{
+    width:100%;padding:9px 12px;border-radius:var(--radius);
+    border:1px solid var(--line);background:#0b1015;color:var(--text);outline:none;
+    transition:border-color .15s;
+  }
+  #search::placeholder{color:var(--text-3);}
+  #search:focus{border-color:var(--accent-dim);}
+  #results{
+    position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:30;
+    background:#101820;border:1px solid var(--line);border-radius:var(--radius);
+    max-height:290px;overflow-y:auto;padding:4px;
+    box-shadow:0 14px 34px rgba(0,0,0,.55);
+  }
+  #results[hidden]{display:none;}
+  .result{
+    display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+    padding:7px 9px;border-radius:6px;
+  }
+  .result:hover{background:#18222c;}
+  .result .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+  .result .r-name{flex:1;font-size:13.5px;}
+  .result .r-region{font-size:11px;color:var(--text-3);}
+  .no-hit{padding:9px;font-size:13px;color:var(--text-3);}
+
+  /* layer rows */
+  .layer{
+    display:flex;align-items:center;gap:10px;padding:6px 0;cursor:pointer;user-select:none;
+  }
+  .layer input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer;margin:0;}
+  .layer .sw{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
+  .layer .nm{flex:1;font-size:13.5px;}
+  .layer .ct{font-size:11.5px;color:var(--text-3);font-variant-numeric:tabular-nums;}
+
+  /* region chips */
+  #regions{display:flex;flex-wrap:wrap;gap:6px;}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none;
+    padding:5px 9px;border:1px solid var(--line);border-radius:20px;
+    font-size:12px;color:var(--text-2);transition:border-color .15s,color .15s;
+  }
+  .chip:hover{border-color:var(--accent-dim);color:var(--text);}
+  .chip input{display:none;}
+  .chip em{font-style:normal;color:var(--text-3);font-size:10.5px;}
+  .chip:has(input:checked){
+    border-color:var(--accent-dim);color:var(--text);background:rgba(67,179,167,.10);
+  }
+  .chip:has(input:not(:checked)){opacity:.42;}
+
+  /* slider + switches */
+  .row{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13.5px;}
+  .row label{flex:1;cursor:pointer;user-select:none;}
+  .row .val{font-size:11.5px;color:var(--text-3);font-variant-numeric:tabular-nums;min-width:36px;text-align:right;}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:2px;
+    background:var(--line);outline:none;cursor:pointer;margin:9px 0 3px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+    background:var(--accent);cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:14px;height:14px;border:none;border-radius:50%;background:var(--accent);cursor:pointer;
+  }
+  .row input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:pointer;margin:0;}
+
+  /* detail card */
+  #detail-pane{flex:1;overflow-y:auto;padding:15px 18px 24px;}
+  #detail-empty{font-size:13px;color:var(--text-3);line-height:1.65;}
+  #detail-empty kbd{
+    background:#0b1015;border:1px solid var(--line);border-radius:4px;
+    padding:1px 5px;font-size:11px;font-family:inherit;color:var(--text-2);
+  }
+  #d-name{
+    margin:0 0 6px;font:400 20px/1.25 Georgia,"Iowan Old Style","Times New Roman",serif;
+  }
+  .badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:15px;}
+  .badge{
+    font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;
+    padding:3px 7px;border-radius:4px;border:1px solid var(--line);color:var(--text-2);
+  }
+  .badge.layer{border:none;color:#fff;}
+  .field{margin-bottom:13px;}
+  .field label{
+    display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;
+    color:var(--text-3);margin-bottom:3px;
+  }
+  .field p{margin:0;font-size:13.5px;line-height:1.6;color:var(--text);}
+  .field.clinical{
+    background:rgba(67,179,167,.07);border-left:2px solid var(--accent-dim);
+    padding:10px 12px;border-radius:0 6px 6px 0;
+  }
+  .field.clinical label{color:var(--accent);}
+  .field.clinical p{font-size:13px;color:var(--text-2);}
+
+  #disclaimer{
+    padding:12px 18px 16px;font-size:11px;line-height:1.55;color:var(--text-3);
+    border-top:1px solid var(--line-soft);
+  }
+  #disclaimer a{color:var(--text-2);}
+
+  #panel-toggle{display:none;}
+
+  /* ---------- loading veil ---------- */
+  #loading{
+    position:fixed;inset:0;z-index:50;background:var(--bg);
+    display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;
+    transition:opacity .45s ease;
+  }
+  #loading.gone{opacity:0;pointer-events:none;}
+  #loading .spin{
+    width:26px;height:26px;border:2px solid var(--line);border-top-color:var(--accent);
+    border-radius:50%;animation:spin .8s linear infinite;
+  }
+  #loading p{margin:0;font-size:12.5px;color:var(--text-3);letter-spacing:.4px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 860px){
+    :root{--panel-w:100%;}
+    #app{flex-direction:column;}
+    #panel{
+      position:fixed;left:0;right:0;bottom:0;height:62vh;width:100%;
+      border-left:none;border-top:1px solid var(--line);
+      border-radius:15px 15px 0 0;
+      transform:translateY(calc(100% - 52px));
+      transition:transform .28s cubic-bezier(.4,0,.2,1);
+    }
+    #panel.open{transform:translateY(0);}
+    #panel::before{
+      content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);
+      width:36px;height:4px;border-radius:2px;background:var(--line);
+    }
+    #panel-toggle{
+      display:block;width:100%;padding:16px 0 8px;font-size:12px;
+      letter-spacing:1px;text-transform:uppercase;color:var(--text-3);
+    }
+    #stage{height:100%;}
+    #stats{display:none;}
+    /* Sit above the collapsed panel handle instead of over the figure's head. */
+    #view-dock{bottom:64px;top:auto;left:50%;transform:translateX(-50%);
+      max-width:calc(100vw - 24px);overflow-x:auto;scrollbar-width:none;}
+    #view-dock::-webkit-scrollbar{display:none;}
+    #panel.open ~ #view-dock, #app:has(#panel.open) #view-dock{opacity:0;pointer-events:none;}
+    #masthead{padding:16px 18px;}
+    #masthead h1{font-size:17px;}
+    #masthead p{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="stage">
+    <div id="masthead">
+      <h1>Human Anatomy Explorer</h1>
+      <p>Drag to rotate &middot; scroll to zoom &middot; click any muscle</p>
+    </div>
+
+    <div class="dock" id="view-dock">
+      <button data-view="front">Front</button>
+      <button data-view="back">Back</button>
+      <button data-view="left">Left</button>
+      <button data-view="right">Right</button>
+      <button data-view="top">Top</button>
+      <span class="sep"></span>
+      <button id="cuff-view" title="Peel to the deep layer and frame the rotator cuff">Rotator cuff</button>
+      <button id="reset" title="Reset everything">Reset</button>
+    </div>
+
+    <div id="stats"><span id="stat-visible">0</span> of <span id="muscle-total">0</span> muscles shown</div>
+  </div>
+
+  <aside id="panel">
+    <button id="panel-toggle">Details &amp; controls</button>
+
+    <div class="sec">
+      <h2>Find a muscle</h2>
+      <div class="search-wrap">
+        <input id="search" type="text" autocomplete="off" spellcheck="false"
+               placeholder="supraspinatus, rotator cuff, calf&hellip;">
+        <div id="results" hidden></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>Layers <span class="tools"><span>peel with 1 &middot; 2 &middot; 3</span></span></h2>
+      <label class="layer">
+        <input type="checkbox" data-layer="1" checked>
+        <span class="sw" style="background:var(--l1)"></span>
+        <span class="nm">Superficial</span><span class="ct" id="count-1"></span>
+      </label>
+      <label class="layer">
+        <input type="checkbox" data-layer="2" checked>
+        <span class="sw" style="background:var(--l2)"></span>
+        <span class="nm">Intermediate</span><span class="ct" id="count-2"></span>
+      </label>
+      <label class="layer">
+        <input type="checkbox" data-layer="3" checked>
+        <span class="sw" style="background:var(--l3)"></span>
+        <span class="nm">Deep</span><span class="ct" id="count-3"></span>
+      </label>
+
+      <input type="range" id="xray" min="12" max="100" value="100">
+      <div class="row">
+        <label for="xray">See through outer layers</label>
+        <span class="val" id="xray-val">100%</span>
+      </div>
+
+      <div class="row">
+        <input type="checkbox" id="toggle-skeleton" checked>
+        <label for="toggle-skeleton">Show skeleton</label>
+      </div>
+      <div class="row">
+        <input type="checkbox" id="toggle-isolate">
+        <label for="toggle-isolate">Isolate selected muscle</label>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>Regions
+        <span class="tools">
+          <button id="regions-all">All</button>
+          <button id="regions-none">None</button>
+        </span>
+      </h2>
+      <div id="regions"></div>
+    </div>
+
+    <div id="detail-pane">
+      <div id="detail-empty">
+        Click any muscle to see what it does, where it attaches and which nerve drives it.
+        Uncheck a layer to peel it away, or drag the see-through slider to fade the outer
+        layers and look underneath. Press <kbd>/</kbd> to search, <kbd>Esc</kbd> to deselect.
+      </div>
+
+      <div id="detail" hidden>
+        <h3 id="d-name"></h3>
+        <div class="badges">
+          <span class="badge layer" id="d-layer"></span>
+          <span class="badge" id="d-region"></span>
+          <span class="badge" id="d-side"></span>
+        </div>
+        <div class="field"><label>Action</label><p id="d-function"></p></div>
+        <div class="field"><label>Origin</label><p id="d-origin"></p></div>
+        <div class="field"><label>Insertion</label><p id="d-insertion"></p></div>
+        <div class="field"><label>Nerve supply</label><p id="d-nerve"></p></div>
+        <div class="field clinical" id="d-clinical-row" hidden>
+          <label>Clinical note</label><p id="d-clinical"></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="disclaimer">
+      Geometry is anatomically approximated from standard attachment descriptions and
+      proportional landmarks, not from medical imaging. A study aid, not a clinical tool.
+    </div>
+  </aside>
+</div>
+
+<div id="tooltip" hidden></div>
+
+<div id="loading">
+  <div class="spin"></div>
+  <p>Building anatomy&hellip;</p>
+</div>
+
+<script type="module" src="./src/app.js"></script>
+<noscript>
+  <p style="padding:24px;color:#9aa7b4">This anatomy explorer renders in 3D and needs JavaScript enabled.</p>
+</noscript>
+</body>
+</html>

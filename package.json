@@ -1,0 +1,28 @@
+{
+  "name": "human-anatomy",
+  "version": "1.0.0",
+  "description": "Interactive 3D human musculoskeletal anatomy explorer",
+  "scripts": {
+    "shot": "node tools/screenshot.mjs",
+    "serve": "node tools/serve.mjs",
+    "test": "node tools/smoke.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amanbaid99/HumanAnatomy.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/amanbaid99/HumanAnatomy/issues"
+  },
+  "homepage": "https://github.com/amanbaid99/HumanAnatomy#readme",
+  "dependencies": {
+    "three": "0.185.1"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.1"
+  },
+  "type": "module"
+}
