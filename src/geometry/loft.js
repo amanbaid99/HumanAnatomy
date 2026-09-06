@@ -312,7 +312,7 @@ export function sheetLoft({
         uvs.push(iu / uSeg, iv / vSeg);
         // Sheets go aponeurotic where they meet bone, at both v edges.
         const v = iv / vSeg;
-        tendon.push(Math.min(1, Math.max(0, 1 - Math.sin(Math.PI * v) / 0.34)));
+        tendon.push(Math.min(1, Math.max(0, 1 - Math.sin(Math.PI * v) / 0.22)));
       }
     }
   });

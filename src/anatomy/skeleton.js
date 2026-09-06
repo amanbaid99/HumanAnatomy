@@ -12,6 +12,7 @@ import {
   Group, Mesh, SphereGeometry, MeshStandardMaterial, Vector3,
 } from '../../vendor/three.module.min.js';
 import { tubeLoft, sheetLoft } from '../geometry/loft.js';
+import { applyOcclusionToMaterial } from '../geometry/occlusion.js';
 import { Y, X, Z, P } from './landmarks.js';
 
 /** Wide at the epiphyses, narrow through the diaphysis. That silhouette reads as bone. */
@@ -19,10 +20,12 @@ const LONG_BONE = [[0, 1.0], [0.10, 0.60], [0.45, 0.52], [0.55, 0.52], [0.90, 0.
 const RIB       = [[0, 0.85], [0.15, 1.0], [0.85, 0.95], [1, 0.7]];
 
 export function boneMaterial() {
-  return new MeshStandardMaterial({
+  const mat = new MeshStandardMaterial({
     color: 0xded2bd, roughness: 0.74, metalness: 0.0,
     transparent: true, opacity: 0.97,
   });
+  mat.onBeforeCompile = applyOcclusionToMaterial;
+  return mat;
 }
 
 export function buildSkeleton() {

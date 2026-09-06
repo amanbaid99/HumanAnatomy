@@ -11,6 +11,7 @@ import {
   Group, Mesh, MeshStandardMaterial, Color,
 } from '../../vendor/three.module.min.js';
 import { tubeLoft, sheetLoft } from '../geometry/loft.js';
+import { applyOcclusionToMaterial } from '../geometry/occlusion.js';
 import { MUSCLES } from './muscles.js';
 
 export const LAYERS = {
@@ -45,6 +46,7 @@ function muscleMaterial(layer) {
   });
 
   mat.onBeforeCompile = (shader) => {
+    applyOcclusionToMaterial(shader);
     shader.uniforms.uTendonColor = { value: TENDON_COLOR };
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', `#include <common>

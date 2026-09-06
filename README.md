@@ -30,6 +30,7 @@ npm run serve      # http://localhost:8123
 Development helpers (need `npm install` first):
 
 ```
+npm test           # 17 desktop interaction checks + 12 on a phone viewport
 npm run shot       # render views headlessly to tools/shots/
 ```
 
@@ -60,6 +61,21 @@ anatomical landmarks, by two primitives in `src/geometry/loft.js`:
 Both emit a per-vertex `tendon` weight where the muscle narrows, which the material
 uses to shade tendon paler and glossier than the belly.
 
+### Occlusion
+
+Separate meshes read as separate objects unless the creases where they meet go dark.
+Screen-space AO would cost every frame, which is what a phone cannot spare, and none
+of this geometry moves. So `src/geometry/occlusion.js` voxelises the figure at load,
+marches a short bundle of rays from every vertex through that grid, and writes the
+result into the mesh as an `ao` attribute. About 140 ms once, then free.
+
+It bakes per depth: a deep muscle is occluded by bone and the deep layer only, so
+peeling the superficial layer away does not leave what is underneath still wearing a
+shadow cast by something no longer on screen.
+
+Lighting is image-based, from a gradient environment generated on a canvas and
+prefiltered at startup, so there is still no external asset to load.
+
 ### Layout
 
 ```
@@ -67,6 +83,7 @@ index.html                  markup, styling, all the UI
 src/app.js                  scene, interaction, state
 src/controls.js             orbit / pan / dolly, with time-based damping
 src/geometry/loft.js        the two loft primitives
+src/geometry/occlusion.js   baked ambient occlusion
 src/anatomy/landmarks.js    shared landmark table (one source of truth)
 src/anatomy/muscles.js      muscle definitions: attachments, actions, notes
 src/anatomy/skeleton.js     bone construction

@@ -210,6 +210,48 @@
 
   #panel-toggle{display:none;}
 
+  /* ---------- mobile peek card ---------- */
+  #peek{display:none;}
+  @media (max-width: 860px){
+    #peek{
+      position:fixed;left:10px;right:10px;
+      bottom:calc(52px + env(safe-area-inset-bottom, 0px) + 8px);
+      z-index:12;
+      background:rgba(18,25,33,.94);backdrop-filter:blur(14px);
+      border:1px solid var(--line);border-radius:13px;
+      padding:13px 15px 11px;
+      box-shadow:0 12px 34px rgba(0,0,0,.55);
+      display:block;
+      animation:peekIn .22s cubic-bezier(.2,.8,.3,1);
+    }
+    #peek[hidden]{display:none;}
+    #peek-close{
+      position:absolute;top:7px;right:9px;width:28px;height:28px;
+      color:var(--text-3);font-size:20px;line-height:1;border-radius:6px;
+    }
+    #peek .peek-layer{
+      display:inline-block;width:8px;height:8px;border-radius:2px;
+      margin-right:7px;vertical-align:1px;
+    }
+    #peek h2{
+      display:inline;font-family:Georgia,"Times New Roman",serif;
+      font-weight:400;font-size:18px;color:var(--text);margin:0;
+    }
+    #peek .peek-region{
+      margin:3px 0 0;font-size:11px;letter-spacing:.7px;text-transform:uppercase;
+      color:var(--accent);
+    }
+    #peek .peek-fn{
+      margin:7px 0 0;font-size:13.5px;line-height:1.5;color:var(--text-2);
+      display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+    }
+    #peek-more{
+      margin-top:10px;padding:7px 0 1px;font-size:12.5px;color:var(--accent);
+      width:100%;text-align:left;border-top:1px solid var(--line-soft);
+    }
+  }
+  @keyframes peekIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
   /* ---------- loading veil ---------- */
   #loading{
     position:fixed;inset:0;z-index:50;background:var(--bg);
@@ -229,10 +271,12 @@
     :root{--panel-w:100%;}
     #app{flex-direction:column;}
     #panel{
-      position:fixed;left:0;right:0;bottom:0;height:62vh;width:100%;
+      position:fixed;left:0;right:0;bottom:0;
+      height:calc(62vh + env(safe-area-inset-bottom, 0px));
+      padding-bottom:env(safe-area-inset-bottom, 0px);width:100%;
       border-left:none;border-top:1px solid var(--line);
       border-radius:15px 15px 0 0;
-      transform:translateY(calc(100% - 52px));
+      transform:translateY(calc(100% - 52px - env(safe-area-inset-bottom, 0px)));
       transition:transform .28s cubic-bezier(.4,0,.2,1);
     }
     #panel.open{transform:translateY(0);}
@@ -247,7 +291,8 @@
     #stage{height:100%;}
     #stats{display:none;}
     /* Sit above the collapsed panel handle instead of over the figure's head. */
-    #view-dock{bottom:64px;top:auto;left:50%;transform:translateX(-50%);
+    #view-dock{bottom:calc(64px + env(safe-area-inset-bottom, 0px));top:auto;
+      left:50%;transform:translateX(-50%);
       max-width:calc(100vw - 24px);overflow-x:auto;scrollbar-width:none;}
     #view-dock::-webkit-scrollbar{display:none;}
     #panel.open ~ #view-dock, #app:has(#panel.open) #view-dock{opacity:0;pointer-events:none;}
@@ -365,6 +410,17 @@
       proportional landmarks, not from medical imaging. A study aid, not a clinical tool.
     </div>
   </aside>
+</div>
+
+<div id="peek" hidden>
+  <button id="peek-close" aria-label="Dismiss">&times;</button>
+  <div class="peek-body">
+    <span class="peek-layer" id="peek-layer"></span>
+    <h2 id="peek-name"></h2>
+    <p class="peek-region" id="peek-region"></p>
+    <p class="peek-fn" id="peek-fn"></p>
+  </div>
+  <button id="peek-more">Origin, insertion &amp; nerve &rarr;</button>
 </div>
 
 <div id="tooltip" hidden></div>

@@ -9,13 +9,15 @@ import {
   Scene, PerspectiveCamera, WebGLRenderer, Color, Fog, Group,
   AmbientLight, DirectionalLight, HemisphereLight,
   Raycaster, Vector2, Vector3, Box3, Sphere,
-  Mesh, CircleGeometry, MeshBasicMaterial, CanvasTexture,
+  Mesh, CircleGeometry, MeshBasicMaterial, CanvasTexture, SphereGeometry,
   ACESFilmicToneMapping, SRGBColorSpace, DoubleSide,
+  PMREMGenerator, EquirectangularReflectionMapping,
 } from '../vendor/three.module.min.js';
 
 import { OrbitControls } from './controls.js';
 import { buildMuscles, LAYERS, GROUPS } from './anatomy/build.js';
 import { buildSkeleton, extractHead } from './anatomy/skeleton.js';
+import { bakeOcclusion } from './geometry/occlusion.js';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -33,36 +35,74 @@ const renderer = new WebGLRenderer({ antialias: true, powerPreference: 'high-per
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = SRGBColorSpace;
 renderer.toneMapping = ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.16;
+renderer.toneMappingExposure = 1.07;
 wrap.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 
 // A phone in portrait is tall and narrow; pull back so the whole figure fits.
-const NARROW = window.matchMedia('(max-width: 860px)').matches;
-const HOME = { radius: NARROW ? 3.35 : 3.0, theta: 0.30, phi: 1.36 };
+const narrowQuery = window.matchMedia('(max-width: 860px)');
+const isNarrow = () => narrowQuery.matches;
+const HOME = { radius: isNarrow() ? 3.35 : 3.0, theta: 0.30, phi: 1.36 };
 controls.spherical.radius = HOME.radius;
 controls._goalSpherical.radius = HOME.radius;
 controls.update(true);
 
-// Lighting: a warm key from the front-left, a cool fill, and a rim to peel the
-// silhouette off the background.
-scene.add(new HemisphereLight(0xb4c6d6, 0x3a2820, 0.70));
-scene.add(new AmbientLight(0xffffff, 0.52));
+/**
+ * Image-based lighting from a procedural sky. A single directional light makes
+ * everything look stamped from the same die; an environment gives each surface
+ * a different tint depending on which way it faces, which is most of what
+ * separates a rendered body from a diagram.
+ */
+function buildEnvironment() {
+  const c = document.createElement('canvas');
+  c.width = 256;
+  c.height = 128;
+  const g = c.getContext('2d');
+  const sky = g.createLinearGradient(0, 0, 0, 128);
+  sky.addColorStop(0.00, '#c8d6e4');   // cool overhead
+  sky.addColorStop(0.42, '#7d8794');
+  sky.addColorStop(0.55, '#4a525c');   // horizon
+  sky.addColorStop(1.00, '#14181d');   // dark floor, so undersides stay grounded
+  g.fillStyle = sky;
+  g.fillRect(0, 0, 256, 128);
+  // A warm patch where the key light sits, so the bounce agrees with it.
+  const warm = g.createRadialGradient(66, 34, 4, 66, 34, 72);
+  warm.addColorStop(0, 'rgba(255,236,208,0.92)');
+  warm.addColorStop(1, 'rgba(255,236,208,0)');
+  g.fillStyle = warm;
+  g.fillRect(0, 0, 256, 128);
 
-const key = new DirectionalLight(0xfff2e6, 1.75);
+  const tex = new CanvasTexture(c);
+  tex.mapping = EquirectangularReflectionMapping;
+  const pmrem = new PMREMGenerator(renderer);
+  const env = pmrem.fromEquirectangular(tex).texture;
+  pmrem.dispose();
+  tex.dispose();
+  return env;
+}
+scene.environment = buildEnvironment();
+// The environment carries the ambient, but at full strength it washes the
+// muscle out to pink. Keep it as a tint on the shadows, not a second key.
+scene.environmentIntensity = 0.42;
+
+// Direct lights now shape the form; the environment carries the ambient.
+scene.add(new HemisphereLight(0xb4c6d6, 0x3a2820, 0.12));
+scene.add(new AmbientLight(0xffffff, 0.05));
+
+const key = new DirectionalLight(0xfff2e6, 1.95);
 key.position.set(2.4, 3.2, 2.8);
 scene.add(key);
 
-const fill = new DirectionalLight(0xa8c2dc, 0.85);
+const fill = new DirectionalLight(0xa8c2dc, 0.42);
 fill.position.set(-3.0, 1.4, 1.6);
 scene.add(fill);
 
-const rim = new DirectionalLight(0x8fb8c4, 0.55);
+const rim = new DirectionalLight(0x8fb8c4, 0.48);
 rim.position.set(-1.0, 2.2, -3.2);
 scene.add(rim);
 
-const under = new DirectionalLight(0x59697a, 0.42);
+const under = new DirectionalLight(0x59697a, 0.16);
 under.position.set(0, -2.0, 1.0);
 scene.add(under);
 
@@ -101,7 +141,8 @@ const skeleton = buildSkeleton();
 figure.add(skeleton);
 
 // The head stays regardless of the skeleton toggle.
-figure.add(extractHead(skeleton));
+const head = extractHead(skeleton);
+figure.add(head);
 
 /**
  * Show only part of the skeleton. At shoulder zoom the ribcage hides the very
@@ -118,6 +159,28 @@ function setSkeletonFilter(re, side) {
 }
 
 const byId = new Map(records.map((r) => [r.uid, r]));
+
+/**
+ * Bake occlusion once, per depth. A deep muscle is shaded by bone and the deep
+ * layer only, so peeling the superficial layer away does not leave what is
+ * underneath still wearing a shadow cast by something no longer on screen.
+ */
+(function bakeAll() {
+  figure.updateMatrixWorld(true);
+  const bones = [skeleton, head].flatMap((g) => g.children.filter((c) => c.geometry));
+  const layer = (n) => records.filter((r) => r.layer === n).map((r) => r.mesh);
+  const deep = layer(3);
+  const mid = layer(2);
+  const superficial = layer(1);
+
+  const bounds = new Box3().expandByObject(figure);
+  const t0 = performance.now();
+  bakeOcclusion(bones, bones, bounds);
+  bakeOcclusion(deep, [...bones, ...deep], bounds);
+  bakeOcclusion(mid, [...bones, ...deep, ...mid], bounds);
+  bakeOcclusion(superficial, [...bones, ...deep, ...mid, ...superficial], bounds);
+  console.info(`occlusion baked in ${Math.round(performance.now() - t0)} ms`);
+})();
 
 // ---------------------------------------------------------------- state ----
 
@@ -185,25 +248,52 @@ function select(rec, fly = true) {
   if (!rec) {
     $('#detail').hidden = true;
     $('#detail-empty').hidden = false;
+    $('#peek').hidden = true;
     if (state.isolate) applyVisibility();
     return;
   }
   setHighlight(rec, true, true);
   showDetail(rec);
+  showPeek(rec);
   if (fly) frame(rec);
   if (state.isolate) applyVisibility();
+}
+
+/** The compact card. Only meaningful on narrow screens; CSS hides it elsewhere. */
+function showPeek(rec) {
+  if (!isNarrow()) return;
+  const peek = $('#peek');
+  $('#peek-layer').style.background = `#${LAYERS[rec.layer].color.toString(16).padStart(6, '0')}`;
+  $('#peek-name').textContent = rec.name + (rec.sideLabel || '');
+  $('#peek-region').textContent = rec.region;
+  $('#peek-fn').textContent = rec.fn;
+  peek.hidden = false;
+  // If the full panel is already open there is no point in the summary.
+  if ($('#panel').classList.contains('open')) peek.hidden = true;
 }
 
 function frame(rec) {
   rec.mesh.geometry.computeBoundingSphere();
   const bs = rec.mesh.geometry.boundingSphere;
   const centre = bs.center.clone();
-  // Pull back far enough to see the whole muscle plus context around it.
-  const radius = Math.max(bs.radius * 4.2, 0.34);
+
+  // Fit the muscle to whichever axis is tighter. A fixed multiple of the
+  // bounding radius over-zooms badly in portrait, where the horizontal field
+  // of view is far narrower than the vertical one.
+  const want = Math.max(bs.radius, 0.05) * 2.2;
+  const vFov = (camera.fov * Math.PI) / 180;
+  const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
+  const radius = Math.max(
+    want / Math.sin(vFov / 2),
+    want / Math.sin(hFov / 2),
+    0.30,
+  );
   // Swing to whichever side of the body the muscle is on.
   const theta = centre.x >= 0 ? 0.85 : -0.85;
   const front = centre.z >= 0;
-  controls.flyTo(centre, radius, front ? theta : Math.PI - theta * 0.6, 1.42);
+  const target = centre.clone();
+  if (isNarrow()) target.y -= radius * 0.16;
+  controls.flyTo(target, radius, front ? theta : Math.PI - theta * 0.6, 1.42);
 }
 
 function showDetail(rec) {
@@ -446,7 +536,17 @@ document.addEventListener('click', (e) => {
 
 // Panel toggle on small screens
 $('#panel-toggle').addEventListener('click', () => {
-  $('#panel').classList.toggle('open');
+  const open = $('#panel').classList.toggle('open');
+  // The card and the panel say the same thing; never show both.
+  if (open) $('#peek').hidden = true;
+  else if (state.selected) showPeek(state.selected);
+});
+
+$('#peek-close').addEventListener('click', () => select(null));
+$('#peek-more').addEventListener('click', () => {
+  $('#peek').hidden = true;
+  $('#panel').classList.add('open');
+  $('#detail-pane').scrollTop = 0;
 });
 
 // Keyboard
