@@ -254,8 +254,8 @@ export const MUSCLES = [
     id: 'pectoralis-major', name: 'Pectoralis major', region: 'Chest',
     group: 'chest', layer: 1, mirror: true, shape: 'sheet',
     origin: [
-      [0.011, 1.452, 0.088], [0.009, 1.390, 0.104],
-      [0.011, 1.320, 0.102], [0.028, 1.250, 0.094],
+      [0.005, 1.452, 0.086], [0.004, 1.390, 0.102],
+      [0.006, 1.320, 0.100], [0.024, 1.248, 0.092],
     ],
     insertion: [
       [0.158, 1.386, 0.030], [0.164, 1.372, 0.026],
@@ -659,10 +659,10 @@ export const MUSCLES = [
     group: 'abdomen', layer: 1, mirror: true, shape: 'tube',
     path: [
       [0.026, 0.942, 0.074], [0.029, 1.020, 0.100], [0.031, 1.110, 0.110],
-      [0.033, 1.190, 0.108], [0.035, 1.258, 0.098],
+      [0.033, 1.190, 0.108], [0.035, 1.272, 0.096],
     ],
-    width: 0.039, flat: 0.40, squareness: 3.4,
-    profile: [[0, 0.60], [0.25, 0.94], [0.7, 1.0], [1, 0.88]],
+    width: 0.043, flat: 0.40, squareness: 3.4,
+    profile: [[0, 0.60], [0.25, 0.94], [0.7, 1.0], [1, 0.92]],
     fn: 'Curls the trunk forward and resists the spine arching backward. The six-pack.',
     or: 'Pubic crest and pubic symphysis',
     ins: 'Cartilage of ribs 5 to 7 and the xiphoid process',
@@ -1137,5 +1137,271 @@ export const MUSCLES = [
     or: 'Posterior surface of the fibula',
     ins: 'Base of the distal phalanx of the big toe',
     nerve: 'Tibial nerve (L5-S2)',
+  },
+
+  // ===================== HEAD AND FACE =====================
+  // A bare skull on top of a muscled body reads as a prop. These two are what
+  // give a head its shape at the temple and the jaw.
+  {
+    id: 'masseter', name: 'Masseter', region: 'Jaw',
+    group: 'head', layer: 1, mirror: true, shape: 'tube',
+    path: [
+      [0.061, 1.679, 0.027], [0.058, 1.656, 0.013], [0.052, 1.631, -0.003],
+    ],
+    width: 0.017, flat: 0.58, squareness: 2.8,
+    profile: [[0, 0.78], [0.4, 1.0], [1, 0.8]],
+    fn: 'Clamps the jaw shut. Pound for pound the strongest muscle in the body, and the bulge you can feel at the angle of the jaw when you clench.',
+    or: 'Zygomatic arch, the cheekbone',
+    ins: 'Angle and outer surface of the mandible',
+    nerve: 'Mandibular branch of the trigeminal nerve (CN V3)',
+  },
+  {
+    id: 'temporalis', name: 'Temporalis', region: 'Jaw',
+    group: 'head', layer: 2, mirror: true, shape: 'sheet',
+    origin: [
+      [0.030, 1.744, 0.014], [0.062, 1.716, -0.006], [0.056, 1.684, -0.036],
+    ],
+    insertion: [
+      [0.042, 1.662, 0.012], [0.048, 1.657, 0.005], [0.045, 1.651, -0.002],
+    ],
+    thickness: 0.012, bulge: 0.010, taper: [[0, 1], [0.6, 0.6], [1, 0.28]],
+    uSeg: 14, vSeg: 12,
+    fn: 'Closes the jaw and draws it backward. The fan across the temple that you can feel move when you chew.',
+    or: 'Temporal fossa, the flat area on the side of the skull',
+    ins: 'Coronoid process of the mandible',
+    nerve: 'Mandibular branch of the trigeminal nerve (CN V3)',
+  },
+  {
+    id: 'sternohyoid', name: 'Sternohyoid', region: 'Neck',
+    group: 'neck', layer: 1, mirror: true, shape: 'tube',
+    path: [
+      [0.016, 1.472, 0.062], [0.018, 1.528, 0.058], [0.016, 1.576, 0.048],
+    ],
+    width: 0.009, flat: 0.5, squareness: 3.0, profile: STRAP,
+    fn: 'Pulls the hyoid bone down after swallowing. One of the strap muscles standing out either side of the windpipe.',
+    or: 'Manubrium of the sternum and the medial clavicle',
+    ins: 'Body of the hyoid bone',
+    nerve: 'Ansa cervicalis (C1-C3)',
+  },
+  {
+    id: 'omohyoid', name: 'Omohyoid', region: 'Neck',
+    group: 'neck', layer: 2, mirror: true, shape: 'tube',
+    path: [
+      [0.020, 1.580, 0.046], [0.048, 1.538, 0.028], [0.086, 1.492, -0.006],
+    ],
+    width: 0.007, flat: 0.6, profile: STRAP,
+    fn: 'Depresses the hyoid bone. Unusual in having two bellies joined by a tendon that is tethered to the clavicle.',
+    or: 'Superior border of the scapula',
+    ins: 'Body of the hyoid bone',
+    nerve: 'Ansa cervicalis (C1-C3)',
+  },
+
+  // ===================== CHEST WALL =====================
+  {
+    id: 'intercostals', name: 'Intercostals', region: 'Chest wall',
+    group: 'chest', layer: 3, mirror: true, shape: 'sheet',
+    origin: [
+      [0.040, 1.428, -0.062], [0.100, 1.414, -0.054],
+      [0.141, 1.398, 0.012], [0.114, 1.394, 0.070],
+    ],
+    insertion: [
+      [0.035, 1.182, -0.054], [0.095, 1.176, -0.046],
+      [0.136, 1.182, 0.016], [0.076, 1.202, 0.078],
+    ],
+    thickness: 0.011, bulge: 0.008, uSeg: 24, vSeg: 16,
+    fn: 'Fill the spaces between the ribs and move them during breathing. The outer layer lifts the ribs to draw air in, the inner layer pulls them down to force it out.',
+    or: 'Lower border of each rib',
+    ins: 'Upper border of the rib below',
+    nerve: 'Intercostal nerves (T1-T11)',
+    clinical: 'A hard cough or a twisting lift can strain them, which produces a sharp, well-localised chest pain that moves with breathing and is often mistaken for something more serious.',
+  },
+
+  // ===================== DEEP BACK AND HIP =====================
+  {
+    id: 'multifidus', name: 'Multifidus', region: 'Back, deep',
+    group: 'back', layer: 3, mirror: true, shape: 'tube',
+    path: [
+      [0.020, 1.420, -0.050], [0.024, 1.300, -0.052], [0.026, 1.180, -0.046],
+      [0.028, 1.060, -0.038], [0.026, 0.992, -0.040],
+    ],
+    width: 0.017, flat: 0.82, profile: [[0, 0.6], [0.3, 0.9], [0.75, 1.0], [1, 0.85]],
+    fn: 'A short muscle repeated the length of the spine, bridging two or three vertebrae at a time. It steadies each joint segment rather than producing large movement.',
+    or: 'Sacrum, and the transverse processes up the spine',
+    ins: 'Spinous processes two to four levels above',
+    nerve: 'Posterior rami of the spinal nerves',
+    clinical: 'It wastes quickly after an episode of back pain and does not recover on its own, which is a large part of why core stability work is prescribed afterwards.',
+  },
+  {
+    id: 'serratus-posterior-inferior', name: 'Serratus posterior inferior', region: 'Back',
+    group: 'back', layer: 2, mirror: true, shape: 'tube',
+    path: [
+      [0.022, 1.156, -0.058], [0.070, 1.190, -0.054], [0.116, 1.234, -0.028],
+    ],
+    width: 0.013, flat: 0.42, squareness: 3.0, profile: STRAP,
+    fn: 'Draws the lower ribs down and back, steadying them against the pull of the diaphragm.',
+    or: 'Spinous processes of T11 to L2',
+    ins: 'Lower borders of ribs 9 to 12',
+    nerve: 'Intercostal nerves (T9-T12)',
+  },
+  {
+    id: 'quadratus-femoris', name: 'Quadratus femoris', region: 'Hip, deep',
+    group: 'hip', layer: 3, mirror: true, shape: 'tube',
+    path: [
+      [0.064, 0.900, -0.040], [0.110, 0.906, -0.030], [0.150, 0.916, -0.020],
+    ],
+    width: 0.013, flat: 0.6, squareness: 2.8, profile: STRAP,
+    fn: 'Turns the thigh outward and holds the head of the femur in its socket. One of the short external rotators lying under gluteus maximus.',
+    or: 'Lateral border of the ischial tuberosity',
+    ins: 'Intertrochanteric crest of the femur',
+    nerve: 'Nerve to quadratus femoris (L4-S1)',
+  },
+  {
+    id: 'obturator-internus', name: 'Obturator internus', region: 'Hip, deep',
+    group: 'hip', layer: 3, mirror: true, shape: 'tube',
+    path: [
+      [0.045, 0.922, -0.008], [0.096, 0.936, -0.030], [0.146, 0.946, -0.018],
+    ],
+    width: 0.012, flat: 0.7, profile: FUSIFORM,
+    fn: 'Rotates the thigh outward. Its tendon turns almost a right angle around the pelvis, using the bone as a pulley.',
+    or: 'Inner surface of the obturator membrane and the surrounding pelvis',
+    ins: 'Medial surface of the greater trochanter',
+    nerve: 'Nerve to obturator internus (L5-S2)',
+  },
+
+  // ===================== HAND =====================
+  {
+    id: 'thenar', name: 'Thenar eminence', region: 'Hand',
+    group: 'forearm', layer: 1, mirror: true, shape: 'tube',
+    path: [
+      [0.190, 0.857, 0.030], [0.180, 0.836, 0.040], [0.170, 0.820, 0.046],
+    ],
+    width: 0.012, flat: 0.66, profile: [[0, 0.7], [0.45, 1.0], [1, 0.6]],
+    fn: 'The muscular pad at the base of the thumb. Together these move the thumb across the palm, which is what makes the human grip what it is.',
+    or: 'Flexor retinaculum and the carpal bones',
+    ins: 'Base of the thumb',
+    nerve: 'Median nerve, mostly (C8-T1)',
+    clinical: 'Wasting of this pad is a classic late sign of carpal tunnel syndrome, because the median nerve that supplies it is the one being compressed.',
+  },
+  {
+    id: 'hypothenar', name: 'Hypothenar eminence', region: 'Hand',
+    group: 'forearm', layer: 1, mirror: true, shape: 'tube',
+    path: [
+      [0.212, 0.851, 0.028], [0.214, 0.812, 0.030], [0.209, 0.784, 0.028],
+    ],
+    width: 0.010, flat: 0.62, profile: [[0, 0.7], [0.45, 1.0], [1, 0.55]],
+    fn: 'The pad along the little-finger edge of the palm. Cups the hand and moves the little finger.',
+    or: 'Pisiform, hamate and the flexor retinaculum',
+    ins: 'Base of the little finger',
+    nerve: 'Ulnar nerve (C8-T1)',
+  },
+  {
+    id: 'interossei', name: 'Interossei', region: 'Hand',
+    group: 'forearm', layer: 2, mirror: true, shape: 'tube',
+    path: [
+      [0.190, 0.850, 0.026], [0.192, 0.802, 0.028], [0.192, 0.772, 0.026],
+    ],
+    width: 0.019, flat: 0.30, squareness: 3.2, profile: [[0, 0.75], [0.5, 1.0], [1, 0.7]],
+    fn: 'Spread the fingers apart and draw them together, and help straighten them at the middle joints. They fill the spaces between the metacarpal bones.',
+    or: 'Shafts of the metacarpal bones',
+    ins: 'Bases of the proximal phalanges and the extensor hoods',
+    nerve: 'Ulnar nerve (C8-T1)',
+  },
+
+  // ===================== FOOT =====================
+  {
+    id: 'extensor-digitorum-brevis', name: 'Extensor digitorum brevis', region: 'Foot',
+    group: 'lowerleg', layer: 1, mirror: true, shape: 'tube',
+    path: [
+      [0.090, 0.058, 0.018], [0.092, 0.041, 0.068], [0.090, 0.031, 0.098],
+    ],
+    width: 0.013, flat: 0.42, squareness: 3.0, profile: [[0, 0.75], [0.4, 1.0], [1, 0.5]],
+    fn: 'Straightens the toes. Forms the soft bulge on the outer side of the top of the foot, in front of the ankle.',
+    or: 'Upper surface of the calcaneus',
+    ins: 'Tendons of the first four toes',
+    nerve: 'Deep fibular nerve (L5-S1)',
+  },
+  {
+    id: 'abductor-hallucis', name: 'Abductor hallucis', region: 'Foot',
+    group: 'lowerleg', layer: 1, mirror: true, shape: 'tube',
+    path: [
+      [0.070, 0.038, -0.028], [0.068, 0.028, 0.030], [0.070, 0.024, 0.080],
+    ],
+    width: 0.011, flat: 0.5, profile: [[0, 0.7], [0.45, 1.0], [1, 0.55]],
+    fn: 'Pulls the big toe away from the others and supports the inner arch during push-off.',
+    or: 'Medial process of the calcaneal tuberosity',
+    ins: 'Medial side of the base of the big toe',
+    nerve: 'Medial plantar nerve (S1-S2)',
+  },
+
+  // ===================== MUSCLES OF FACIAL EXPRESSION =====================
+  // Unlike every other muscle here, most of these insert into skin rather than
+  // bone. That is what lets a face move the way it does, and without them the
+  // head reads as a skull sitting on a body.
+  {
+    id: 'frontalis', name: 'Frontalis', region: 'Face',
+    group: 'head', layer: 1, mirror: true, shape: 'sheet',
+    origin: [
+      [0.008, 1.706, 0.080], [0.036, 1.709, 0.070], [0.058, 1.706, 0.044],
+    ],
+    insertion: [
+      [0.010, 1.764, 0.050], [0.038, 1.759, 0.040], [0.057, 1.750, 0.018],
+    ],
+    thickness: 0.008, bulge: 0.005, uSeg: 14, vSeg: 10,
+    fn: 'Raises the eyebrows and wrinkles the forehead. The surprise muscle, and the reason horizontal forehead lines form where they do.',
+    or: 'Epicranial aponeurosis, the sheet of tissue over the top of the skull',
+    ins: 'Skin of the eyebrow and the bridge of the nose',
+    nerve: 'Temporal branches of the facial nerve (CN VII)',
+  },
+  {
+    id: 'orbicularis-oculi', name: 'Orbicularis oculi', region: 'Face',
+    group: 'head', layer: 1, mirror: true, shape: 'tube',
+    path: [
+      [0.013, 1.700, 0.077], [0.032, 1.715, 0.072], [0.051, 1.700, 0.061],
+      [0.032, 1.687, 0.070], [0.015, 1.699, 0.076],
+    ],
+    width: 0.008, flat: 0.45, squareness: 2.6, profile: STRAP,
+    fn: 'Closes the eye. The inner part blinks, the outer part screws the eye shut. Repeated contraction is what creates crow’s feet.',
+    or: 'Medial orbital margin and the medial palpebral ligament',
+    ins: 'Skin around the eyelid, returning to its origin as a ring',
+    nerve: 'Temporal and zygomatic branches of the facial nerve (CN VII)',
+    clinical: 'When the facial nerve is paralysed, as in Bell’s palsy, this muscle stops working and the eye on that side cannot be closed, which puts the cornea at risk of drying out.',
+  },
+  {
+    id: 'orbicularis-oris', name: 'Orbicularis oris', region: 'Face',
+    group: 'head', layer: 1, mirror: false, shape: 'tube',
+    path: [
+      [-0.024, 1.648, 0.070], [0, 1.657, 0.081], [0.024, 1.648, 0.070],
+      [0, 1.639, 0.078], [-0.022, 1.648, 0.070],
+    ],
+    width: 0.008, flat: 0.5, squareness: 2.6, profile: STRAP,
+    fn: 'Closes and purses the lips. Needed for speech, whistling, kissing and holding food in the mouth.',
+    or: 'Encircles the mouth, blending with the muscles that converge on it',
+    ins: 'Skin and mucous membrane of the lips',
+    nerve: 'Buccal and mandibular branches of the facial nerve (CN VII)',
+  },
+  {
+    id: 'zygomaticus-major', name: 'Zygomaticus major', region: 'Face',
+    group: 'head', layer: 1, mirror: true, shape: 'tube',
+    path: [
+      [0.058, 1.685, 0.040], [0.040, 1.665, 0.064], [0.025, 1.651, 0.072],
+    ],
+    width: 0.006, flat: 0.6, profile: STRAP,
+    fn: 'Pulls the corner of the mouth up and outward. This is the smiling muscle.',
+    or: 'Zygomatic bone, the cheekbone',
+    ins: 'Corner of the mouth',
+    nerve: 'Zygomatic and buccal branches of the facial nerve (CN VII)',
+  },
+  {
+    id: 'buccinator', name: 'Buccinator', region: 'Face',
+    group: 'head', layer: 2, mirror: true, shape: 'tube',
+    path: [
+      [0.050, 1.652, 0.034], [0.036, 1.649, 0.058], [0.023, 1.647, 0.070],
+    ],
+    width: 0.011, flat: 0.42, squareness: 3.0, profile: STRAP,
+    fn: 'Presses the cheek against the teeth, keeping food out of the space between them while chewing, and blows air out forcefully.',
+    or: 'Outer surfaces of the upper and lower jaw, opposite the molars',
+    ins: 'Blends into orbicularis oris at the corner of the mouth',
+    nerve: 'Buccal branch of the facial nerve (CN VII)',
+    clinical: 'Its name comes from the Latin for trumpeter. It is the muscle that lets a wind player control the stream of air.',
   },
 ];

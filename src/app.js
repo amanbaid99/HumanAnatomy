@@ -10,7 +10,8 @@ import {
   AmbientLight, DirectionalLight, HemisphereLight,
   Raycaster, Vector2, Vector3, Box3, Sphere,
   Mesh, CircleGeometry, MeshBasicMaterial, CanvasTexture, SphereGeometry,
-  ACESFilmicToneMapping, SRGBColorSpace, DoubleSide,
+  Line, LineDashedMaterial, BufferGeometry,
+  ACESFilmicToneMapping, SRGBColorSpace, DoubleSide, Layers,
   PMREMGenerator, EquirectangularReflectionMapping,
 } from '../vendor/three.module.min.js';
 
@@ -35,7 +36,9 @@ const renderer = new WebGLRenderer({ antialias: true, powerPreference: 'high-per
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = SRGBColorSpace;
 renderer.toneMapping = ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.07;
+renderer.toneMappingExposure = 1.16;
+// Two passes share one frame, so clearing is done by hand.
+renderer.autoClear = false;
 wrap.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -106,6 +109,16 @@ const under = new DirectionalLight(0x59697a, 0.16);
 under.position.set(0, -2.0, 1.0);
 scene.add(under);
 
+/**
+ * Layer 1 is the overlay pass: the selected muscle and its markers are drawn a
+ * second time, after the depth buffer is cleared, so a muscle buried under
+ * three other layers is still fully visible when you pick it. The lights have
+ * to be on that layer too or the overlay renders unlit.
+ */
+const OVERLAY = 1;
+[key, fill, rim, under].forEach((l) => l.layers.enable(OVERLAY));
+scene.children.forEach((o) => { if (o.isLight) o.layers.enable(OVERLAY); });
+
 // A soft blob under the figure so it does not float.
 function contactShadow() {
   const c = document.createElement('canvas');
@@ -143,6 +156,10 @@ figure.add(skeleton);
 // The head stays regardless of the skeleton toggle.
 const head = extractHead(skeleton);
 figure.add(head);
+
+// One material is shared by every bone, so dimming it dims the whole skeleton.
+const boneMat = skeleton.children.find((c) => c.material).material;
+const BONE_BASE = boneMat.color.getHex();
 
 /**
  * Show only part of the skeleton. At shoulder zoom the ribcage hides the very
@@ -182,6 +199,80 @@ const byId = new Map(records.map((r) => [r.uid, r]));
   console.info(`occlusion baked in ${Math.round(performance.now() - t0)} ms`);
 })();
 
+/**
+ * Attachment markers.
+ *
+ * A muscle is only meaningful as a connection between two bones, and for a deep
+ * muscle the two ends are usually buried. These sit on top of everything
+ * (depthTest off) so the anchors stay readable however far inside the body they
+ * are, with a dashed line between them showing the line of pull.
+ */
+const GHOST_TINT = new Color(0x241e1d);
+const _tint = new Color();
+
+const markers = new Group();
+markers.visible = false;
+markers.renderOrder = 999;
+markers.layers.enable(OVERLAY);
+scene.add(markers);
+
+const dot = (color) => {
+  const m = new Mesh(
+    new SphereGeometry(0.0105, 18, 14),
+    new MeshBasicMaterial({ color, depthTest: false, transparent: true, opacity: 0.95 }),
+  );
+  m.renderOrder = 1000;
+  m.layers.enable(OVERLAY);
+  markers.add(m);
+  return m;
+};
+const originDot = dot(0xf0c07a);     // warm, matching bone
+const insertionDot = dot(0x53c9bc);  // the accent, matching the selection glow
+
+const pullGeometry = new BufferGeometry().setFromPoints([new Vector3(), new Vector3()]);
+const pullLine = new Line(pullGeometry, new LineDashedMaterial({
+  color: 0x9fdcd5, dashSize: 0.014, gapSize: 0.011,
+  transparent: true, opacity: 0.7, depthTest: false,
+}));
+pullLine.renderOrder = 999;
+pullLine.layers.enable(OVERLAY);
+markers.add(pullLine);
+
+function showAttachments(rec) {
+  const from = new Vector3(...rec.originPoint);
+  const to = new Vector3(...rec.insertionPoint);
+  originDot.position.copy(from);
+  insertionDot.position.copy(to);
+  pullGeometry.setFromPoints([from, to]);
+  pullLine.computeLineDistances();
+  markers.visible = true;
+}
+
+/** Keep the two floating labels pinned to their markers. */
+const labelOrigin = $('#label-origin');
+const labelInsertion = $('#label-insertion');
+const _proj = new Vector3();
+
+function positionLabels() {
+  if (!markers.visible) {
+    labelOrigin.hidden = true;
+    labelInsertion.hidden = true;
+    return;
+  }
+  const rect = renderer.domElement.getBoundingClientRect();
+  [[originDot, labelOrigin], [insertionDot, labelInsertion]].forEach(([m, el]) => {
+    _proj.copy(m.position).project(camera);
+    // Behind the camera, or off screen: hide rather than pinning to an edge.
+    if (_proj.z > 1 || Math.abs(_proj.x) > 1.15 || Math.abs(_proj.y) > 1.15) {
+      el.hidden = true;
+      return;
+    }
+    el.hidden = false;
+    el.style.left = `${rect.left + (_proj.x * 0.5 + 0.5) * rect.width}px`;
+    el.style.top = `${rect.top + (-_proj.y * 0.5 + 0.5) * rect.height}px`;
+  });
+}
+
 // ---------------------------------------------------------------- state ----
 
 const state = {
@@ -192,6 +283,7 @@ const state = {
   sideFilter: null,
   xray: 1,
   isolate: false,
+  focus: true,
   selected: null,
   hovered: null,
 };
@@ -208,8 +300,14 @@ function meshVisible(rec) {
 }
 
 function applyVisibility() {
+  // With something selected, everything else drops back so the picked muscle
+  // is readable even when it sits under three other layers.
+  const focusing = state.focus && !!state.selected;
+
   records.forEach((rec) => {
     rec.mesh.visible = meshVisible(rec);
+    const isSelected = focusing && rec.id === state.selected.id;
+
     // X-ray fades the outer layers so the deep ones show through.
     const fade = rec.layer === 3 ? 1 : rec.layer === 2 ? 0.55 : 0;
     const opacity = 1 - (1 - state.xray) * (1 - fade);
@@ -217,7 +315,20 @@ function applyVisibility() {
     mat.opacity = opacity;
     mat.transparent = opacity < 0.995;
     mat.depthWrite = opacity > 0.72;
+
+    // Dimming darkens rather than fades. Fading 180 overlapping surfaces just
+    // stacks their alpha back up to opaque, and looks like fog.
+    if (focusing && !isSelected) mat.color.copy(_tint.setHex(rec.baseColor)).lerp(GHOST_TINT, 0.56);
+    else mat.color.setHex(rec.baseColor);
+
+    // The selection is drawn again in the overlay pass, on top of everything.
+    if (isSelected) rec.mesh.layers.enable(OVERLAY);
+    else rec.mesh.layers.disable(OVERLAY);
   });
+
+  // The skeleton stays as orientation, but recedes.
+  boneMat.color.copy(_tint.setHex(BONE_BASE)).lerp(GHOST_TINT, focusing ? 0.42 : 0);
+
   skeleton.visible = state.skeleton;
   setSkeletonFilter(state.skeletonFilter, state.sideFilter);
   updateCounts();
@@ -237,9 +348,16 @@ function updateCounts() {
 
 function setHighlight(rec, on, strong) {
   if (!rec) return;
-  const mat = rec.mesh.material;
-  mat.emissive.setHex(on ? (strong ? 0x2f7d78 : 0x1b4a47) : 0x000000);
-  mat.emissiveIntensity = on ? (strong ? 0.85 : 0.5) : 0;
+  // A selection lights both sides of a mirrored pair; a hover lights only the
+  // mesh under the cursor.
+  const targets = strong || !on
+    ? records.filter((r) => r.id === rec.id)
+    : [rec];
+  targets.forEach((r) => {
+    const mat = r.mesh.material;
+    mat.emissive.setHex(on ? (strong ? 0x35908a : 0x1b4a47) : 0x000000);
+    mat.emissiveIntensity = on ? (strong ? 1.15 : 0.5) : 0;
+  });
 }
 
 function select(rec, fly = true) {
@@ -249,14 +367,16 @@ function select(rec, fly = true) {
     $('#detail').hidden = true;
     $('#detail-empty').hidden = false;
     $('#peek').hidden = true;
-    if (state.isolate) applyVisibility();
+    markers.visible = false;
+    applyVisibility();
     return;
   }
   setHighlight(rec, true, true);
   showDetail(rec);
   showPeek(rec);
+  showAttachments(rec);
   if (fly) frame(rec);
-  if (state.isolate) applyVisibility();
+  applyVisibility();
 }
 
 /** The compact card. Only meaningful on narrow screens; CSS hides it elsewhere. */
@@ -280,13 +400,15 @@ function frame(rec) {
   // Fit the muscle to whichever axis is tighter. A fixed multiple of the
   // bounding radius over-zooms badly in portrait, where the horizontal field
   // of view is far narrower than the vertical one.
-  const want = Math.max(bs.radius, 0.05) * 2.2;
+  // Enough padding that a small deep muscle is seen in context rather than
+  // filling the frame from the inside.
+  const want = Math.max(bs.radius, 0.05) * 3.0;
   const vFov = (camera.fov * Math.PI) / 180;
   const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
   const radius = Math.max(
     want / Math.sin(vFov / 2),
     want / Math.sin(hFov / 2),
-    0.30,
+    0.46,
   );
   // Swing to whichever side of the body the muscle is on.
   const theta = centre.x >= 0 ? 0.85 : -0.85;
@@ -431,6 +553,10 @@ $('#toggle-isolate').addEventListener('change', (e) => {
   state.isolate = e.target.checked;
   applyVisibility();
 });
+$('#toggle-focus').addEventListener('change', (e) => {
+  state.focus = e.target.checked;
+  applyVisibility();
+});
 
 // View presets
 const VIEWS = {
@@ -449,6 +575,7 @@ $('#reset').addEventListener('click', () => {
   setLayers([1, 2, 3]);
   setRegions('all');
   state.isolate = false; $('#toggle-isolate').checked = false;
+  state.focus = true; $('#toggle-focus').checked = true;
   state.skeleton = true; $('#toggle-skeleton').checked = true;
   state.skeletonFilter = null;
   state.sideFilter = null;
@@ -551,7 +678,11 @@ $('#peek-more').addEventListener('click', () => {
 
 // Keyboard
 window.addEventListener('keydown', (e) => {
-  if (e.target.tagName === 'INPUT') {
+  // Only swallow shortcuts while text is genuinely being typed. A focused
+  // checkbox or slider should not disable the layer keys.
+  const el = e.target;
+  const typing = el.tagName === 'INPUT' && el.type !== 'checkbox' && el.type !== 'range';
+  if (typing) {
     if (e.key === 'Escape') { searchInput.blur(); resultsBox.hidden = true; }
     return;
   }
@@ -580,7 +711,27 @@ resize();
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
+  // Project labels against a current camera matrix; the renderer only refreshes
+  // it during render, so doing this first would lag the camera by a frame.
+  camera.updateMatrixWorld();
+  positionLabels();
+
+  renderer.clear();
+  camera.layers.set(0);
   renderer.render(scene, camera);
+
+  if (state.focus && state.selected) {
+    // A scene background that is a Color forces a clear inside render(),
+    // regardless of autoClear, which would wipe the pass above. Detaching it
+    // for the overlay pass is what keeps the first image on screen.
+    const background = scene.background;
+    scene.background = null;
+    renderer.clearDepth();
+    camera.layers.set(OVERLAY);
+    renderer.render(scene, camera);
+    scene.background = background;
+    camera.layers.set(0);
+  }
 }
 
 applyVisibility();

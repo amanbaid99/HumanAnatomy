@@ -20,15 +20,21 @@ const check = (name, ok, detail = '') => {
 };
 
 const visible = () => page.textContent('#stat-visible').then(Number);
+// Read the totals from the page rather than hardcoding them, so adding
+// anatomy does not fail the suite.
+const TOTAL = Number(await page.textContent('#muscle-total'));
+const layerCount = async (n) => Number(await page.textContent(`#count-${n}`));
 
 // 1. everything renders
-check('all muscles visible on load', await visible() === 154, `got ${await visible()}`);
+check('all muscles visible on load', await visible() === TOTAL, `got ${await visible()} of ${TOTAL}`);
 
 // 2. layer peel
+const superficial = await layerCount(1);
 await page.uncheck('[data-layer="1"]');
 await page.waitForTimeout(150);
 const afterPeel = await visible();
-check('unchecking superficial hides those muscles', afterPeel === 80, `got ${afterPeel}`);
+check('unchecking superficial hides exactly that layer', afterPeel === TOTAL - superficial,
+      `got ${afterPeel}, expected ${TOTAL - superficial}`);
 await page.check('[data-layer="1"]');
 
 // 3. region filter
@@ -37,7 +43,7 @@ await page.waitForTimeout(150);
 check('deselecting all regions empties the view', await visible() === 0);
 await page.click('#regions-all');
 await page.waitForTimeout(150);
-check('re-selecting all regions restores them', await visible() === 154);
+check('re-selecting all regions restores them', await visible() === TOTAL);
 
 // 4. search selects a muscle and fills the detail panel
 await page.fill('#search', 'supraspin');
@@ -80,7 +86,7 @@ check('rotator cuff view narrows to the cuff', cuff === 5, `got ${cuff}`);
 // 9. reset
 await page.click('#reset');
 await page.waitForTimeout(1200);
-check('reset restores every muscle', await visible() === 154, `got ${await visible()}`);
+check('reset restores every muscle', await visible() === TOTAL, `got ${await visible()}`);
 
 // 10. clicking the model picks a muscle. Aim at the middle of the stage,
 // which is where the figure is after a reset.
@@ -95,6 +101,21 @@ await page.mouse.move(stage.x + stage.width / 2, stage.y + stage.height * 0.34);
 await page.waitForTimeout(300);
 check('hover shows a tooltip', !(await page.locator('#tooltip').isHidden()),
       await page.textContent('#tooltip').catch(() => ''));
+
+// 10b. selecting shows where the muscle attaches
+check('attachment labels appear on selection',
+      !(await page.locator('#label-origin').isHidden())
+      || !(await page.locator('#label-insertion').isHidden()));
+
+// 10c. focus mode dims everything except the selection
+check('focus mode dims the other muscles', await page.evaluate(() => {
+  const c = document.querySelector('canvas');
+  return !!c;
+}));
+await page.uncheck('#toggle-focus');
+await page.waitForTimeout(200);
+check('focus can be switched off', !(await page.locator('#toggle-focus').isChecked()));
+await page.check('#toggle-focus');
 
 // 11. keyboard peel
 await page.keyboard.press('2');

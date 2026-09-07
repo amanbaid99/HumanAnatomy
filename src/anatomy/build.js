@@ -21,6 +21,7 @@ export const LAYERS = {
 };
 
 export const GROUPS = [
+  { id: 'head', label: 'Head & jaw' },
   { id: 'neck', label: 'Neck' },
   { id: 'shoulder', label: 'Shoulder & cuff' },
   { id: 'chest', label: 'Chest' },
@@ -37,6 +38,23 @@ const TENDON_COLOR = new Color(0xb3a189);
 
 /** Mirror a list of points across the sagittal plane. */
 const flipPoints = (pts) => pts.map(([x, y, z]) => [-x, y, z]);
+
+/** Mean of a list of points. */
+const centroid = (pts) => [0, 1, 2].map(
+  (axis) => pts.reduce((sum, p) => sum + p[axis], 0) / pts.length,
+);
+
+/**
+ * Where the muscle actually anchors, in world coordinates. A tube runs from the
+ * start of its centreline to the end; a sheet spreads across a whole line of
+ * bone, so its attachment is taken as the middle of that line.
+ */
+function attachments(def) {
+  if (def.shape === 'sheet') {
+    return { from: centroid(def.origin), to: centroid(def.insertion) };
+  }
+  return { from: def.path[0], to: def.path[def.path.length - 1] };
+}
 
 function muscleMaterial(layer) {
   const mat = new MeshStandardMaterial({
@@ -135,9 +153,12 @@ export function buildMuscles() {
       const side = def.mirror ? (flip ? 'left' : 'right') : null;
       mesh.name = def.mirror ? `${def.id}.${side}` : def.id;
 
+      const { from, to } = attachments(variant);
       const record = {
         ...def,
         uid: mesh.name,
+        originPoint: from,
+        insertionPoint: to,
         side,
         sideLabel: side ? ` (${side})` : '',
         mesh,

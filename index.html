@@ -89,6 +89,23 @@
   }
   #tooltip[hidden]{display:none;}
 
+  /* Floating markers naming the two ends of the selected muscle. */
+  .attach-label{
+    position:fixed;z-index:14;pointer-events:none;
+    transform:translate(10px,-50%);
+    display:flex;align-items:center;gap:6px;
+    font-size:10.5px;letter-spacing:1.1px;text-transform:uppercase;
+    color:var(--text);
+    background:rgba(10,14,19,.86);border:1px solid var(--line);
+    padding:3px 8px 3px 6px;border-radius:5px;white-space:nowrap;
+  }
+  .attach-label[hidden]{display:none;}
+  .attach-label .pin{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+  #label-origin .pin{background:#f0c07a;}
+  #label-insertion .pin{background:#53c9bc;}
+  #label-origin{border-color:rgba(240,192,122,.32);}
+  #label-insertion{border-color:rgba(83,201,188,.32);}
+
   /* ---------- panel ---------- */
   #panel{
     width:var(--panel-w);flex-shrink:0;height:100%;
@@ -366,6 +383,10 @@
         <label for="toggle-skeleton">Show skeleton</label>
       </div>
       <div class="row">
+        <input type="checkbox" id="toggle-focus" checked>
+        <label for="toggle-focus">Dim the rest when one is selected</label>
+      </div>
+      <div class="row">
         <input type="checkbox" id="toggle-isolate">
         <label for="toggle-isolate">Isolate selected muscle</label>
       </div>
@@ -422,6 +443,9 @@
   </div>
   <button id="peek-more">Origin, insertion &amp; nerve &rarr;</button>
 </div>
+
+<div class="attach-label" id="label-origin" hidden><span class="pin"></span>Origin</div>
+<div class="attach-label" id="label-insertion" hidden><span class="pin"></span>Insertion</div>
 
 <div id="tooltip" hidden></div>
 

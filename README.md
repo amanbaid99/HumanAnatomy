@@ -10,12 +10,15 @@ attachments, nerve supply and, where relevant, a clinical note.
 
 ## What it does
 
-- **154 muscles** across ten regions, each modelled as real geometry rather than a stick
+- **191 muscles** across eleven regions, each modelled as real geometry rather than a stick
 - **A full skeleton** underneath: curved spine, twelve rib pairs, scapula with its
   spine, acromion and coracoid, and long bones with proper wide ends
 - **Peel by layer** (superficial, intermediate, deep) or fade the outer layers with a
   slider to look through them
 - **Filter by region**, isolate a single muscle, or search by name, region or function
+- **Select anything and see where it connects**: the origin and insertion are marked
+  on the body with a line of pull between them, and everything else dims so a deep
+  muscle is readable even when three layers sit on top of it
 - **A dedicated rotator cuff view** that strips to the deep layer, narrows the skeleton
   to the shoulder girdle, and frames the supraspinatus where it passes under the acromion
 
@@ -72,6 +75,16 @@ result into the mesh as an `ao` attribute. About 140 ms once, then free.
 It bakes per depth: a deep muscle is occluded by bone and the deep layer only, so
 peeling the superficial layer away does not leave what is underneath still wearing a
 shadow cast by something no longer on screen.
+
+### Drawing the selection on top
+
+A selected muscle is rendered twice: once in the scene, then again after the depth
+buffer is cleared, using a camera layer to pick out just that muscle and its markers.
+Without the second pass a deep muscle highlights invisibly under everything else.
+Two traps worth knowing if you touch this: `renderer.autoClear` has to be off, and
+`scene.background` has to be detached for the overlay pass, because a background that
+is a `Color` forces a clear inside `render()` regardless of `autoClear` and silently
+wipes the pass before it.
 
 Lighting is image-based, from a gradient environment generated on a canvas and
 prefiltered at startup, so there is still no external asset to load.

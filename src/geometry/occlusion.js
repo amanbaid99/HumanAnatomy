@@ -20,7 +20,9 @@ import { Vector3, BufferAttribute } from '../../vendor/three.module.min.js';
 const CELL = 0.012;      // metres per voxel, about a fingertip
 const RAYS = 9;
 const STEPS = 8;         // reach = CELL * STEPS, roughly 10 cm
-const STRENGTH = 0.92;
+// Tuned against the full model. More anatomy means more blockers, so this
+// wants revisiting whenever a region gets filled in.
+const STRENGTH = 0.78;
 
 /** A dense occupancy grid over an axis-aligned box. */
 class Grid {

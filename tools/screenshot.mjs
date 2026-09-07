@@ -24,6 +24,18 @@ const SHOTS = [
       await p.uncheck('[data-layer="2"]');
       await p.uncheck('[data-layer="3"]');
     } },
+  { name: 'selected-deep', setup: async (p) => {
+      // A deep muscle picked from the search: the case that used to be
+      // invisible under three other layers.
+      await p.fill('#search', 'supraspinatus');
+      await p.waitForTimeout(300);
+      await p.locator('#results .result').first().click();
+    } },
+  { name: 'selected-superficial', setup: async (p) => {
+      await p.fill('#search', 'latissimus');
+      await p.waitForTimeout(300);
+      await p.locator('#results .result').first().click();
+    } },
   { name: 'peeled', setup: async (p) => {
       await p.click('[data-view="back"]');
       await p.uncheck('[data-layer="1"]');
