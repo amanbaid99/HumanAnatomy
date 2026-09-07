@@ -18,6 +18,7 @@ import {
 import { OrbitControls } from './controls.js';
 import { buildMuscles, LAYERS, GROUPS } from './anatomy/build.js';
 import { buildSkeleton, extractHead } from './anatomy/skeleton.js';
+import { buildFace } from './anatomy/face.js';
 import { bakeOcclusion } from './geometry/occlusion.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -157,6 +158,9 @@ figure.add(skeleton);
 const head = extractHead(skeleton);
 figure.add(head);
 
+const face = buildFace();
+figure.add(face);
+
 // One material is shared by every bone, so dimming it dims the whole skeleton.
 const boneMat = skeleton.children.find((c) => c.material).material;
 const BONE_BASE = boneMat.color.getHex();
@@ -185,6 +189,7 @@ const byId = new Map(records.map((r) => [r.uid, r]));
 (function bakeAll() {
   figure.updateMatrixWorld(true);
   const bones = [skeleton, head].flatMap((g) => g.children.filter((c) => c.geometry));
+  const faceParts = face.children.filter((c) => c.geometry);
   const layer = (n) => records.filter((r) => r.layer === n).map((r) => r.mesh);
   const deep = layer(3);
   const mid = layer(2);
@@ -193,9 +198,10 @@ const byId = new Map(records.map((r) => [r.uid, r]));
   const bounds = new Box3().expandByObject(figure);
   const t0 = performance.now();
   bakeOcclusion(bones, bones, bounds);
+  bakeOcclusion(faceParts, [...bones, ...faceParts], bounds);
   bakeOcclusion(deep, [...bones, ...deep], bounds);
   bakeOcclusion(mid, [...bones, ...deep, ...mid], bounds);
-  bakeOcclusion(superficial, [...bones, ...deep, ...mid, ...superficial], bounds);
+  bakeOcclusion(superficial, [...bones, ...deep, ...mid, ...superficial, ...faceParts], bounds);
   console.info(`occlusion baked in ${Math.round(performance.now() - t0)} ms`);
 })();
 
@@ -329,6 +335,7 @@ function applyVisibility() {
   // The skeleton stays as orientation, but recedes.
   boneMat.color.copy(_tint.setHex(BONE_BASE)).lerp(GHOST_TINT, focusing ? 0.42 : 0);
 
+  face.visible = state.layers[1];
   skeleton.visible = state.skeleton;
   setSkeletonFilter(state.skeletonFilter, state.sideFilter);
   updateCounts();
@@ -670,6 +677,69 @@ $('#panel-toggle').addEventListener('click', () => {
 });
 
 $('#peek-close').addEventListener('click', () => select(null));
+
+/**
+ * Swipe the card away. A close button alone is not what anyone reaches for on
+ * a phone: the instinct is to push the sheet back down.
+ */
+(function makePeekDismissable() {
+  const peek = $('#peek');
+  let startY = null;
+  let startX = null;
+  let dy = 0;
+  let dragging = false;
+
+  const reset = (animate) => {
+    peek.classList.remove('dragging');
+    if (animate) {
+      peek.classList.add('settling');
+      setTimeout(() => peek.classList.remove('settling'), 200);
+    }
+    peek.style.transform = '';
+    peek.style.opacity = '';
+  };
+
+  peek.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('button')) return;
+    startY = e.clientY;
+    startX = e.clientX;
+    dy = 0;
+    dragging = false;
+  });
+
+  peek.addEventListener('pointermove', (e) => {
+    if (startY === null) return;
+    const moveY = e.clientY - startY;
+    const moveX = e.clientX - startX;
+    // Only take over once the gesture is clearly a downward drag.
+    if (!dragging) {
+      if (moveY > 6 && Math.abs(moveY) > Math.abs(moveX)) {
+        dragging = true;
+        peek.classList.add('dragging');
+        peek.setPointerCapture(e.pointerId);
+      } else if (Math.abs(moveX) > 10) {
+        startY = null;
+        return;
+      } else {
+        return;
+      }
+    }
+    dy = Math.max(0, moveY);
+    peek.style.transform = `translateY(${dy}px)`;
+    peek.style.opacity = String(Math.max(0, 1 - dy / 160));
+  });
+
+  const release = () => {
+    if (startY === null) return;
+    const dismissed = dragging && dy > 48;
+    startY = null;
+    dragging = false;
+    if (dismissed) { reset(false); select(null); }
+    else reset(true);
+  };
+  peek.addEventListener('pointerup', release);
+  peek.addEventListener('pointercancel', release);
+})();
 $('#peek-more').addEventListener('click', () => {
   $('#peek').hidden = true;
   $('#panel').classList.add('open');

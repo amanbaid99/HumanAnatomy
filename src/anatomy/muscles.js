@@ -1144,7 +1144,7 @@ export const MUSCLES = [
   // give a head its shape at the temple and the jaw.
   {
     id: 'masseter', name: 'Masseter', region: 'Jaw',
-    group: 'head', layer: 1, mirror: true, shape: 'tube',
+    group: 'head', layer: 2, mirror: true, shape: 'tube',
     path: [
       [0.061, 1.679, 0.027], [0.058, 1.656, 0.013], [0.052, 1.631, -0.003],
     ],
@@ -1157,9 +1157,9 @@ export const MUSCLES = [
   },
   {
     id: 'temporalis', name: 'Temporalis', region: 'Jaw',
-    group: 'head', layer: 2, mirror: true, shape: 'sheet',
+    group: 'head', layer: 3, mirror: true, shape: 'sheet',
     origin: [
-      [0.030, 1.744, 0.014], [0.062, 1.716, -0.006], [0.056, 1.684, -0.036],
+      [0.03, 1.744, 0.014], [0.062, 1.716, -0.006], [0.056, 1.684, -0.036],
     ],
     insertion: [
       [0.042, 1.662, 0.012], [0.048, 1.657, 0.005], [0.045, 1.651, -0.002],
@@ -1339,12 +1339,12 @@ export const MUSCLES = [
   // head reads as a skull sitting on a body.
   {
     id: 'frontalis', name: 'Frontalis', region: 'Face',
-    group: 'head', layer: 1, mirror: true, shape: 'sheet',
+    group: 'head', layer: 2, mirror: true, shape: 'sheet',
     origin: [
-      [0.008, 1.706, 0.080], [0.036, 1.709, 0.070], [0.058, 1.706, 0.044],
+      [0.008, 1.706, 0.08], [0.036, 1.709, 0.07], [0.058, 1.706, 0.044],
     ],
     insertion: [
-      [0.010, 1.764, 0.050], [0.038, 1.759, 0.040], [0.057, 1.750, 0.018],
+      [0.01, 1.764, 0.05], [0.038, 1.759, 0.04], [0.057, 1.75, 0.018],
     ],
     thickness: 0.008, bulge: 0.005, uSeg: 14, vSeg: 10,
     fn: 'Raises the eyebrows and wrinkles the forehead. The surprise muscle, and the reason horizontal forehead lines form where they do.',
@@ -1354,10 +1354,10 @@ export const MUSCLES = [
   },
   {
     id: 'orbicularis-oculi', name: 'Orbicularis oculi', region: 'Face',
-    group: 'head', layer: 1, mirror: true, shape: 'tube',
+    group: 'head', layer: 2, mirror: true, shape: 'tube',
     path: [
-      [0.013, 1.700, 0.077], [0.032, 1.715, 0.072], [0.051, 1.700, 0.061],
-      [0.032, 1.687, 0.070], [0.015, 1.699, 0.076],
+      [0.013, 1.7, 0.077], [0.032, 1.715, 0.072], [0.051, 1.7, 0.061],
+      [0.032, 1.687, 0.07], [0.015, 1.699, 0.076],
     ],
     width: 0.008, flat: 0.45, squareness: 2.6, profile: STRAP,
     fn: 'Closes the eye. The inner part blinks, the outer part screws the eye shut. Repeated contraction is what creates crow’s feet.',
@@ -1368,10 +1368,10 @@ export const MUSCLES = [
   },
   {
     id: 'orbicularis-oris', name: 'Orbicularis oris', region: 'Face',
-    group: 'head', layer: 1, mirror: false, shape: 'tube',
+    group: 'head', layer: 2, mirror: false, shape: 'tube',
     path: [
-      [-0.024, 1.648, 0.070], [0, 1.657, 0.081], [0.024, 1.648, 0.070],
-      [0, 1.639, 0.078], [-0.022, 1.648, 0.070],
+      [-0.024, 1.648, 0.07], [0.0, 1.657, 0.081], [0.024, 1.648, 0.07],
+      [0.0, 1.639, 0.078], [-0.022, 1.648, 0.07],
     ],
     width: 0.008, flat: 0.5, squareness: 2.6, profile: STRAP,
     fn: 'Closes and purses the lips. Needed for speech, whistling, kissing and holding food in the mouth.',
@@ -1381,9 +1381,9 @@ export const MUSCLES = [
   },
   {
     id: 'zygomaticus-major', name: 'Zygomaticus major', region: 'Face',
-    group: 'head', layer: 1, mirror: true, shape: 'tube',
+    group: 'head', layer: 2, mirror: true, shape: 'tube',
     path: [
-      [0.058, 1.685, 0.040], [0.040, 1.665, 0.064], [0.025, 1.651, 0.072],
+      [0.058, 1.685, 0.04], [0.04, 1.665, 0.064], [0.025, 1.651, 0.072],
     ],
     width: 0.006, flat: 0.6, profile: STRAP,
     fn: 'Pulls the corner of the mouth up and outward. This is the smiling muscle.',
@@ -1393,7 +1393,7 @@ export const MUSCLES = [
   },
   {
     id: 'buccinator', name: 'Buccinator', region: 'Face',
-    group: 'head', layer: 2, mirror: true, shape: 'tube',
+    group: 'head', layer: 3, mirror: true, shape: 'tube',
     path: [
       [0.050, 1.652, 0.034], [0.036, 1.649, 0.058], [0.023, 1.647, 0.070],
     ],

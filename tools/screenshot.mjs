@@ -24,6 +24,15 @@ const SHOTS = [
       await p.uncheck('[data-layer="2"]');
       await p.uncheck('[data-layer="3"]');
     } },
+  { name: 'head', setup: async (p) => {
+      // Selecting a facial muscle flies the camera to the head, which is the
+      // cheapest way to frame it without scripting the orbit controls.
+      await p.fill('#search', 'zygomaticus');
+      await p.waitForTimeout(300);
+      await p.locator('#results .result').first().click();
+      await p.waitForTimeout(1600);
+      await p.uncheck('#toggle-focus');
+    } },
   { name: 'selected-deep', setup: async (p) => {
       // A deep muscle picked from the search: the case that used to be
       // invisible under three other layers.

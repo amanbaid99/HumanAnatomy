@@ -60,7 +60,35 @@ check('closing the panel restores the card', !(await page.locator('#peek').isHid
 
 await page.click('#peek-close');
 await page.waitForTimeout(400);
-check('dismissing the card deselects', await page.locator('#peek').isHidden());
+check('the close button dismisses the card', await page.locator('#peek').isHidden());
+
+// Swiping the card down is what people actually reach for on a phone.
+await page.touchscreen.tap(stage.x + stage.width / 2, stage.y + stage.height * 0.40);
+await page.waitForTimeout(900);
+const card = await page.locator('#peek').boundingBox();
+const cx = card.x + card.width / 2;
+const cy = card.y + 24;
+await page.mouse.move(cx, cy);
+await page.mouse.down();
+for (const dy of [10, 30, 55, 85, 115]) {
+  await page.mouse.move(cx, cy + dy);
+  await page.waitForTimeout(30);
+}
+await page.mouse.up();
+await page.waitForTimeout(600);
+check('swiping the card down dismisses it', await page.locator('#peek').isHidden());
+
+// A short drag is not a dismissal; it should settle back.
+await page.touchscreen.tap(stage.x + stage.width / 2, stage.y + stage.height * 0.40);
+await page.waitForTimeout(900);
+const card2 = await page.locator('#peek').boundingBox();
+await page.mouse.move(card2.x + card2.width / 2, card2.y + 24);
+await page.mouse.down();
+await page.mouse.move(card2.x + card2.width / 2, card2.y + 44, { steps: 4 });
+await page.mouse.up();
+await page.waitForTimeout(500);
+check('a short drag settles back instead', !(await page.locator('#peek').isHidden()));
+await page.click('#peek-close');
 
 check('page never scrolls sideways', !(await page.evaluate(
   () => document.documentElement.scrollWidth > window.innerWidth,

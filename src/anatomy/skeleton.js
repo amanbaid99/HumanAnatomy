@@ -61,18 +61,18 @@ export function buildSkeleton() {
 
   // ---- Skull and jaw ----
   // A head is about an eighth of stature, so roughly 0.23 m from crown to chin.
-  const cranium = knob('cranium', [0, 1.698, 0.002], 0.077, [0.96, 1.12, 1.18]);
+  const cranium = knob('cranium', [0, 1.697, 0.000], 0.068, [0.95, 1.11, 1.16]);
   cranium.rotation.x = -0.08;
   head.add(cranium);
-  const face = knob('maxilla', [0, 1.650, 0.050], 0.046, [0.86, 0.92, 0.86]);
+  const face = knob('maxilla', [0, 1.652, 0.046], 0.040, [0.84, 0.90, 0.84]);
   head.add(face);
-  const brow = knob('brow', [0, 1.694, 0.058], 0.036, [1.10, 0.44, 0.70]);
+  const brow = knob('brow', [0, 1.700, 0.052], 0.032, [1.12, 0.42, 0.68]);
   head.add(brow);
   [1, -1].forEach((s2) => {
     head.add(tube(`mandible.${s2 > 0 ? 'r' : 'l'}`, [
-      [0, 1.618, 0.076], [0.042 * s2, 1.626, 0.050], [0.055 * s2, 1.646, -0.004],
-      [0.052 * s2, 1.672, -0.014],
-    ], 0.0092, { flat: 0.72, profile: [[0, 0.85], [0.5, 1], [1, 0.6]] }));
+      [0, 1.620, 0.068], [0.036 * s2, 1.627, 0.046], [0.046 * s2, 1.646, -0.004],
+      [0.044 * s2, 1.670, -0.014],
+    ], 0.0078, { flat: 0.72, profile: [[0, 0.85], [0.5, 1], [1, 0.6]] }));
   });
 
   // ---- Vertebral column ----

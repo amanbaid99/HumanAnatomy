@@ -236,15 +236,25 @@
       z-index:12;
       background:rgba(18,25,33,.94);backdrop-filter:blur(14px);
       border:1px solid var(--line);border-radius:13px;
-      padding:13px 15px 11px;
+      padding:9px 15px 11px;
       box-shadow:0 12px 34px rgba(0,0,0,.55);
       display:block;
       animation:peekIn .22s cubic-bezier(.2,.8,.3,1);
+      touch-action:none;
+      will-change:transform;
     }
+    #peek.dragging{animation:none;transition:none;}
+    #peek.settling{transition:transform .18s ease-out, opacity .18s ease-out;}
     #peek[hidden]{display:none;}
     #peek-close{
-      position:absolute;top:7px;right:9px;width:28px;height:28px;
-      color:var(--text-3);font-size:20px;line-height:1;border-radius:6px;
+      position:absolute;top:4px;right:4px;width:44px;height:44px;
+      color:var(--text-3);font-size:22px;line-height:1;border-radius:8px;
+      display:flex;align-items:center;justify-content:center;
+    }
+    #peek-close:active{background:var(--bg-2);}
+    .peek-grip{
+      display:block;width:34px;height:4px;border-radius:2px;
+      background:var(--line);margin:0 auto 10px;
     }
     #peek .peek-layer{
       display:inline-block;width:8px;height:8px;border-radius:2px;
@@ -434,6 +444,7 @@
 </div>
 
 <div id="peek" hidden>
+  <span class="peek-grip" aria-hidden="true"></span>
   <button id="peek-close" aria-label="Dismiss">&times;</button>
   <div class="peek-body">
     <span class="peek-layer" id="peek-layer"></span>
