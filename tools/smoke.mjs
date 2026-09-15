@@ -102,12 +102,12 @@ await page.waitForTimeout(300);
 check('hover shows a tooltip', !(await page.locator('#tooltip').isHidden()),
       await page.textContent('#tooltip').catch(() => ''));
 
-// 10b. selecting shows where the muscle attaches
+// 10c. selecting shows where the muscle attaches
 check('attachment labels appear on selection',
       !(await page.locator('#label-origin').isHidden())
       || !(await page.locator('#label-insertion').isHidden()));
 
-// 10c. focus mode dims everything except the selection
+// 10d. focus mode dims everything except the selection
 check('focus mode dims the other muscles', await page.evaluate(() => {
   const c = document.querySelector('canvas');
   return !!c;
@@ -120,7 +120,8 @@ await page.check('#toggle-focus');
 // 11. keyboard peel
 await page.keyboard.press('2');
 await page.waitForTimeout(150);
-check('pressing 2 toggles the intermediate layer', await visible() < 154);
+check('pressing 2 toggles the intermediate layer', await visible() < TOTAL,
+      `got ${await visible()} of ${TOTAL}`);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 if (errors.length) { console.log('\nconsole errors:'); errors.forEach((e) => console.log(' ', e)); }

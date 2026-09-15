@@ -95,11 +95,11 @@ scene.add(new HemisphereLight(0xb4c6d6, 0x3a2820, 0.12));
 scene.add(new AmbientLight(0xffffff, 0.05));
 
 const key = new DirectionalLight(0xfff2e6, 1.95);
-key.position.set(2.4, 3.2, 2.8);
+key.position.set(1.3, 2.7, 3.5);
 scene.add(key);
 
-const fill = new DirectionalLight(0xa8c2dc, 0.42);
-fill.position.set(-3.0, 1.4, 1.6);
+const fill = new DirectionalLight(0xa8c2dc, 0.62);
+fill.position.set(-2.8, 1.2, 2.2);
 scene.add(fill);
 
 const rim = new DirectionalLight(0x8fb8c4, 0.48);
@@ -417,8 +417,9 @@ function frame(rec) {
     want / Math.sin(hFov / 2),
     0.46,
   );
-  // Swing to whichever side of the body the muscle is on.
-  const theta = centre.x >= 0 ? 0.85 : -0.85;
+  // Swing to whichever side of the body the muscle is on. Anything close to
+  // the midline is framed square, since there is no side to swing toward.
+  const theta = Math.abs(centre.x) < 0.025 ? 0 : (centre.x > 0 ? 0.85 : -0.85);
   const front = centre.z >= 0;
   const target = centre.clone();
   if (isNarrow()) target.y -= radius * 0.16;

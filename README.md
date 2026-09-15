@@ -10,7 +10,7 @@ attachments, nerve supply and, where relevant, a clinical note.
 
 ## What it does
 
-- **191 muscles** across eleven regions, each modelled as real geometry rather than a stick
+- **206 muscles** across eleven regions, each modelled as real geometry rather than a stick
 - **A head with a face**, lofted from cross-sections with orbital sockets pressed into
   it. The skin is the superficial layer of the head, so peeling it reveals the muscles
   of facial expression underneath, then the skull
@@ -104,6 +104,12 @@ src/anatomy/landmarks.js    shared landmark table (one source of truth)
 src/anatomy/muscles.js      muscle definitions: attachments, actions, notes
 src/anatomy/skeleton.js     bone construction
 src/anatomy/face.js         the head: lofted shell, carved sockets, features
+
+A band lying on a curved surface, like orbicularis oculi around the eye, cannot use
+the transported frames the rest of the model relies on: they drift around a closed
+loop and the ribbon ends up standing edge-on to the face. `tubeLoft` takes an
+`alignRadial` axis for those, holding the thin side of the cross-section along the
+outward direction so the band lies flat.
 src/anatomy/build.js        definitions to meshes, and the muscle material
 vendor/                     three.js r0.185, vendored so there is no CDN dependency
 ```

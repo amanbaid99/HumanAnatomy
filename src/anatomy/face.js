@@ -44,14 +44,19 @@ const SLICES = [
 
 /** Hollows pressed into the shell after lofting: [x, y, z, radius, depth]. */
 const HOLLOWS = [
-  [0.0305, 1.7015, 0.086, 0.025, 0.015],   // right orbit
-  [-0.0305, 1.7015, 0.086, 0.025, 0.015],  // left orbit
-  [0, 1.6515, 0.088, 0.026, 0.005],        // mouth
+  [0.0305, 1.7015, 0.086, 0.019, 0.0050],  // right orbit
+  [-0.0305, 1.7015, 0.086, 0.019, 0.0050], // left orbit
+  [0, 1.6515, 0.088, 0.024, 0.004],        // mouth
   [0.052, 1.674, 0.070, 0.026, 0.004],     // right temple hollow
   [-0.052, 1.674, 0.070, 0.026, 0.004],    // left temple hollow
 ];
 
 const RADIAL = 56;
+/**
+ * The shell is the deep core of the face, not its outer surface: the muscles
+ * are authored to the head's true outline, so the core sits just inside them.
+ */
+const CORE = 0.962;
 const SQUARENESS = 2.3;   // slightly fuller than an ellipse; heads are not eggs
 
 /**
@@ -61,8 +66,8 @@ const SQUARENESS = 2.3;   // slightly fuller than an ellipse; heads are not eggs
  */
 const FLESH = new Color(0xc47a69);
 const APONEUROSIS = new Color(0xded4c2);
-const FADE_LOW = 1.706;   // all muscle below this
-const FADE_HIGH = 1.756;  // all aponeurosis above it
+const FADE_LOW = 1.734;   // all muscle below this
+const FADE_HIGH = 1.778;  // all aponeurosis above it
 
 export function skinMaterial(color = 0xbe9a80, roughness = 0.78) {
   const mat = new MeshStandardMaterial({ color, roughness, metalness: 0 });
@@ -87,8 +92,8 @@ function headGeometry() {
       const s = Math.sin(a);
       const c = Math.cos(a);
       // Front and back are shaped separately, which is what gives a jawline.
-      const w = c >= 0 ? wFront : wBack;
-      const depth = c >= 0 ? zFront : -zBack;
+      const w = (c >= 0 ? wFront : wBack) * CORE;
+      const depth = (c >= 0 ? zFront : -zBack) * CORE;
       const ex = Math.sign(s) * Math.abs(s) ** p;
       const ez = Math.sign(c) * Math.abs(c) ** p;
       verts.push(ex * w, y, ez * depth);
@@ -223,28 +228,28 @@ export function buildFace() {
     // Eye, open, as the plates show it: sclera in the socket, iris and pupil
     // on its front, and a thin muscular rim for the lid margin.
     const sclera = new Mesh(new SphereGeometry(0.0104, 20, 16), skinMaterial(0xc6bfb2, 0.38));
-    sclera.position.set(0.0305 * side, 1.7005, 0.0718);
+    sclera.position.set(0.0305 * side, 1.7005, 0.0744);
     sclera.name = `face.sclera.${s}`;
     group.add(sclera);
 
     const iris = new Mesh(new SphereGeometry(0.0051, 18, 14), skinMaterial(0x6d7f86, 0.30));
-    iris.position.set(0.0314 * side, 1.7002, 0.0792);
+    iris.position.set(0.0313 * side, 1.7002, 0.0821);
     iris.scale.set(1, 1, 0.42);
     iris.name = `face.iris.${s}`;
     group.add(iris);
 
     const pupil = new Mesh(new SphereGeometry(0.0023, 12, 10), skinMaterial(0x140f0c, 0.25));
-    pupil.position.set(0.0315 * side, 1.7002, 0.0812);
+    pupil.position.set(0.0314 * side, 1.7002, 0.0842);
     pupil.scale.set(1, 1, 0.35);
     pupil.name = `face.pupil.${s}`;
     group.add(pupil);
 
-    [[1.7075, 0.0790, 0.0044], [1.6938, 0.0784, 0.0034]].forEach(([ly, lz, lw], i) => {
+    [[1.7078, 0.0836, 0.0034], [1.6938, 0.0830, 0.0028]].forEach(([ly, lz, lw], i) => {
       const rim = new Mesh(tubeLoft({
         path: [
-          [0.017 * side, ly - (i ? -0.002 : 0.002), 0.0768],
-          [0.031 * side, ly, lz],
-          [0.045 * side, ly - (i ? -0.002 : 0.002), 0.0742],
+          [0.0200 * side, ly - (i ? -0.0035 : 0.0035), 0.0806],
+          [0.0305 * side, ly, lz],
+          [0.0412 * side, ly - (i ? -0.0035 : 0.0035), 0.0782],
         ],
         width: lw, flat: 0.55, profile: [[0, 0.45], [0.5, 1.0], [1, 0.45]],
         segments: 14, radial: 10,
@@ -254,9 +259,9 @@ export function buildFace() {
     });
 
     // Nostril wing.
-    const nostril = new Mesh(new SphereGeometry(0.0082, 14, 10), flesh);
-    nostril.position.set(0.0135 * side, 1.6675, 0.0945);
-    nostril.scale.set(0.92, 0.74, 0.86);
+    const nostril = new Mesh(new SphereGeometry(0.0062, 14, 10), flesh);
+    nostril.position.set(0.0118 * side, 1.6682, 0.0962);
+    nostril.scale.set(0.90, 0.78, 0.92);
     nostril.name = `face.nostril.${s}`;
     group.add(nostril);
   });

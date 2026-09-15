@@ -27,7 +27,7 @@ const SHOTS = [
   { name: 'head', setup: async (p) => {
       // Selecting a facial muscle flies the camera to the head, which is the
       // cheapest way to frame it without scripting the orbit controls.
-      await p.fill('#search', 'zygomaticus');
+      await p.fill('#search', 'procerus');
       await p.waitForTimeout(300);
       await p.locator('#results .result').first().click();
       await p.waitForTimeout(1600);

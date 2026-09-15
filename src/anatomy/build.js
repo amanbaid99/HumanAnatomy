@@ -119,6 +119,7 @@ function geometryFor(def) {
     squareness: def.squareness ?? 2.4,
     segments: def.segments ?? Math.min(30, Math.max(10, (def.path.length - 1) * 7)),
     radial: def.radial ?? (w > 0.030 ? 14 : w > 0.018 ? 11 : 8),
+    alignRadial: def.alignRadial ?? null,
   });
 }
 
@@ -127,6 +128,7 @@ function sideVariant(def, flip) {
   if (!flip) return def;
   const out = { ...def };
   if (def.path) out.path = flipPoints(def.path);
+  if (def.alignRadial) out.alignRadial = [-def.alignRadial[0], def.alignRadial[1]];
   if (def.origin) out.origin = flipPoints(def.origin);
   if (def.insertion) out.insertion = flipPoints(def.insertion);
   if (Array.isArray(def.outward)) out.outward = [-def.outward[0], def.outward[1], def.outward[2]];

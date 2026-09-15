@@ -109,6 +109,12 @@ export const TAPERED = [[0, 0.95], [0.35, 1.0], [1, 0.30]];
  * @param {number}     flat      height/width ratio; <1 flattens against the body
  * @param {Array}      profile   [[t, scale], ...] width scale along the muscle
  * @param {number}     squareness superellipse exponent; 2 = ellipse, higher = slab-like
+ * @param {number[]}   alignRadial [x, z] of a vertical axis. When given, the
+ *        thin side of the cross-section is held along the outward direction
+ *        from that axis instead of being carried by the transported frame.
+ *        A flat band following a closed loop on a curved surface needs this:
+ *        transported frames drift around the loop, so the ribbon ends up
+ *        standing edge-on to the surface rather than lying on it.
  */
 export function tubeLoft({
   path,
@@ -121,9 +127,12 @@ export function tubeLoft({
   radial = 14,
   up = null,
   tension = 0.5,
+  alignRadial = null,
 }) {
   const { pos, tan } = sampleCurve(path, segments, false, tension);
-  const { r, s } = rmFrames(pos, tan, up ? new Vector3(...up) : null);
+  const { r, s } = alignRadial
+    ? radialFrames(pos, tan, alignRadial)
+    : rmFrames(pos, tan, up ? new Vector3(...up) : null);
 
   const verts = [];
   const norms = [];
@@ -190,6 +199,28 @@ export function tubeLoft({
   });
 
   return buildGeometry(verts, norms, uvs, idx, tendon);
+}
+
+/**
+ * Frames whose thin axis points away from a vertical axis, so a band lies flat
+ * against a rounded surface like the face or the skull.
+ */
+function radialFrames(pos, tan, [ax, az]) {
+  const r = [];
+  const s = [];
+  const outward = new Vector3();
+  for (let i = 0; i < pos.length; i++) {
+    outward.set(pos[i].x - ax, 0, pos[i].z - az);
+    if (outward.lengthSq() < 1e-10) outward.set(0, 0, 1);
+    outward.normalize();
+    // Drop any component along the path, so the frame stays orthonormal.
+    const thin = outward.clone().sub(tan[i].clone().multiplyScalar(outward.dot(tan[i])));
+    if (thin.lengthSq() < 1e-10) thin.set(0, 0, 1);
+    thin.normalize();
+    s.push(thin);
+    r.push(new Vector3().crossVectors(tan[i], thin).normalize());
+  }
+  return { r, s };
 }
 
 /** A muscle narrows into its tendon, so thinness is a good proxy for tendon. */
