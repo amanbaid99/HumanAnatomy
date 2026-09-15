@@ -15,9 +15,9 @@ import { applyOcclusionToMaterial } from '../geometry/occlusion.js';
 import { MUSCLES } from './muscles.js';
 
 export const LAYERS = {
-  1: { key: 'superficial', label: 'Superficial', color: 0xc25349 },
-  2: { key: 'intermediate', label: 'Intermediate', color: 0xa93f31 },
-  3: { key: 'deep', label: 'Deep', color: 0x9c352c },
+  1: { key: 'superficial', label: 'Superficial', color: 0xc4705f },
+  2: { key: 'intermediate', label: 'Intermediate', color: 0xb35e4f },
+  3: { key: 'deep', label: 'Deep', color: 0xa14d42 },
 };
 
 export const GROUPS = [
@@ -34,7 +34,7 @@ export const GROUPS = [
   { id: 'lowerleg', label: 'Lower leg' },
 ];
 
-const TENDON_COLOR = new Color(0xb3a189);
+const TENDON_COLOR = new Color(0xe6ddcd);
 
 /** Mirror a list of points across the sagittal plane. */
 const flipPoints = (pts) => pts.map(([x, y, z]) => [-x, y, z]);
@@ -86,9 +86,9 @@ function muscleMaterial(layer) {
         diffuseColor.rgb *= 0.90 + 0.10 * fiber + 0.035 * fine;
         // Tendon is pale, and glossier than the belly.
         float t = smoothstep(0.12, 0.92, vTendon);
-        diffuseColor.rgb = mix(diffuseColor.rgb, uTendonColor, t * 0.70);`)
+        diffuseColor.rgb = mix(diffuseColor.rgb, uTendonColor, t * 0.88);`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-        roughnessFactor = mix(roughnessFactor, 0.34, smoothstep(0.12, 0.92, vTendon));`);
+        roughnessFactor = mix(roughnessFactor, 0.42, smoothstep(0.12, 0.92, vTendon));`);
   };
 
   return mat;

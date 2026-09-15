@@ -194,7 +194,7 @@ export function tubeLoft({
 
 /** A muscle narrows into its tendon, so thinness is a good proxy for tendon. */
 function tendonWeight(scale) {
-  return Math.min(1, Math.max(0, (0.62 - scale) / 0.42));
+  return Math.min(1, Math.max(0, (0.70 - scale) / 0.46));
 }
 
 /** Sample a polyline (given as control points) at parameter u in [0,1]. */
@@ -312,7 +312,7 @@ export function sheetLoft({
         uvs.push(iu / uSeg, iv / vSeg);
         // Sheets go aponeurotic where they meet bone, at both v edges.
         const v = iv / vSeg;
-        tendon.push(Math.min(1, Math.max(0, 1 - Math.sin(Math.PI * v) / 0.22)));
+        tendon.push(Math.min(1, Math.max(0, 1 - Math.sin(Math.PI * v) / 0.40)));
       }
     }
   });
