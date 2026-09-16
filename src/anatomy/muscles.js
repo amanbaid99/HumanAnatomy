@@ -114,11 +114,15 @@ export const MUSCLES = [
   {
     id: 'supraspinatus', name: 'Supraspinatus', region: 'Rotator cuff',
     group: 'shoulder', layer: 3, mirror: true, shape: 'tube',
+    // The belly lies in the supraspinous fossa: the trough on the back of the
+    // blade above the scapular spine, not across the blade itself. It is a
+    // shallow trough, so the muscle is wider front-to-back than it is tall.
+    // The tendon then runs out over the humeral head into the subacromial gap.
     path: [
-      [0.048, 1.422, -0.080], [0.092, 1.430, -0.074],
-      [0.136, 1.443, -0.054], [0.168, 1.450, -0.031], [0.188, 1.445, -0.015],
+      [0.048, 1.441, -0.086], [0.078, 1.447, -0.083], [0.112, 1.455, -0.068],
+      [0.148, 1.462, -0.040], [0.174, 1.462, -0.022], [0.188, 1.456, -0.016],
     ],
-    width: 0.0225, flat: 0.62, squareness: 2.6,
+    width: 0.0135, flat: 0.80, squareness: 2.8,
     profile: [[0, 0.48], [0.22, 1.0], [0.52, 0.96], [0.80, 0.50], [1, 0.32]],
     fn: 'Starts the first 15 degrees of lifting the arm out to the side, then assists the deltoid through the rest of the range. Presses the humeral head into the socket so the deltoid has something to pull against.',
     or: 'Supraspinous fossa: the shallow trough above the spine of the scapula',
@@ -129,14 +133,20 @@ export const MUSCLES = [
   {
     id: 'infraspinatus', name: 'Infraspinatus', region: 'Rotator cuff',
     group: 'shoulder', layer: 3, mirror: true, shape: 'sheet',
+    // The origin traces the rim of the infraspinous fossa rather than just the
+    // medial border, so the fan lies on the back of the blade instead of
+    // cutting across it: down the medial border, round the inferior angle and
+    // back up the lateral border. The fibres then converge on the tubercle,
+    // crossing the back of the humeral head rather than passing through it.
     origin: [
-      [0.042, 1.386, -0.080], [0.056, 1.330, -0.082], [0.082, 1.276, -0.076],
+      [0.046, 1.392, -0.084], [0.058, 1.330, -0.084], [0.088, 1.276, -0.081],
+      [0.124, 1.306, -0.084], [0.146, 1.372, -0.083],
     ],
     insertion: [
-      [0.166, 1.436, -0.038], [0.178, 1.428, -0.024], [0.174, 1.417, -0.012],
+      [0.172, 1.446, -0.048], [0.184, 1.434, -0.038], [0.182, 1.422, -0.028],
     ],
-    thickness: 0.0247, bulge: 0.0225, taper: [[0, 1], [0.55, 0.82], [1, 0.34]],
-    uSeg: 20, vSeg: 16,
+    thickness: 0.0190, bulge: 0.026, taper: [[0, 1], [0.55, 0.82], [1, 0.34]],
+    uSeg: 24, vSeg: 16,
     fn: 'The main external rotator of the shoulder: turns the arm outward, as in the wind-up before throwing.',
     or: 'Infraspinous fossa, the broad hollow below the spine of the scapula',
     ins: 'Middle facet of the greater tubercle of the humerus',
@@ -146,11 +156,14 @@ export const MUSCLES = [
   {
     id: 'teres-minor', name: 'Teres minor', region: 'Rotator cuff',
     group: 'shoulder', layer: 3, mirror: true, shape: 'tube',
+    // It arises from the lateral border, so it runs alongside the edge of the
+    // blade rather than across its back. Following the border keeps it out of
+    // the plate on the way to the inferior facet.
     path: [
-      [0.092, 1.298, -0.080], [0.126, 1.338, -0.068],
-      [0.160, 1.386, -0.040], [0.183, 1.416, -0.018],
+      [0.120, 1.294, -0.075], [0.145, 1.330, -0.077], [0.163, 1.367, -0.068],
+      [0.180, 1.404, -0.046], [0.189, 1.425, -0.030],
     ],
-    width: 0.0152, flat: 0.72, profile: TENDINOUS,
+    width: 0.0145, flat: 0.76, profile: TENDINOUS,
     fn: 'Externally rotates the shoulder alongside infraspinatus, and helps hold the humeral head down in the socket.',
     or: 'Upper two thirds of the lateral border of the scapula',
     ins: 'Inferior facet of the greater tubercle of the humerus',
@@ -159,14 +172,17 @@ export const MUSCLES = [
   {
     id: 'subscapularis', name: 'Subscapularis', region: 'Rotator cuff',
     group: 'shoulder', layer: 3, mirror: true, shape: 'sheet',
+    // The only cuff muscle on the front of the blade, so its origin sits clear
+    // of the costal surface rather than on it, and the fan passes in front of
+    // the glenoid on its way to the lesser tubercle.
     origin: [
-      [0.044, 1.428, -0.062], [0.056, 1.358, -0.064], [0.080, 1.284, -0.060],
+      [0.048, 1.428, -0.044], [0.060, 1.358, -0.045], [0.084, 1.284, -0.042],
     ],
     insertion: [
-      [0.156, 1.450, -0.008], [0.168, 1.441, 0.002], [0.163, 1.428, 0.008],
+      [0.162, 1.452, -0.002], [0.172, 1.443, 0.006], [0.168, 1.430, 0.012],
     ],
-    thickness: 0.0232, bulge: 0.0185, outward: [0.35, 0, 1],
-    taper: [[0, 1], [0.55, 0.80], [1, 0.32]], uSeg: 20, vSeg: 16,
+    thickness: 0.0210, bulge: 0.0185, outward: [0.35, 0, 1],
+    taper: [[0, 1], [0.55, 0.80], [1, 0.32]], uSeg: 24, vSeg: 16,
     fn: 'The only cuff muscle on the front of the shoulder blade. Internally rotates the arm and is the main block against the humeral head sliding forward.',
     or: 'Subscapular fossa, the front surface of the scapula facing the ribs',
     ins: 'Lesser tubercle of the humerus',
@@ -226,11 +242,14 @@ export const MUSCLES = [
   {
     id: 'teres-major', name: 'Teres major', region: 'Shoulder',
     group: 'shoulder', layer: 2, mirror: true, shape: 'tube',
+    // From the back of the inferior angle, then out along the lateral border
+    // to the humerus. Hugging the border keeps the belly behind the blade and
+    // out of the rib wall instead of running across the back of the chest.
     path: [
-      [0.086, 1.252, -0.074], [0.124, 1.278, -0.058],
-      [0.156, 1.312, -0.022], [0.170, 1.344, 0.004],
+      [0.094, 1.250, -0.078], [0.136, 1.274, -0.062],
+      [0.163, 1.304, -0.026], [0.173, 1.340, 0.002],
     ],
-    width: 0.0254, flat: 0.72, profile: FUSIFORM,
+    width: 0.0230, flat: 0.60, profile: FUSIFORM,
     fn: 'Extends, adducts and internally rotates the arm. Works with latissimus dorsi, which is why it is nicknamed the lat’s little helper.',
     or: 'Inferior angle of the scapula',
     ins: 'Medial lip of the intertubercular groove of the humerus',
