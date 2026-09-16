@@ -33,8 +33,8 @@ export const MUSCLES = [
     id: 'sternocleidomastoid', name: 'Sternocleidomastoid', region: 'Neck',
     group: 'neck', layer: 1, mirror: true, shape: 'tube',
     path: [
-      [0.020, 1.466, 0.078], [0.038, 1.508, 0.062],
-      [0.054, 1.556, 0.030], [0.062, 1.600, -0.002], [0.062, 1.632, -0.016],
+      [0.020, 1.466, 0.078], [0.038, 1.498, 0.062],
+      [0.054, 1.532, 0.030], [0.062, 1.564, -0.002], [0.062, 1.602, -0.016],
     ],
     width: 0.0295, flat: 0.68, profile: [[0, 0.55], [0.3, 1.0], [0.7, 0.95], [1, 0.5]],
     fn: 'Tilts the head toward the same side and turns the face to the opposite side. Both together flex the neck forward.',
@@ -46,7 +46,7 @@ export const MUSCLES = [
     id: 'scalenes', name: 'Scalenes', region: 'Neck',
     group: 'neck', layer: 3, mirror: true, shape: 'tube',
     path: [
-      [0.030, 1.590, 0.006], [0.042, 1.545, 0.010], [0.052, 1.500, 0.020],
+      [0.030, 1.557, 0.006], [0.042, 1.524, 0.010], [0.052, 1.492, 0.020],
     ],
     width: 0.0175, flat: 0.8, profile: STRAP,
     fn: 'Elevate the first two ribs during forceful breathing and side-bend the neck.',
@@ -59,8 +59,8 @@ export const MUSCLES = [
     id: 'levator-scapulae', name: 'Levator scapulae', region: 'Neck',
     group: 'neck', layer: 2, mirror: true, shape: 'tube',
     path: [
-      [0.028, 1.600, -0.026], [0.036, 1.556, -0.044],
-      [0.042, 1.508, -0.062], [0.042, 1.462, -0.074],
+      [0.028, 1.564, -0.026], [0.036, 1.532, -0.044],
+      [0.042, 1.498, -0.062], [0.042, 1.462, -0.074],
     ],
     width: 0.0162, flat: 0.75, profile: STRAP,
     fn: 'Lifts the shoulder blade and helps tilt the neck. Chronically overworked in desk posture.',
@@ -72,7 +72,7 @@ export const MUSCLES = [
     id: 'splenius-capitis', name: 'Splenius capitis', region: 'Neck',
     group: 'neck', layer: 3, mirror: true, shape: 'tube',
     path: [
-      [0.014, 1.470, -0.060], [0.034, 1.540, -0.058], [0.052, 1.604, -0.040],
+      [0.014, 1.470, -0.060], [0.034, 1.521, -0.058], [0.052, 1.569, -0.040],
     ],
     width: 0.0189, flat: 0.55, profile: STRAP,
     fn: 'Extends and rotates the head to the same side.',
@@ -85,8 +85,8 @@ export const MUSCLES = [
     id: 'semispinalis-capitis', name: 'Semispinalis capitis', region: 'Neck',
     group: 'neck', layer: 2, mirror: true, shape: 'tube',
     path: [
-      [0.024, 1.470, -0.062], [0.026, 1.530, -0.062],
-      [0.026, 1.590, -0.052], [0.024, 1.640, -0.034],
+      [0.024, 1.470, -0.062], [0.026, 1.514, -0.062],
+      [0.026, 1.557, -0.052], [0.024, 1.611, -0.034],
     ],
     width: 0.023, flat: 0.72, profile: [[0, 0.7], [0.35, 1.0], [0.75, 0.95], [1, 0.62]],
     fn: 'The main extensor of the head: holds the skull up against gravity all day. Most of the bulk at the back of the neck is this muscle.',
@@ -98,7 +98,7 @@ export const MUSCLES = [
     id: 'longus-colli', name: 'Longus colli', region: 'Neck',
     group: 'neck', layer: 3, mirror: true, shape: 'tube',
     path: [
-      [0.014, 1.470, -0.006], [0.016, 1.530, 0.000], [0.016, 1.586, -0.002],
+      [0.014, 1.470, -0.006], [0.016, 1.514, 0.000], [0.016, 1.554, -0.002],
     ],
     width: 0.012, flat: 0.8, profile: STRAP,
     fn: 'Flexes the neck forward and steadies the cervical spine from the front.',
@@ -194,7 +194,7 @@ export const MUSCLES = [
     id: 'deltoid-lateral', name: 'Deltoid, lateral head', region: 'Shoulder',
     group: 'shoulder', layer: 1, mirror: true, shape: 'sheet',
     origin: [
-      [0.178, 1.472, 0.008], [0.198, 1.474, -0.012], [0.190, 1.468, -0.032],
+      [0.178, 1.472, 0.008], [0.198, 1.473, -0.012], [0.190, 1.468, -0.032],
     ],
     insertion: [
       [0.205, 1.286, 0.010], [0.211, 1.275, 0.005], [0.208, 1.264, 0.000],
@@ -309,10 +309,10 @@ export const MUSCLES = [
     id: 'trapezius-upper', name: 'Trapezius, upper fibres', region: 'Back',
     group: 'back', layer: 1, mirror: true, shape: 'sheet',
     origin: [
-      [0.018, 1.636, -0.046], [0.012, 1.578, -0.066], [0.009, 1.508, -0.074],
+      [0.018, 1.606, -0.046], [0.012, 1.548, -0.066], [0.009, 1.498, -0.074],
     ],
     insertion: [
-      [0.104, 1.474, -0.012], [0.148, 1.476, -0.010], [0.184, 1.472, -0.014],
+      [0.104, 1.473, -0.012], [0.148, 1.475, -0.010], [0.184, 1.472, -0.014],
     ],
     thickness: 0.017, bulge: 0.03, uSeg: 20, vSeg: 16,
     fn: 'Lifts the shoulder blade, as in a shrug, and helps rotate the socket upward when you reach overhead.',
@@ -324,7 +324,7 @@ export const MUSCLES = [
     id: 'trapezius-middle', name: 'Trapezius, middle fibres', region: 'Back',
     group: 'back', layer: 1, mirror: true, shape: 'sheet',
     origin: [
-      [0.008, 1.500, -0.074], [0.009, 1.452, -0.076], [0.010, 1.404, -0.074],
+      [0.008, 1.492, -0.074], [0.009, 1.452, -0.076], [0.010, 1.404, -0.074],
     ],
     insertion: [
       [0.076, 1.436, -0.062], [0.128, 1.418, -0.050], [0.170, 1.446, -0.032],
@@ -401,7 +401,7 @@ export const MUSCLES = [
     id: 'erector-spinae', name: 'Erector spinae', region: 'Back',
     group: 'back', layer: 3, mirror: true, shape: 'tube',
     path: [
-      [0.028, 1.480, -0.058], [0.032, 1.380, -0.062],
+      [0.028, 1.478, -0.058], [0.032, 1.380, -0.062],
       [0.036, 1.260, -0.062], [0.038, 1.140, -0.052], [0.036, 1.020, -0.042],
     ],
     width: 0.0299, flat: 0.85, profile: [[0, 0.55], [0.25, 0.85], [0.7, 1.0], [1, 0.8]],
@@ -1142,7 +1142,7 @@ export const MUSCLES = [
     id: 'sternohyoid', name: 'Sternohyoid', region: 'Neck',
     group: 'neck', layer: 1, mirror: true, shape: 'tube',
     path: [
-      [0.016, 1.472, 0.062], [0.018, 1.528, 0.058], [0.016, 1.576, 0.048],
+      [0.016, 1.472, 0.062], [0.018, 1.512, 0.058], [0.016, 1.547, 0.048],
     ],
     width: 0.009, flat: 0.5, squareness: 3.0, profile: STRAP,
     fn: 'Pulls the hyoid bone down after swallowing. One of the strap muscles standing out either side of the windpipe.',
@@ -1154,7 +1154,7 @@ export const MUSCLES = [
     id: 'omohyoid', name: 'Omohyoid', region: 'Neck',
     group: 'neck', layer: 2, mirror: true, shape: 'tube',
     path: [
-      [0.020, 1.580, 0.046], [0.048, 1.538, 0.028], [0.086, 1.492, -0.006],
+      [0.020, 1.550, 0.046], [0.048, 1.519, 0.028], [0.086, 1.486, -0.006],
     ],
     width: 0.007, flat: 0.6, profile: STRAP,
     fn: 'Depresses the hyoid bone. Unusual in having two bellies joined by a tendon that is tethered to the clavicle.',
@@ -1305,12 +1305,12 @@ export const MUSCLES = [
     id: 'temporalis', name: 'Temporalis', region: 'Jaw',
     group: 'head', layer: 1, mirror: true, shape: 'sheet',
     origin: [
-      [0.030, 1.752, 0.028], [0.052, 1.742, 0.002],
-      [0.062, 1.722, -0.028], [0.060, 1.700, -0.044],
+      [0.030, 1.743, 0.028], [0.052, 1.732, 0.002],
+      [0.062, 1.708, -0.028], [0.060, 1.682, -0.044],
     ],
     insertion: [
-      [0.044, 1.694, 0.048], [0.052, 1.692, 0.028],
-      [0.056, 1.690, 0.008], [0.054, 1.688, -0.006],
+      [0.044, 1.675, 0.048], [0.052, 1.673, 0.028],
+      [0.056, 1.670, 0.008], [0.054, 1.668, -0.006],
     ],
     thickness: 0.010, bulge: 0.005, uSeg: 20, vSeg: 14,
     fn: 'Closes the jaw and draws it backward. The broad fan over the temple that you can feel bunch under your fingers when you clench.',
@@ -1322,10 +1322,10 @@ export const MUSCLES = [
     id: 'masseter', name: 'Masseter', region: 'Jaw',
     group: 'head', layer: 1, mirror: true, shape: 'sheet',
     origin: [
-      [0.042, 1.678, 0.058], [0.055, 1.680, 0.030], [0.064, 1.682, 0.002],
+      [0.042, 1.656, 0.058], [0.055, 1.658, 0.030], [0.064, 1.661, 0.002],
     ],
     insertion: [
-      [0.038, 1.626, 0.046], [0.050, 1.628, 0.020], [0.057, 1.632, -0.006],
+      [0.038, 1.595, 0.046], [0.050, 1.597, 0.020], [0.057, 1.602, -0.006],
     ],
     thickness: 0.012, bulge: 0.007, uSeg: 16, vSeg: 12,
     fn: 'Clamps the jaw shut. Pound for pound the strongest muscle in the body, and the slab you can feel bulge at the angle of the jaw when you bite down.',
@@ -1337,10 +1337,10 @@ export const MUSCLES = [
     id: 'buccinator', name: 'Buccinator', region: 'Face',
     group: 'head', layer: 2, mirror: true, shape: 'sheet',
     origin: [
-      [0.046, 1.664, 0.036], [0.048, 1.650, 0.032], [0.044, 1.638, 0.036],
+      [0.046, 1.640, 0.036], [0.048, 1.623, 0.032], [0.044, 1.609, 0.036],
     ],
     insertion: [
-      [0.026, 1.658, 0.080], [0.027, 1.651, 0.082], [0.025, 1.644, 0.080],
+      [0.026, 1.632, 0.080], [0.027, 1.624, 0.082], [0.025, 1.616, 0.080],
     ],
     thickness: 0.008, bulge: 0.004, uSeg: 12, vSeg: 10,
     fn: 'Presses the cheek flat against the teeth so food does not collect there, and blows air out forcefully.',
@@ -1358,10 +1358,10 @@ export const MUSCLES = [
     id: 'frontalis', name: 'Frontalis', region: 'Face',
     group: 'head', layer: 1, mirror: true, shape: 'sheet',
     origin: [
-      [0.006, 1.710, 0.0885], [0.022, 1.713, 0.0865], [0.039, 1.710, 0.0765],
+      [0.006, 1.694, 0.0885], [0.022, 1.697, 0.0865], [0.039, 1.694, 0.0765],
     ],
     insertion: [
-      [0.015, 1.760, 0.0590], [0.030, 1.757, 0.0540], [0.045, 1.750, 0.0410],
+      [0.015, 1.753, 0.0590], [0.030, 1.749, 0.0540], [0.045, 1.741, 0.0410],
     ],
     thickness: 0.0075, bulge: 0.0045, uSeg: 16, vSeg: 14,
     fn: 'Raises the eyebrows and wrinkles the forehead. The pair of vertical straps that give the forehead its shape, separated by the pale aponeurosis running down between them.',
@@ -1373,7 +1373,7 @@ export const MUSCLES = [
     id: 'procerus', name: 'Procerus', region: 'Face',
     group: 'head', layer: 1, mirror: false, shape: 'tube',
     path: [
-      [0, 1.6905, 0.0960], [0, 1.7015, 0.0935], [0, 1.7125, 0.0885],
+      [0, 1.6708, 0.0960], [0, 1.6838, 0.0935], [0, 1.6967, 0.0885],
     ],
     alignRadial: [0, 0.005],
     width: 0.0075, flat: 0.42, squareness: 2.8, profile: STRAP,
@@ -1386,9 +1386,9 @@ export const MUSCLES = [
     id: 'orbicularis-oculi', name: 'Orbicularis oculi', region: 'Face',
     group: 'head', layer: 1, mirror: true, shape: 'tube',
     path: [
-      [0.0100, 1.7005, 0.0870], [0.0150, 1.7130, 0.0870], [0.0305, 1.7185, 0.0845],
-      [0.0465, 1.7130, 0.0780], [0.0520, 1.7005, 0.0730], [0.0465, 1.6880, 0.0780],
-      [0.0305, 1.6825, 0.0850], [0.0150, 1.6880, 0.0870], [0.0100, 1.7005, 0.0870],
+      [0.0100, 1.6826, 0.0870], [0.0150, 1.6973, 0.0870], [0.0305, 1.7038, 0.0845],
+      [0.0465, 1.6973, 0.0780], [0.0520, 1.6826, 0.0730], [0.0465, 1.6678, 0.0780],
+      [0.0305, 1.6614, 0.0850], [0.0150, 1.6678, 0.0870], [0.0100, 1.6826, 0.0870],
     ],
     alignRadial: [0, 0.005],
     width: 0.0115, flat: 0.26, squareness: 3.2,
@@ -1403,7 +1403,7 @@ export const MUSCLES = [
     id: 'nasalis', name: 'Nasalis', region: 'Face',
     group: 'head', layer: 1, mirror: true, shape: 'tube',
     path: [
-      [0.0045, 1.6790, 0.1000], [0.0130, 1.6830, 0.0925], [0.0195, 1.6890, 0.0820],
+      [0.0045, 1.6572, 0.1000], [0.0130, 1.6619, 0.0925], [0.0195, 1.6690, 0.0820],
     ],
     alignRadial: [0, 0.005],
     width: 0.0052, flat: 0.45, profile: STRAP,
@@ -1416,7 +1416,7 @@ export const MUSCLES = [
     id: 'levator-labii', name: 'Levator labii superioris', region: 'Face',
     group: 'head', layer: 1, mirror: true, shape: 'tube',
     path: [
-      [0.0255, 1.6915, 0.0855], [0.0205, 1.6740, 0.0895], [0.0145, 1.6620, 0.0890],
+      [0.0255, 1.6720, 0.0855], [0.0205, 1.6513, 0.0895], [0.0145, 1.6372, 0.0890],
     ],
     alignRadial: [0, 0.005],
     width: 0.0050, flat: 0.5, profile: STRAP,
@@ -1429,7 +1429,7 @@ export const MUSCLES = [
     id: 'zygomaticus-major', name: 'Zygomaticus major', region: 'Face',
     group: 'head', layer: 1, mirror: true, shape: 'tube',
     path: [
-      [0.0520, 1.6790, 0.0505], [0.0385, 1.6650, 0.0745], [0.0245, 1.6530, 0.0840],
+      [0.0520, 1.6572, 0.0505], [0.0385, 1.6407, 0.0745], [0.0245, 1.6265, 0.0840],
     ],
     alignRadial: [0, 0.005],
     width: 0.0058, flat: 0.5, profile: STRAP,
@@ -1442,7 +1442,7 @@ export const MUSCLES = [
     id: 'zygomaticus-minor', name: 'Zygomaticus minor', region: 'Face',
     group: 'head', layer: 1, mirror: true, shape: 'tube',
     path: [
-      [0.0440, 1.6835, 0.0610], [0.0300, 1.6700, 0.0820], [0.0180, 1.6600, 0.0880],
+      [0.0440, 1.6625, 0.0610], [0.0300, 1.6466, 0.0820], [0.0180, 1.6348, 0.0880],
     ],
     alignRadial: [0, 0.005],
     width: 0.0040, flat: 0.5, profile: STRAP,
@@ -1455,7 +1455,7 @@ export const MUSCLES = [
     id: 'risorius', name: 'Risorius', region: 'Face',
     group: 'head', layer: 1, mirror: true, shape: 'tube',
     path: [
-      [0.0540, 1.6520, 0.0430], [0.0390, 1.6510, 0.0720], [0.0262, 1.6512, 0.0828],
+      [0.0540, 1.6254, 0.0430], [0.0390, 1.6242, 0.0720], [0.0262, 1.6244, 0.0828],
     ],
     alignRadial: [0, 0.005],
     width: 0.0046, flat: 0.38, profile: STRAP,
@@ -1468,9 +1468,9 @@ export const MUSCLES = [
     id: 'orbicularis-oris', name: 'Orbicularis oris', region: 'Face',
     group: 'head', layer: 1, mirror: false, shape: 'tube',
     path: [
-      [-0.0245, 1.6510, 0.0790], [-0.0140, 1.6625, 0.0865], [0, 1.6655, 0.0905],
-      [0.0140, 1.6625, 0.0865], [0.0245, 1.6510, 0.0790], [0.0140, 1.6395, 0.0860],
-      [0, 1.6365, 0.0895], [-0.0140, 1.6395, 0.0860], [-0.0245, 1.6510, 0.0790],
+      [-0.0245, 1.6242, 0.0790], [-0.0140, 1.6378, 0.0865], [0, 1.6413, 0.0905],
+      [0.0140, 1.6378, 0.0865], [0.0245, 1.6242, 0.0790], [0.0140, 1.6106, 0.0860],
+      [0, 1.6071, 0.0895], [-0.0140, 1.6106, 0.0860], [-0.0245, 1.6242, 0.0790],
     ],
     alignRadial: [0, 0.005],
     width: 0.0092, flat: 0.34, squareness: 3.0,
@@ -1484,7 +1484,7 @@ export const MUSCLES = [
     id: 'depressor-anguli-oris', name: 'Depressor anguli oris', region: 'Face',
     group: 'head', layer: 1, mirror: true, shape: 'tube',
     path: [
-      [0.0330, 1.6250, 0.0690], [0.0295, 1.6390, 0.0790], [0.0255, 1.6495, 0.0830],
+      [0.0330, 1.5935, 0.0690], [0.0295, 1.6100, 0.0790], [0.0255, 1.6224, 0.0830],
     ],
     alignRadial: [0, 0.005],
     width: 0.0060, flat: 0.45, profile: TAPERED,
@@ -1497,7 +1497,7 @@ export const MUSCLES = [
     id: 'mentalis', name: 'Mentalis', region: 'Face',
     group: 'head', layer: 1, mirror: true, shape: 'tube',
     path: [
-      [0.0075, 1.6190, 0.0765], [0.0095, 1.6280, 0.0830], [0.0105, 1.6345, 0.0855],
+      [0.0075, 1.5864, 0.0765], [0.0095, 1.5970, 0.0830], [0.0105, 1.6047, 0.0855],
     ],
     alignRadial: [0, 0.005],
     width: 0.0052, flat: 0.55, profile: STRAP,
@@ -1510,10 +1510,10 @@ export const MUSCLES = [
     id: 'platysma', name: 'Platysma', region: 'Neck',
     group: 'neck', layer: 1, mirror: true, shape: 'sheet',
     origin: [
-      [0.0180, 1.6180, 0.0720], [0.0400, 1.6300, 0.0480], [0.0555, 1.6380, 0.0080],
+      [0.0180, 1.5852, 0.0720], [0.0400, 1.5994, 0.0480], [0.0555, 1.6088, 0.0080],
     ],
     insertion: [
-      [0.0340, 1.4720, 0.0640], [0.0760, 1.4760, 0.0330], [0.1080, 1.4790, -0.0180],
+      [0.0340, 1.4720, 0.0640], [0.0760, 1.4749, 0.0330], [0.1080, 1.4770, -0.0180],
     ],
     thickness: 0.0055, bulge: 0.006, uSeg: 18, vSeg: 14,
     fn: 'A broad sheet just under the skin of the neck. Tenses the skin of the neck and pulls the corner of the mouth down, as in a look of horror or strain.',

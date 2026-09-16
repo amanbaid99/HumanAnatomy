@@ -22,36 +22,39 @@ import { applyOcclusionToMaterial } from '../geometry/occlusion.js';
 
 /** y, front half-width, back half-width, front z, back z. */
 const SLICES = [
-  [1.794, 0.026, 0.030, 0.020, -0.034],
-  [1.780, 0.046, 0.050, 0.044, -0.056],
-  [1.764, 0.058, 0.064, 0.062, -0.070],
-  [1.748, 0.066, 0.071, 0.073, -0.080],
-  [1.734, 0.070, 0.075, 0.079, -0.086],
-  [1.722, 0.072, 0.077, 0.082, -0.089],
-  [1.712, 0.072, 0.077, 0.085, -0.090],
-  [1.702, 0.072, 0.077, 0.086, -0.091],  // eye level
-  [1.692, 0.071, 0.077, 0.088, -0.091],
-  [1.682, 0.070, 0.076, 0.089, -0.089],  // cheekbone
-  [1.672, 0.067, 0.074, 0.090, -0.086],
-  [1.662, 0.063, 0.072, 0.090, -0.082],
-  [1.652, 0.056, 0.070, 0.088, -0.076],  // mouth
-  [1.642, 0.049, 0.068, 0.085, -0.068],
-  [1.632, 0.040, 0.065, 0.080, -0.060],  // jaw narrows, skull does not
-  [1.622, 0.030, 0.059, 0.071, -0.052],
-  [1.613, 0.021, 0.050, 0.058, -0.045],  // chin
-  [1.606, 0.016, 0.042, 0.044, -0.040],
+  [1.7929, 0.026, 0.030, 0.020, -0.034],
+  [1.7764, 0.046, 0.050, 0.044, -0.056],
+  [1.7575, 0.058, 0.064, 0.062, -0.070],
+  [1.7386, 0.066, 0.071, 0.073, -0.080],
+  [1.7221, 0.070, 0.075, 0.079, -0.086],
+  [1.7080, 0.072, 0.077, 0.082, -0.089],
+  [1.6962, 0.072, 0.077, 0.085, -0.090],
+  [1.6844, 0.072, 0.077, 0.086, -0.091],  // eye level
+  [1.6726, 0.071, 0.077, 0.088, -0.091],
+  [1.6608, 0.070, 0.076, 0.089, -0.089],  // cheekbone
+  [1.6490, 0.067, 0.074, 0.090, -0.086],
+  [1.6372, 0.063, 0.072, 0.090, -0.082],
+  [1.6254, 0.056, 0.070, 0.088, -0.076],  // mouth
+  [1.6136, 0.049, 0.068, 0.085, -0.068],
+  [1.6018, 0.040, 0.065, 0.080, -0.060],  // jaw narrows, skull does not
+  [1.5900, 0.030, 0.059, 0.071, -0.052],
+  [1.5793, 0.021, 0.050, 0.058, -0.045],  // chin
+  [1.5711, 0.016, 0.042, 0.044, -0.040],
 ];
 
 /** Hollows pressed into the shell after lofting: [x, y, z, radius, depth]. */
 const HOLLOWS = [
-  [0.0305, 1.7015, 0.086, 0.019, 0.0050],  // right orbit
-  [-0.0305, 1.7015, 0.086, 0.019, 0.0050], // left orbit
-  [0, 1.6515, 0.088, 0.024, 0.004],        // mouth
-  [0.052, 1.674, 0.070, 0.026, 0.004],     // right temple hollow
-  [-0.052, 1.674, 0.070, 0.026, 0.004],    // left temple hollow
+  [0.0305, 1.6838, 0.086, 0.019, 0.0050],  // right orbit
+  [-0.0305, 1.6838, 0.086, 0.019, 0.0050], // left orbit
+  [0, 1.6248, 0.088, 0.024, 0.004],        // mouth
+  [0.052, 1.651, 0.070, 0.026, 0.004],     // right temple hollow
+  [-0.052, 1.651, 0.070, 0.026, 0.004],    // left temple hollow
 ];
 
 const RADIAL = 56;
+// Columns per ring. The ring is closed by wrapping the index, so this is also
+// the vertex count per ring. The shell carries no texture map, only vertex
+// colours and baked occlusion, so nothing depends on u running to 1 at a seam.
 /**
  * The shell is the deep core of the face, not its outer surface: the muscles
  * are authored to the head's true outline, so the core sits just inside them.
@@ -66,8 +69,8 @@ const SQUARENESS = 2.3;   // slightly fuller than an ellipse; heads are not eggs
  */
 const FLESH = new Color(0xc47a69);
 const APONEUROSIS = new Color(0xded4c2);
-const FADE_LOW = 1.734;   // all muscle below this
-const FADE_HIGH = 1.778;  // all aponeurosis above it
+const FADE_LOW = 1.722;   // all muscle below this
+const FADE_HIGH = 1.774;  // all aponeurosis above it
 
 export function skinMaterial(color = 0xbe9a80, roughness = 0.78) {
   const mat = new MeshStandardMaterial({ color, roughness, metalness: 0 });
@@ -80,14 +83,18 @@ function headGeometry() {
   const verts = [];
   const uvs = [];
   const idx = [];
-  const perRing = RADIAL + 1;
+  const perRing = RADIAL;
   const p = 2 / SQUARENESS;
 
   const rows = SLICES;
   const colors = [];
   const tint = new Color();
+  // One column per step, with the ring closing back onto column 0 rather than
+  // repeating it. A repeated column is a second vertex at the same point, and
+  // computeVertexNormals averages per vertex, so the two sides of the join
+  // light differently and the seam reads as a crack down the skull.
   rows.forEach(([y, wFront, wBack, zFront, zBack], row) => {
-    for (let j = 0; j <= RADIAL; j++) {
+    for (let j = 0; j < RADIAL; j++) {
       const a = (j / RADIAL) * Math.PI * 2;
       const s = Math.sin(a);
       const c = Math.cos(a);
@@ -104,9 +111,12 @@ function headGeometry() {
 
   for (let r = 0; r < rows.length - 1; r++) {
     for (let j = 0; j < RADIAL; j++) {
+      const wrap = (j + 1) % RADIAL;
       const a = r * perRing + j;
+      const a1 = r * perRing + wrap;
       const b = a + perRing;
-      idx.push(a, b, a + 1, b, b + 1, a + 1);
+      const b1 = a1 + perRing;
+      idx.push(a, b, a1, b, b1, a1);
     }
   }
 
@@ -119,8 +129,9 @@ function headGeometry() {
     colors.push(...scalpTint(y, tint));
     const base = row * perRing;
     for (let j = 0; j < RADIAL; j++) {
-      if (dir > 0) idx.push(centre, base + j + 1, base + j);
-      else idx.push(centre, base + j, base + j + 1);
+      const wrap = (j + 1) % RADIAL;
+      if (dir > 0) idx.push(centre, base + wrap, base + j);
+      else idx.push(centre, base + j, base + wrap);
     }
   });
 
@@ -192,8 +203,8 @@ export function buildFace() {
   // Nose: bridge, tip, then tucking back under to the base.
   const nose = new Mesh(tubeLoft({
     path: [
-      [0, 1.722, 0.072], [0, 1.707, 0.082], [0, 1.691, 0.094],
-      [0, 1.678, 0.104], [0, 1.669, 0.101], [0, 1.663, 0.088],
+      [0, 1.708, 0.072], [0, 1.690, 0.082], [0, 1.671, 0.094],
+      [0, 1.656, 0.104], [0, 1.645, 0.101], [0, 1.638, 0.088],
     ],
     width: 0.013, flat: 0.92, squareness: 2.2,
     profile: [[0, 0.32], [0.28, 0.54], [0.62, 0.92], [0.80, 1.0], [1, 0.72]],
@@ -205,7 +216,7 @@ export function buildFace() {
   // Lips, as a low band around the mouth.
   const lips = new Mesh(tubeLoft({
     path: [
-      [-0.022, 1.6505, 0.0800], [0, 1.6535, 0.0878], [0.022, 1.6505, 0.0800],
+      [-0.022, 1.6236, 0.0800], [0, 1.6271, 0.0878], [0.022, 1.6236, 0.0800],
     ],
     width: 0.0085, flat: 0.5, squareness: 2.6,
     profile: [[0, 0.4], [0.5, 1.0], [1, 0.4]],
@@ -219,8 +230,8 @@ export function buildFace() {
 
     // Ear: a flattened disc set against the side of the head.
     const ear = new Mesh(new SphereGeometry(0.024, 16, 12), skinMaterial(0xc2a08c, 0.68));
-    ear.position.set(0.072 * side, 1.686, -0.016);
-    ear.scale.set(0.30, 1.06, 0.60);
+    ear.position.set(0.072 * side, 1.665, -0.016);
+    ear.scale.set(0.30, 1.2508, 0.60);
     ear.rotation.z = -0.12 * side;
     ear.name = `face.ear.${s}`;
     group.add(ear);
@@ -228,18 +239,18 @@ export function buildFace() {
     // Eye, open, as the plates show it: sclera in the socket, iris and pupil
     // on its front, and a thin muscular rim for the lid margin.
     const sclera = new Mesh(new SphereGeometry(0.0104, 20, 16), skinMaterial(0xc6bfb2, 0.38));
-    sclera.position.set(0.0305 * side, 1.7005, 0.0744);
+    sclera.position.set(0.0305 * side, 1.6826, 0.0744);
     sclera.name = `face.sclera.${s}`;
     group.add(sclera);
 
     const iris = new Mesh(new SphereGeometry(0.0051, 18, 14), skinMaterial(0x6d7f86, 0.30));
-    iris.position.set(0.0313 * side, 1.7002, 0.0821);
+    iris.position.set(0.0313 * side, 1.6822, 0.0821);
     iris.scale.set(1, 1, 0.42);
     iris.name = `face.iris.${s}`;
     group.add(iris);
 
     const pupil = new Mesh(new SphereGeometry(0.0023, 12, 10), skinMaterial(0x140f0c, 0.25));
-    pupil.position.set(0.0314 * side, 1.7002, 0.0842);
+    pupil.position.set(0.0314 * side, 1.6822, 0.0842);
     pupil.scale.set(1, 1, 0.35);
     pupil.name = `face.pupil.${s}`;
     group.add(pupil);
@@ -260,7 +271,7 @@ export function buildFace() {
 
     // Nostril wing.
     const nostril = new Mesh(new SphereGeometry(0.0062, 14, 10), flesh);
-    nostril.position.set(0.0118 * side, 1.6682, 0.0962);
+    nostril.position.set(0.0118 * side, 1.6445, 0.0962);
     nostril.scale.set(0.90, 0.78, 0.92);
     nostril.name = `face.nostril.${s}`;
     group.add(nostril);

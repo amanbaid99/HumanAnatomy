@@ -17,11 +17,11 @@ export const H = 1.80;
 /** Heights, as fractions of stature where a standard fraction exists. */
 export const Y = {
   vertex:        1.800,
-  glabella:      1.740,
-  chin:          1.630,
-  c1:            1.628,
-  c7:            1.510,   // vertebra prominens, the bump at the base of the neck
-  t1:            1.492,
+  glabella:      1.729,
+  chin:          1.599,
+  c1:            1.597,
+  c7:            1.499,   // vertebra prominens, the bump at the base of the neck
+  t1:            1.486,
   t4:            1.400,   // level of the sternal angle and the spine of the scapula
   t12:           1.160,
   l1:            1.140,
