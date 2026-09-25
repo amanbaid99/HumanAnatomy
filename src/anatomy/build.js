@@ -35,6 +35,9 @@ export const GROUPS = [
 ];
 
 const TENDON_COLOR = new Color(0xe6ddcd);
+// The edge put on a selected muscle. Pale and slightly cool so it reads as a
+// callout against warm tissue, matching the accent the interface already uses.
+const RIM_COLOR = new Color(0x8fd8d0);
 
 /** Mirror a list of points across the sagittal plane. */
 const flipPoints = (pts) => pts.map(([x, y, z]) => [-x, y, z]);
@@ -57,15 +60,23 @@ function attachments(def) {
 }
 
 function muscleMaterial(layer) {
+  // Muscle is matte and damp, not wet. At 0.52 the broad highlight read as
+  // plastic; this keeps enough of a sheen to show curvature and no more.
   const mat = new MeshStandardMaterial({
     color: LAYERS[layer].color,
-    roughness: 0.52,
+    roughness: 0.78,
     metalness: 0.0,
   });
 
   mat.onBeforeCompile = (shader) => {
     applyOcclusionToMaterial(shader);
     shader.uniforms.uTendonColor = { value: TENDON_COLOR };
+    // Selection emphasis. A fresnel term in the shader the muscle already
+    // compiles costs a few instructions and no extra pass, which is why the
+    // selected muscle gets an edge rather than an outline hull.
+    shader.uniforms.uRim = { value: mat.userData.rim || 0 };
+    shader.uniforms.uRimColor = { value: RIM_COLOR };
+    mat.userData.shader = shader;
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', `#include <common>
         attribute float tendon;
@@ -78,7 +89,9 @@ function muscleMaterial(layer) {
       .replace('#include <common>', `#include <common>
         varying float vTendon;
         varying vec2 vFiberUv;
-        uniform vec3 uTendonColor;`)
+        uniform vec3 uTendonColor;
+        uniform float uRim;
+        uniform vec3 uRimColor;`)
       .replace('#include <color_fragment>', `#include <color_fragment>
         // Fibres run along the sweep, so striate across the cross-section.
         float fiber = sin(vFiberUv.x * 96.0) * 0.5 + 0.5;
@@ -88,7 +101,17 @@ function muscleMaterial(layer) {
         float t = smoothstep(0.12, 0.92, vTendon);
         diffuseColor.rgb = mix(diffuseColor.rgb, uTendonColor, t * 0.88);`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-        roughnessFactor = mix(roughnessFactor, 0.42, smoothstep(0.12, 0.92, vTendon));`);
+        // Tendon is the one part that is genuinely shiny, but only relative
+        // to the belly beside it.
+        roughnessFactor = mix(roughnessFactor, 0.58, smoothstep(0.12, 0.92, vTendon));`)
+      .replace('#include <opaque_fragment>', `
+        // Built from the renderer's own shaded normal and view vector rather
+        // than hand-rolled varyings, and thresholded so it lands on the
+        // silhouette only. The muscle keeps its own colour; just its outline
+        // is picked out.
+        float rimF = 1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0);
+        outgoingLight += uRimColor * (smoothstep(0.62, 0.94, rimF) * uRim);
+        #include <opaque_fragment>`);
   };
 
   return mat;

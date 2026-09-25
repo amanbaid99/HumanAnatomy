@@ -22,7 +22,7 @@ const RAYS = 9;
 const STEPS = 8;         // reach = CELL * STEPS, roughly 10 cm
 // Tuned against the full model. More anatomy means more blockers, so this
 // wants revisiting whenever a region gets filled in.
-const STRENGTH = 0.66;
+const STRENGTH = 0.70;
 
 /** A dense occupancy grid over an axis-aligned box. */
 class Grid {

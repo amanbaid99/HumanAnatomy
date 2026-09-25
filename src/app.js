@@ -36,6 +36,10 @@ const camera = new PerspectiveCamera(36, 1, 0.05, 60);
 const renderer = new WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = SRGBColorSpace;
+// The filmic curve is kept: it rolls the brightest tissue off toward white
+// instead of letting it go to a hot red, which is what keeps the palette
+// restrained. The evenness this pass is after comes from the light rig below,
+// not from the transfer curve.
 renderer.toneMapping = ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.16;
 // Two passes share one frame, so clearing is done by hand.
@@ -63,18 +67,14 @@ function buildEnvironment() {
   c.width = 256;
   c.height = 128;
   const g = c.getContext('2d');
+  // A neutral softbox dome rather than a sky. No hot spot and no colour cast,
+  // so the bounce lifts the form without tinting the tissue.
   const sky = g.createLinearGradient(0, 0, 0, 128);
-  sky.addColorStop(0.00, '#c8d6e4');   // cool overhead
-  sky.addColorStop(0.42, '#7d8794');
-  sky.addColorStop(0.55, '#4a525c');   // horizon
-  sky.addColorStop(1.00, '#14181d');   // dark floor, so undersides stay grounded
+  sky.addColorStop(0.00, '#dfe3e6');   // bright, neutral overhead
+  sky.addColorStop(0.45, '#aeb3b8');
+  sky.addColorStop(0.58, '#7c8186');   // horizon
+  sky.addColorStop(1.00, '#2a2d30');   // darker floor, so undersides stay grounded
   g.fillStyle = sky;
-  g.fillRect(0, 0, 256, 128);
-  // A warm patch where the key light sits, so the bounce agrees with it.
-  const warm = g.createRadialGradient(66, 34, 4, 66, 34, 72);
-  warm.addColorStop(0, 'rgba(255,236,208,0.92)');
-  warm.addColorStop(1, 'rgba(255,236,208,0)');
-  g.fillStyle = warm;
   g.fillRect(0, 0, 256, 128);
 
   const tex = new CanvasTexture(c);
@@ -86,28 +86,35 @@ function buildEnvironment() {
   return env;
 }
 scene.environment = buildEnvironment();
-// The environment carries the ambient, but at full strength it washes the
-// muscle out to pink. Keep it as a tint on the shadows, not a second key.
-scene.environmentIntensity = 0.42;
+// The dome does more of the work than it used to: soft wraparound light is
+// what keeps both sides of the face readable.
+scene.environmentIntensity = 0.52;
 
-// Direct lights now shape the form; the environment carries the ambient.
-scene.add(new HemisphereLight(0xb4c6d6, 0x3a2820, 0.12));
-scene.add(new AmbientLight(0xffffff, 0.05));
+// Near-neutral lights. Anything with a hue in it shifts the tissue colour,
+// and tissue colour is information here.
+scene.add(new HemisphereLight(0xdde4ea, 0x33302e, 0.16));
+scene.add(new AmbientLight(0xffffff, 0.07));
 
-const key = new DirectionalLight(0xfff2e6, 1.95);
-key.position.set(1.3, 2.7, 3.5);
+// Key: frontal and only a little off to one side, so it models the form
+// without throwing half the face into shadow.
+const key = new DirectionalLight(0xfffaf4, 1.12);
+key.position.set(0.45, 1.70, 3.95);
 scene.add(key);
 
-const fill = new DirectionalLight(0xa8c2dc, 0.62);
-fill.position.set(-2.8, 1.2, 2.2);
+// Fill is deliberately close to the key in strength. A 1.5:1 ratio reads as
+// even clinical illumination; the 3:1 it was reads as a portrait.
+const fill = new DirectionalLight(0xf4f7fa, 0.82);
+fill.position.set(-2.2, 1.00, 3.05);
 scene.add(fill);
 
-const rim = new DirectionalLight(0x8fb8c4, 0.48);
-rim.position.set(-1.0, 2.2, -3.2);
+// Just enough edge to separate the figure from the background.
+const rim = new DirectionalLight(0xeef2f5, 0.26);
+rim.position.set(0.0, 2.0, -3.2);
 scene.add(rim);
 
-const under = new DirectionalLight(0x59697a, 0.16);
-under.position.set(0, -2.0, 1.0);
+// A little bounce from below so undersides do not go to black.
+const under = new DirectionalLight(0xe4e9ee, 0.20);
+under.position.set(0.2, -1.9, 1.3);
 scene.add(under);
 
 /**
@@ -362,8 +369,14 @@ function setHighlight(rec, on, strong) {
     : [rec];
   targets.forEach((r) => {
     const mat = r.mesh.material;
-    mat.emissive.setHex(on ? (strong ? 0x35908a : 0x1b4a47) : 0x000000);
-    mat.emissiveIntensity = on ? (strong ? 1.15 : 0.5) : 0;
+    // The muscle keeps its own colour. What marks it is a small lift in level
+    // and a thin bright edge, the way a structure is called out in an atlas,
+    // rather than the teal wash it used to take on.
+    mat.emissive.setHex(on ? (strong ? 0x120806 : 0x090403) : 0x000000);
+    mat.emissiveIntensity = on ? (strong ? 0.8 : 0.5) : 0;
+    const level = on ? (strong ? 0.16 : 0.06) : 0;
+    mat.userData.rim = level;
+    if (mat.userData.shader) mat.userData.shader.uniforms.uRim.value = level;
   });
 }
 

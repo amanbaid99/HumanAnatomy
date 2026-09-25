@@ -21,7 +21,10 @@ const RIB       = [[0, 0.85], [0.15, 1.0], [0.85, 0.95], [1, 0.7]];
 
 export function boneMaterial() {
   const mat = new MeshStandardMaterial({
-    color: 0xded2bd, roughness: 0.74, metalness: 0.0,
+    // Bone reads as dry and chalky next to damp muscle. Slightly desaturated
+    // from the old ivory so it is clearly bone rather than pale flesh, and
+    // well short of white so the form still shows.
+    color: 0xd9d0c2, roughness: 0.86, metalness: 0.0,
     transparent: true, opacity: 0.97,
   });
   mat.onBeforeCompile = applyOcclusionToMaterial;
