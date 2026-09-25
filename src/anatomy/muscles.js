@@ -423,7 +423,10 @@ export const MUSCLES = [
       [0.028, 1.478, -0.058], [0.032, 1.380, -0.062],
       [0.036, 1.260, -0.062], [0.038, 1.140, -0.052], [0.036, 1.020, -0.042],
     ],
-    width: 0.0299, flat: 0.85, profile: [[0, 0.55], [0.25, 0.85], [0.7, 1.0], [1, 0.8]],
+    // A broad column filling the gutter either side of the spine, wider across
+    // the back than it is deep.
+    width: 0.0299, flat: 0.60, squareness: 2.8,
+    profile: [[0, 0.55], [0.25, 0.85], [0.7, 1.0], [1, 0.8]],
     fn: 'The column of muscle either side of the spine that holds you upright and straightens the back from a bend.',
     or: 'Sacrum, iliac crest and the lumbar spinous processes',
     ins: 'Ribs, transverse processes all the way up, and the skull',
@@ -454,7 +457,9 @@ export const MUSCLES = [
       [0.188, 1.318, 0.044], [0.195, 1.222, 0.046], [0.198, 1.140, 0.034],
       [0.199, 1.100, 0.028],
     ],
-    width: 0.0352, flat: 0.86,
+    // The belly is an oval lying on the brachialis, wider across the arm than
+    // it is deep, not the round cord it was.
+    width: 0.0352, flat: 0.74, squareness: 2.6,
     profile: [[0, 0.26], [0.14, 0.30], [0.36, 0.95], [0.62, 1.0], [0.86, 0.48], [1, 0.24]],
     fn: 'Bends the elbow and turns the palm upward. The long head also helps hold the humeral head down in the socket.',
     or: 'Supraglenoid tubercle, just above the socket of the scapula',
@@ -466,10 +471,14 @@ export const MUSCLES = [
     id: 'biceps-short', name: 'Biceps brachii, short head', region: 'Upper arm',
     group: 'arm', layer: 1, mirror: true, shape: 'tube',
     path: [
-      [0.110, 1.444, 0.028], [0.146, 1.380, 0.042], [0.176, 1.300, 0.050],
-      [0.192, 1.202, 0.044], [0.198, 1.122, 0.030],
+      [0.110, 1.444, 0.028], [0.148, 1.380, 0.049], [0.178, 1.300, 0.058],
+      [0.194, 1.202, 0.051], [0.198, 1.122, 0.030],
     ],
-    width: 0.0333, flat: 0.86, profile: TENDINOUS,
+    // Lies medial to the long head, and its belly sits a little lower, so the
+    // swell peaks past the midpoint rather than at it. The belly also stands a
+    // few mm further in front of the humerus, which is where it really lies.
+    width: 0.0333, flat: 0.76, squareness: 2.6,
+    profile: [[0, 0.34], [0.24, 0.86], [0.52, 1.0], [0.82, 0.62], [1, 0.26]],
     fn: 'Bends the elbow and supinates the forearm, alongside the long head.',
     or: 'Coracoid process of the scapula',
     ins: 'Radial tuberosity of the radius',
@@ -495,7 +504,11 @@ export const MUSCLES = [
       [0.147, 1.400, -0.046], [0.166, 1.340, -0.050], [0.180, 1.258, -0.048],
       [0.190, 1.180, -0.038], [0.194, 1.132, -0.026],
     ],
-    width: 0.037, flat: 0.86, profile: TENDINOUS,
+    // Flattened against the back of the humerus. The common tendon it ends in
+    // is a broad flat aponeurosis, so it stays wide rather than drawing to a
+    // point the way a cord-like tendon would.
+    width: 0.037, flat: 0.72, squareness: 2.7,
+    profile: [[0, 0.46], [0.22, 0.95], [0.5, 1.0], [0.8, 0.66], [1, 0.42]],
     fn: 'Straightens the elbow, and because it crosses the shoulder it also helps pull the arm backward and inward.',
     or: 'Infraglenoid tubercle, just below the socket of the scapula',
     ins: 'Olecranon process of the ulna, the point of the elbow',
@@ -505,10 +518,14 @@ export const MUSCLES = [
     id: 'triceps-lateral', name: 'Triceps brachii, lateral head', region: 'Upper arm',
     group: 'arm', layer: 1, mirror: true, shape: 'tube',
     path: [
-      [0.190, 1.352, -0.028], [0.201, 1.280, -0.036], [0.201, 1.198, -0.036],
-      [0.196, 1.136, -0.026],
+      [0.190, 1.352, -0.028], [0.198, 1.316, -0.034], [0.201, 1.280, -0.036],
+      [0.201, 1.198, -0.036], [0.196, 1.136, -0.026],
     ],
-    width: 0.0315, flat: 0.82, profile: TENDINOUS,
+    // A flat sheet of muscle wrapped round the outside of the humerus, so it
+    // is much wider than it is deep. The extra control point describes that
+    // wrap instead of cutting the corner.
+    width: 0.0315, flat: 0.64, squareness: 2.8,
+    profile: [[0, 0.52], [0.24, 0.96], [0.52, 1.0], [0.82, 0.64], [1, 0.40]],
     fn: 'Straightens the elbow. The head that gives the back of the arm its outer ridge.',
     or: 'Upper posterior surface of the humerus, above the radial groove',
     ins: 'Olecranon process of the ulna',
@@ -544,10 +561,14 @@ export const MUSCLES = [
     id: 'brachioradialis', name: 'Brachioradialis', region: 'Forearm',
     group: 'forearm', layer: 1, mirror: true, shape: 'tube',
     path: [
-      [0.204, 1.182, 0.004], [0.216, 1.100, 0.024], [0.217, 1.000, 0.032],
-      [0.206, 0.912, 0.032], [0.198, 0.878, 0.030],
+      [0.204, 1.182, 0.004], [0.223, 1.100, 0.027], [0.224, 1.000, 0.036],
+      [0.210, 0.912, 0.033], [0.198, 0.878, 0.030],
     ],
-    width: 0.0264, flat: 0.78,
+    // The flat strap that makes the outer border of the forearm. Reading it as
+    // a round cord was what made the forearm look like a bundle of ropes.
+    // Flattening it also widens it, so the belly rides a few mm further out on
+    // the radius, where it actually sits, rather than into the bone.
+    width: 0.0264, flat: 0.58, squareness: 2.7,
     profile: [[0, 0.4], [0.2, 0.95], [0.44, 1.0], [0.78, 0.42], [1, 0.24]],
     fn: 'Bends the elbow, and is strongest with the thumb pointing up, as when carrying a briefcase.',
     or: 'Lateral supracondylar ridge of the humerus',
@@ -640,7 +661,9 @@ export const MUSCLES = [
       [0.208, 1.124, -0.012], [0.212, 1.040, -0.008], [0.208, 0.950, -0.002],
       [0.200, 0.880, 0.004],
     ],
-    width: 0.0217, flat: 0.75, profile: TENDINOUS,
+    // A broad flat sheet that splits into four tendons, so it is wide and
+    // shallow rather than round.
+    width: 0.0217, flat: 0.58, squareness: 2.7, profile: TENDINOUS,
     fn: 'Straightens the fingers, opening the hand.',
     or: 'Lateral epicondyle of the humerus, via the common extensor tendon',
     ins: 'Extensor hoods of the four fingers',
@@ -680,8 +703,12 @@ export const MUSCLES = [
       [0.026, 0.942, 0.074], [0.029, 1.020, 0.100], [0.031, 1.110, 0.110],
       [0.033, 1.190, 0.108], [0.035, 1.272, 0.096],
     ],
+    // Cross-section was already right. What was missing is the segmentation:
+    // three tendinous intersections cross the muscle above the navel and pinch
+    // it slightly at each one, which is what makes the blocks of a six-pack.
     width: 0.043, flat: 0.40, squareness: 3.4,
-    profile: [[0, 0.60], [0.25, 0.94], [0.7, 1.0], [1, 0.92]],
+    profile: [[0, 0.58], [0.18, 0.94], [0.32, 1.0], [0.42, 0.90], [0.52, 1.0],
+              [0.62, 0.89], [0.72, 0.99], [0.82, 0.88], [0.92, 0.93], [1, 0.82]],
     fn: 'Curls the trunk forward and resists the spine arching backward. The six-pack.',
     or: 'Pubic crest and pubic symphysis',
     ins: 'Cartilage of ribs 5 to 7 and the xiphoid process',
@@ -863,7 +890,9 @@ export const MUSCLES = [
       [0.108, 0.960, 0.056], [0.124, 0.880, 0.072], [0.128, 0.760, 0.080],
       [0.122, 0.640, 0.072], [0.110, 0.556, 0.052], [0.104, 0.520, 0.042],
     ],
-    width: 0.0455, flat: 0.85, profile: TENDINOUS,
+    // Bipennate and distinctly flat: it lies as a broad band on the front of
+    // the thigh, roughly half as deep as it is wide.
+    width: 0.0455, flat: 0.62, squareness: 2.7, profile: TENDINOUS,
     fn: 'Straightens the knee and helps lift the thigh. The only quadriceps head that crosses both the hip and the knee.',
     or: 'Anterior inferior iliac spine of the pelvis',
     ins: 'Patella, and through the patellar tendon to the tibial tuberosity',
@@ -876,7 +905,9 @@ export const MUSCLES = [
       [0.156, 0.916, -0.004], [0.168, 0.840, 0.014], [0.166, 0.740, 0.032],
       [0.150, 0.640, 0.046], [0.126, 0.556, 0.048], [0.110, 0.522, 0.042],
     ],
-    width: 0.0525, flat: 0.80,
+    // The largest of the four. It is a broad mass wrapped round the outside of
+    // the femur, so it is much wider than deep.
+    width: 0.0525, flat: 0.64, squareness: 2.8,
     profile: [[0, 0.48], [0.25, 0.95], [0.58, 1.0], [0.88, 0.48], [1, 0.28]],
     fn: 'Straightens the knee. The largest of the four quadriceps heads and the outer sweep of the thigh.',
     or: 'Greater trochanter and the lateral lip of the linea aspera of the femur',
@@ -890,8 +921,10 @@ export const MUSCLES = [
       [0.100, 0.880, 0.010], [0.086, 0.780, 0.028], [0.076, 0.680, 0.048],
       [0.076, 0.590, 0.056], [0.090, 0.534, 0.048],
     ],
-    width: 0.042, flat: 0.80,
-    profile: [[0, 0.38], [0.35, 0.76], [0.74, 1.0], [1, 0.44]],
+    // Its bulk sits low, just above the knee: the teardrop you can see on the
+    // inside of a straightened leg. The peak is pushed down to match.
+    width: 0.042, flat: 0.66, squareness: 2.7,
+    profile: [[0, 0.34], [0.32, 0.72], [0.70, 0.96], [0.86, 1.0], [1, 0.46]],
     fn: 'Straightens the knee and pulls the kneecap inward, keeping it tracking in its groove through the last part of the movement.',
     or: 'Intertrochanteric line and the medial lip of the linea aspera of the femur',
     ins: 'Patella, and through the patellar tendon to the tibia',
@@ -918,7 +951,9 @@ export const MUSCLES = [
       [0.070, 0.680, 0.040], [0.052, 0.590, 0.010], [0.056, 0.530, -0.008],
       [0.072, 0.494, 0.006],
     ],
-    width: 0.0137, flat: 0.72, profile: STRAP,
+    // The longest muscle in the body, and a flat ribbon rather than a cord:
+    // about 2.5cm across and only 1cm thick as it crosses the thigh.
+    width: 0.0137, flat: 0.38, squareness: 2.8, radial: 12, profile: STRAP,
     fn: 'Flexes, abducts and externally rotates the hip while bending the knee. Put together, that is the cross-legged tailor’s position its name comes from.',
     or: 'Anterior superior iliac spine',
     ins: 'Upper medial tibia, at the pes anserinus',
@@ -932,7 +967,8 @@ export const MUSCLES = [
       [0.036, 0.928, 0.036], [0.048, 0.840, 0.014], [0.052, 0.720, 0.000],
       [0.054, 0.600, -0.004], [0.068, 0.508, 0.004],
     ],
-    width: 0.0143, flat: 0.6, profile: STRAP,
+    // A thin flat strap down the inside of the thigh, not a rounded cord.
+    width: 0.0143, flat: 0.42, squareness: 2.8, radial: 12, profile: STRAP,
     fn: 'Pulls the thigh inward and helps bend the knee. The most superficial of the inner-thigh muscles.',
     or: 'Body and inferior ramus of the pubis',
     ins: 'Upper medial tibia, at the pes anserinus',
@@ -945,7 +981,11 @@ export const MUSCLES = [
       [0.036, 0.930, 0.044], [0.062, 0.870, 0.028], [0.086, 0.800, 0.006],
       [0.104, 0.730, -0.008],
     ],
-    width: 0.0298, flat: 0.8, profile: TAPERED,
+    // A flat triangular fan: it starts narrow on the pubis and broadens as it
+    // runs to the back of the femur, which is the opposite way round to the
+    // tapering profile it had.
+    width: 0.0298, flat: 0.56, squareness: 2.7,
+    profile: [[0, 0.34], [0.28, 0.78], [0.68, 1.0], [1, 0.86]],
     fn: 'Pulls the thigh in toward the midline and assists hip flexion.',
     or: 'Front of the pubis, just below the pubic crest',
     ins: 'Middle third of the linea aspera of the femur',
@@ -986,7 +1026,8 @@ export const MUSCLES = [
       [0.062, 0.902, -0.048], [0.086, 0.820, -0.048], [0.104, 0.720, -0.046],
       [0.118, 0.620, -0.038], [0.130, 0.540, -0.022], [0.132, 0.500, -0.008],
     ],
-    width: 0.035, flat: 0.85, profile: TENDINOUS,
+    // Flattened between the other hamstrings and the outside of the thigh.
+    width: 0.035, flat: 0.70, squareness: 2.6, profile: TENDINOUS,
     fn: 'Bends the knee and extends the hip. The outer hamstring; its tendon is the cord you can feel on the outside behind the knee.',
     or: 'Ischial tuberosity, the sit bone',
     ins: 'Head of the fibula, at the outer knee',
@@ -1026,7 +1067,9 @@ export const MUSCLES = [
       [0.062, 0.898, -0.054], [0.070, 0.800, -0.056], [0.076, 0.690, -0.052],
       [0.078, 0.590, -0.040], [0.076, 0.528, -0.024],
     ],
-    width: 0.0298, flat: 0.8, profile: TENDINOUS,
+    // Named for its membrane: broad flat tendons at both ends and a flat belly
+    // between them.
+    width: 0.0298, flat: 0.58, squareness: 2.8, profile: TENDINOUS,
     fn: 'Bends the knee and extends the hip. Lies underneath semitendinosus, against the femur.',
     or: 'Ischial tuberosity',
     ins: 'Posterior aspect of the medial tibial condyle',
@@ -1041,7 +1084,9 @@ export const MUSCLES = [
       [0.084, 0.506, -0.030], [0.078, 0.430, -0.048], [0.080, 0.340, -0.050],
       [0.086, 0.250, -0.038], [0.088, 0.180, -0.030],
     ],
-    width: 0.0384, flat: 0.85, profile: BULGING,
+    // The calf bellies are broad and pressed flat against the soleus behind
+    // them, so they are wider than they are deep.
+    width: 0.0384, flat: 0.64, squareness: 2.7, profile: BULGING,
     fn: 'Points the foot down and helps bend the knee. The larger, more prominent of the two calf bellies.',
     or: 'Medial condyle of the femur, above the knee',
     ins: 'Calcaneus, via the Achilles tendon',
@@ -1054,7 +1099,8 @@ export const MUSCLES = [
       [0.124, 0.504, -0.026], [0.124, 0.430, -0.046], [0.116, 0.345, -0.048],
       [0.100, 0.255, -0.038], [0.092, 0.185, -0.030],
     ],
-    width: 0.0336, flat: 0.85, profile: BULGING,
+    // Same flattening as the medial head, and it ends a little higher.
+    width: 0.0336, flat: 0.62, squareness: 2.7, profile: BULGING,
     fn: 'Points the foot down and helps bend the knee. Because it crosses the knee, the calf is weaker when the knee is bent.',
     or: 'Lateral condyle of the femur',
     ins: 'Calcaneus, via the Achilles tendon',
@@ -1067,7 +1113,9 @@ export const MUSCLES = [
       [0.104, 0.456, -0.024], [0.104, 0.380, -0.036], [0.100, 0.300, -0.040],
       [0.092, 0.200, -0.034], [0.088, 0.140, -0.026],
     ],
-    width: 0.0448, flat: 0.70,
+    // The broad flat muscle under the gastrocnemius. It is what gives the calf
+    // its width, so it is the flattest of the three.
+    width: 0.0448, flat: 0.54, squareness: 2.7,
     profile: [[0, 0.55], [0.25, 1.0], [0.6, 0.92], [0.88, 0.44], [1, 0.26]],
     fn: 'Points the foot down. It does not cross the knee, so it keeps working when the knee is bent and does most of the quiet work of standing.',
     or: 'Back of the head of the fibula and the soleal line of the tibia',
@@ -1097,7 +1145,9 @@ export const MUSCLES = [
       [0.112, 0.470, 0.030], [0.114, 0.390, 0.040], [0.108, 0.290, 0.040],
       [0.096, 0.180, 0.032], [0.084, 0.110, 0.024], [0.076, 0.078, 0.020],
     ],
-    width: 0.0272, flat: 0.75, profile: TENDINOUS,
+    // Packed into the trough on the outer side of the shin bone, which makes
+    // its section closer to a triangle than a circle.
+    width: 0.0272, flat: 0.58, squareness: 2.8, profile: TENDINOUS,
     fn: 'Lifts the foot and turns the sole inward. It lowers the foot under control after the heel strikes, instead of letting it slap down.',
     or: 'Lateral condyle and upper lateral surface of the tibia',
     ins: 'Medial cuneiform and the base of the first metatarsal',
