@@ -44,8 +44,8 @@ const SLICES = [
 
 /** Hollows pressed into the shell after lofting: [x, y, z, radius, depth]. */
 const HOLLOWS = [
-  [0.0305, 1.6838, 0.086, 0.019, 0.0050],  // right orbit
-  [-0.0305, 1.6838, 0.086, 0.019, 0.0050], // left orbit
+  [0.0305, 1.6838, 0.086, 0.021, 0.0100],  // right orbit
+  [-0.0305, 1.6838, 0.086, 0.021, 0.0100], // left orbit
   [0, 1.6248, 0.088, 0.024, 0.004],        // mouth
   [0.052, 1.651, 0.070, 0.026, 0.004],     // right temple hollow
   [-0.052, 1.651, 0.070, 0.026, 0.004],    // left temple hollow
@@ -200,14 +200,18 @@ export function buildFace() {
   shell.name = 'face.shell';
   group.add(shell);
 
-  // Nose: bridge, tip, then tucking back under to the base.
+  // Nose: root between the eyes, bridge, tip, then tucking back under to the
+  // base. It used to start up at brow level and carry on to a tip 38mm proud
+  // of the glabella, which is about twice a real projection and read as a
+  // beak in profile. The root now starts at the nasion and the dorsum rises
+  // less steeply; the alar width and the base are left where they were.
   const nose = new Mesh(tubeLoft({
     path: [
-      [0, 1.708, 0.072], [0, 1.690, 0.082], [0, 1.671, 0.094],
-      [0, 1.656, 0.104], [0, 1.645, 0.101], [0, 1.638, 0.088],
+      [0, 1.6880, 0.0768], [0, 1.6785, 0.0832], [0, 1.6685, 0.0875],
+      [0, 1.6575, 0.0890], [0, 1.6480, 0.0880], [0, 1.6410, 0.0838],
     ],
-    width: 0.013, flat: 0.92, squareness: 2.2,
-    profile: [[0, 0.32], [0.28, 0.54], [0.62, 0.92], [0.80, 1.0], [1, 0.72]],
+    width: 0.0112, flat: 0.92, squareness: 2.2,
+    profile: [[0, 0.34], [0.28, 0.58], [0.62, 0.94], [0.80, 1.0], [1, 0.76]],
     segments: 26, radial: 16,
   }), flesh);
   nose.name = 'face.nose';
@@ -229,49 +233,70 @@ export function buildFace() {
     const s = side > 0 ? 'r' : 'l';
 
     // Ear: a flattened disc set against the side of the head.
+    // Raised so the top of the ear meets brow level, the way it does on a real
+    // head, and widened: at 0.30 it was a 16mm sliver that vanished in profile.
     const ear = new Mesh(new SphereGeometry(0.024, 16, 12), skinMaterial(0xc2a08c, 0.68));
-    ear.position.set(0.072 * side, 1.665, -0.016);
-    ear.scale.set(0.30, 1.2508, 0.60);
+    ear.position.set(0.072 * side, 1.672, -0.016);
+    ear.scale.set(0.42, 1.2508, 0.60);
     ear.rotation.z = -0.12 * side;
     ear.name = `face.ear.${s}`;
     group.add(ear);
 
     // Eye, open, as the plates show it: sclera in the socket, iris and pupil
-    // on its front, and a thin muscular rim for the lid margin.
-    const sclera = new Mesh(new SphereGeometry(0.0104, 20, 16), skinMaterial(0xc6bfb2, 0.38));
-    sclera.position.set(0.0305 * side, 1.6826, 0.0744);
+    // on its front, and a lid margin above and below. The globe is life sized
+    // at 24mm and seated 3mm deeper than it was; the lids are derived from it
+    // rather than being placed by hand, because by hand both of them had ended
+    // up above the globe entirely, which is what made the face stare.
+    const EYE = { x: 0.0305 * side, y: 1.6826, z: 0.0714, r: 0.0120 };
+
+    const sclera = new Mesh(new SphereGeometry(EYE.r, 20, 16), skinMaterial(0xc6bfb2, 0.38));
+    sclera.position.set(EYE.x, EYE.y, EYE.z);
     sclera.name = `face.sclera.${s}`;
     group.add(sclera);
 
-    const iris = new Mesh(new SphereGeometry(0.0051, 18, 14), skinMaterial(0x6d7f86, 0.30));
-    iris.position.set(0.0313 * side, 1.6822, 0.0821);
+    // The iris rim sits on the globe, so its flattened cap stands slightly
+    // proud the way a cornea does.
+    const irisR = 0.0059;
+    const irisZ = EYE.z + Math.sqrt(EYE.r * EYE.r - irisR * irisR);
+    const iris = new Mesh(new SphereGeometry(irisR, 18, 14), skinMaterial(0x6d7f86, 0.30));
+    iris.position.set(EYE.x + 0.0008 * side, EYE.y - 0.0004, irisZ);
     iris.scale.set(1, 1, 0.42);
     iris.name = `face.iris.${s}`;
     group.add(iris);
 
     const pupil = new Mesh(new SphereGeometry(0.0023, 12, 10), skinMaterial(0x140f0c, 0.25));
-    pupil.position.set(0.0314 * side, 1.6822, 0.0842);
+    pupil.position.set(EYE.x + 0.0009 * side, EYE.y - 0.0004, irisZ + 0.0021);
     pupil.scale.set(1, 1, 0.35);
     pupil.name = `face.pupil.${s}`;
     group.add(pupil);
 
-    [[1.7078, 0.0836, 0.0034], [1.6938, 0.0830, 0.0028]].forEach(([ly, lz, lw], i) => {
+    // Lid margins, swept along the globe. dy is how far above or below the
+    // centre of the globe the margin crosses, and the arc is drawn on a sphere
+    // a little larger than the globe so the lid lies on it rather than in it.
+    // The upper lid is the thicker of the two and covers more of the globe.
+    [[0.0079, 0.0036, 'upper'], [-0.0071, 0.0029, 'lower']].forEach(([dy, lw, which]) => {
+      const shell = EYE.r + lw * 0.55;
+      // medial canthus, mid-lid, lateral canthus
+      const arc = [[-0.0115, 0.34], [0, 1], [0.0117, 0.30]].map(([dx, k]) => {
+        const yy = dy * k;
+        const inside = shell * shell - dx * dx - yy * yy;
+        return [EYE.x + dx * side, EYE.y + yy, EYE.z + Math.sqrt(Math.max(inside, 1e-6))];
+      });
       const rim = new Mesh(tubeLoft({
-        path: [
-          [0.0200 * side, ly - (i ? -0.0035 : 0.0035), 0.0806],
-          [0.0305 * side, ly, lz],
-          [0.0412 * side, ly - (i ? -0.0035 : 0.0035), 0.0782],
-        ],
-        width: lw, flat: 0.55, profile: [[0, 0.45], [0.5, 1.0], [1, 0.45]],
-        segments: 14, radial: 10,
+        path: arc,
+        width: lw, flat: 0.55, profile: [[0, 0.40], [0.5, 1.0], [1, 0.38]],
+        segments: 16, radial: 10,
       }), flesh);
-      rim.name = `face.lidrim.${i ? 'lower' : 'upper'}.${s}`;
+      rim.name = `face.lidrim.${which}.${s}`;
       group.add(rim);
     });
 
     // Nostril wing.
+    // The alar width is left exactly where it was; only the depth follows the
+    // nose back, so the wings stay attached to the base instead of hanging off
+    // the front of it.
     const nostril = new Mesh(new SphereGeometry(0.0062, 14, 10), flesh);
-    nostril.position.set(0.0118 * side, 1.6445, 0.0962);
+    nostril.position.set(0.0118 * side, 1.6455, 0.0924);
     nostril.scale.set(0.90, 0.78, 0.92);
     nostril.name = `face.nostril.${s}`;
     group.add(nostril);

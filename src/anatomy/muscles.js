@@ -1404,7 +1404,7 @@ export const MUSCLES = [
   },
   {
     id: 'buccinator', name: 'Buccinator', region: 'Face',
-    group: 'head', layer: 2, mirror: true, shape: 'sheet',
+    group: 'head', layer: 3, mirror: true, shape: 'sheet',
     origin: [
       [0.046, 1.640, 0.036], [0.048, 1.623, 0.032], [0.044, 1.609, 0.036],
     ],
@@ -1483,7 +1483,7 @@ export const MUSCLES = [
   },
   {
     id: 'levator-labii', name: 'Levator labii superioris', region: 'Face',
-    group: 'head', layer: 1, mirror: true, shape: 'tube',
+    group: 'head', layer: 2, mirror: true, shape: 'tube',
     path: [
       [0.0255, 1.6720, 0.0855], [0.0205, 1.6513, 0.0895], [0.0145, 1.6372, 0.0890],
     ],
@@ -1535,7 +1535,7 @@ export const MUSCLES = [
   },
   {
     id: 'orbicularis-oris', name: 'Orbicularis oris', region: 'Face',
-    group: 'head', layer: 1, mirror: false, shape: 'tube',
+    group: 'head', layer: 2, mirror: false, shape: 'tube',
     path: [
       [-0.0245, 1.6242, 0.0790], [-0.0140, 1.6378, 0.0865], [0, 1.6413, 0.0905],
       [0.0140, 1.6378, 0.0865], [0.0245, 1.6242, 0.0790], [0.0140, 1.6106, 0.0860],
@@ -1564,7 +1564,7 @@ export const MUSCLES = [
   },
   {
     id: 'mentalis', name: 'Mentalis', region: 'Face',
-    group: 'head', layer: 1, mirror: true, shape: 'tube',
+    group: 'head', layer: 2, mirror: true, shape: 'tube',
     path: [
       [0.0075, 1.5864, 0.0765], [0.0095, 1.5970, 0.0830], [0.0105, 1.6047, 0.0855],
     ],
