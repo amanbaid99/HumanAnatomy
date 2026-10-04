@@ -20,6 +20,18 @@
 
 import { Y, X, Z, P } from './landmarks.js';
 import { FUSIFORM, STRAP, TAPERED } from '../geometry/loft.js';
+import { conformFacePath } from './face.js';
+
+/*
+ * Facial muscle paths are authored anatomically and then walked onto the face
+ * by conformFacePath, which queries the same surface the head shell is built
+ * from. The offset each one is given is its own half-depth plus about a
+ * millimetre, so the belly rests against the face rather than hovering over it
+ * or sinking into it. Muscles that cross the orbit or the mouth ride over the
+ * carved sockets (fillHollows); muscles that cross the nose are held off it
+ * (clearNose); buccinator is pushed the other way, since it is the deepest
+ * muscle of the face.
+ */
 
 /** Tendon-heavy profile: short belly, long tapering tendon at the insertion. */
 const TENDINOUS = [[0, 0.45], [0.22, 1.0], [0.52, 0.95], [0.80, 0.48], [1, 0.30]];
@@ -1373,14 +1385,17 @@ export const MUSCLES = [
   {
     id: 'temporalis', name: 'Temporalis', region: 'Jaw',
     group: 'head', layer: 1, mirror: true, shape: 'sheet',
-    origin: [
+    // The fan belongs in the temporal fossa, which is a hollow, so this is the
+    // one muscle conformed to the carved shell rather than over it. It was
+    // sitting 13mm inside the skull and showing nothing at all.
+    origin: conformFacePath([
       [0.030, 1.743, 0.028], [0.052, 1.732, 0.002],
       [0.062, 1.708, -0.028], [0.060, 1.682, -0.044],
-    ],
-    insertion: [
+    ], { offset: 0.005, fillHollows: false }),
+    insertion: conformFacePath([
       [0.044, 1.675, 0.048], [0.052, 1.673, 0.028],
       [0.056, 1.670, 0.008], [0.054, 1.668, -0.006],
-    ],
+    ], { offset: 0.002, fillHollows: false }),
     thickness: 0.010, bulge: 0.005, uSeg: 20, vSeg: 14,
     fn: 'Closes the jaw and draws it backward. The broad fan over the temple that you can feel bunch under your fingers when you clench.',
     or: 'Temporal fossa, the flat area on the side of the skull',
@@ -1390,12 +1405,15 @@ export const MUSCLES = [
   {
     id: 'masseter', name: 'Masseter', region: 'Jaw',
     group: 'head', layer: 1, mirror: true, shape: 'sheet',
-    origin: [
+    // Arch above, ramus below. The arch is a ridge rather than a hollow, so
+    // the origin rides the filled outline; without that it dropped into the
+    // temple socket next to it.
+    origin: conformFacePath([
       [0.042, 1.656, 0.058], [0.055, 1.658, 0.030], [0.064, 1.661, 0.002],
-    ],
-    insertion: [
+    ], { offset: 0.0015 }),
+    insertion: conformFacePath([
       [0.038, 1.595, 0.046], [0.050, 1.597, 0.020], [0.057, 1.602, -0.006],
-    ],
+    ], { offset: 0.0015 }),
     thickness: 0.012, bulge: 0.007, uSeg: 16, vSeg: 12,
     fn: 'Clamps the jaw shut. Pound for pound the strongest muscle in the body, and the slab you can feel bulge at the angle of the jaw when you bite down.',
     or: 'Zygomatic arch, the bar of bone across the cheek',
@@ -1405,12 +1423,15 @@ export const MUSCLES = [
   {
     id: 'buccinator', name: 'Buccinator', region: 'Face',
     group: 'head', layer: 3, mirror: true, shape: 'sheet',
-    origin: [
+    // The deepest muscle of the face. It is conformed like the rest so it stops
+    // cutting through the cheek, but with a small offset so it still lies well
+    // under everything that crosses it.
+    origin: conformFacePath([
       [0.046, 1.640, 0.036], [0.048, 1.623, 0.032], [0.044, 1.609, 0.036],
-    ],
-    insertion: [
+    ], { offset: 0.001 }),
+    insertion: conformFacePath([
       [0.026, 1.632, 0.080], [0.027, 1.624, 0.082], [0.025, 1.616, 0.080],
-    ],
+    ], { offset: 0.001 }),
     thickness: 0.008, bulge: 0.004, uSeg: 12, vSeg: 10,
     fn: 'Presses the cheek flat against the teeth so food does not collect there, and blows air out forcefully.',
     or: 'Outer surfaces of the upper and lower jaw, opposite the molars',
@@ -1426,12 +1447,14 @@ export const MUSCLES = [
   {
     id: 'frontalis', name: 'Frontalis', region: 'Face',
     group: 'head', layer: 1, mirror: true, shape: 'sheet',
-    origin: [
+    // It ran from 7mm proud at the brow to 11mm inside at the hairline, which
+    // is what put the straight-edged slab across the forehead.
+    origin: conformFacePath([
       [0.006, 1.694, 0.0885], [0.022, 1.697, 0.0865], [0.039, 1.694, 0.0765],
-    ],
-    insertion: [
+    ], { offset: 0.0035 }),
+    insertion: conformFacePath([
       [0.015, 1.753, 0.0590], [0.030, 1.749, 0.0540], [0.045, 1.741, 0.0410],
-    ],
+    ], { offset: 0.0035 }),
     thickness: 0.0075, bulge: 0.0045, uSeg: 16, vSeg: 14,
     fn: 'Raises the eyebrows and wrinkles the forehead. The pair of vertical straps that give the forehead its shape, separated by the pale aponeurosis running down between them.',
     or: 'Epicranial aponeurosis, the sheet over the top of the skull',
@@ -1441,9 +1464,11 @@ export const MUSCLES = [
   {
     id: 'procerus', name: 'Procerus', region: 'Face',
     group: 'head', layer: 1, mirror: false, shape: 'tube',
-    path: [
+    // Runs up the bridge, so it is held on the nose rather than allowed to sink
+    // back to the shell behind it.
+    path: conformFacePath([
       [0, 1.6708, 0.0960], [0, 1.6838, 0.0935], [0, 1.6967, 0.0885],
-    ],
+    ], { offset: 0.004, noseRadius: 0.0075 }),
     alignRadial: [0, 0.005],
     width: 0.0075, flat: 0.42, squareness: 2.8, profile: STRAP,
     fn: 'Pulls the skin between the eyebrows down, making the horizontal wrinkle across the bridge of the nose. The muscle of frowning and of squinting into the sun.',
@@ -1454,11 +1479,15 @@ export const MUSCLES = [
   {
     id: 'orbicularis-oculi', name: 'Orbicularis oculi', region: 'Face',
     group: 'head', layer: 1, mirror: true, shape: 'tube',
-    path: [
+    // A closed loop around the orbit, so it rides the filled outline: dropped
+    // onto the carved shell it would fall into the socket and sit behind the
+    // eye. Smoothing is off because the loop's ends are the same point.
+    // The ring's own topology is untouched here.
+    path: conformFacePath([
       [0.0100, 1.6826, 0.0870], [0.0150, 1.6973, 0.0870], [0.0305, 1.7038, 0.0845],
       [0.0465, 1.6973, 0.0780], [0.0520, 1.6826, 0.0730], [0.0465, 1.6678, 0.0780],
       [0.0305, 1.6614, 0.0850], [0.0150, 1.6678, 0.0870], [0.0100, 1.6826, 0.0870],
-    ],
+    ], { offset: 0.004, smooth: 0 }),
     alignRadial: [0, 0.005],
     width: 0.0115, flat: 0.26, squareness: 3.2,
     profile: [[0, 0.85], [0.5, 1.0], [1, 0.85]],
@@ -1471,9 +1500,11 @@ export const MUSCLES = [
   {
     id: 'nasalis', name: 'Nasalis', region: 'Face',
     group: 'head', layer: 1, mirror: true, shape: 'tube',
-    path: [
+    // Over the side wall of the nose, so it is held off the nasal mesh rather
+    // than conformed back onto the cheek behind it.
+    path: conformFacePath([
       [0.0045, 1.6572, 0.1000], [0.0130, 1.6619, 0.0925], [0.0195, 1.6690, 0.0820],
-    ],
+    ], { offset: 0.0032, noseRadius: 0.0098 }),
     alignRadial: [0, 0.005],
     width: 0.0052, flat: 0.45, profile: STRAP,
     fn: 'Compresses the bridge of the nose and flares the nostril. The muscle that moves when you wrinkle your nose.',
@@ -1484,9 +1515,9 @@ export const MUSCLES = [
   {
     id: 'levator-labii', name: 'Levator labii superioris', region: 'Face',
     group: 'head', layer: 2, mirror: true, shape: 'tube',
-    path: [
+    path: conformFacePath([
       [0.0255, 1.6720, 0.0855], [0.0205, 1.6513, 0.0895], [0.0145, 1.6372, 0.0890],
-    ],
+    ], { offset: 0.0035, noseRadius: 0.0120 }),
     alignRadial: [0, 0.005],
     width: 0.0050, flat: 0.5, profile: STRAP,
     fn: 'Lifts the upper lip. Working hard it produces the raised-lip look of disgust, and with the nose muscles a snarl.',
@@ -1497,9 +1528,11 @@ export const MUSCLES = [
   {
     id: 'zygomaticus-major', name: 'Zygomaticus major', region: 'Face',
     group: 'head', layer: 1, mirror: true, shape: 'tube',
-    path: [
+    // Obliquely across the cheek. A straight chord between three authored
+    // points dipped below the cheek at the middle and stood proud at the ends.
+    path: conformFacePath([
       [0.0520, 1.6572, 0.0505], [0.0385, 1.6407, 0.0745], [0.0245, 1.6265, 0.0840],
-    ],
+    ], { offset: 0.0039 }),
     alignRadial: [0, 0.005],
     width: 0.0058, flat: 0.5, profile: STRAP,
     fn: 'Draws the corner of the mouth up and outward. This is the smiling muscle.',
@@ -1510,9 +1543,9 @@ export const MUSCLES = [
   {
     id: 'zygomaticus-minor', name: 'Zygomaticus minor', region: 'Face',
     group: 'head', layer: 1, mirror: true, shape: 'tube',
-    path: [
+    path: conformFacePath([
       [0.0440, 1.6625, 0.0610], [0.0300, 1.6466, 0.0820], [0.0180, 1.6348, 0.0880],
-    ],
+    ], { offset: 0.0030 }),
     alignRadial: [0, 0.005],
     width: 0.0040, flat: 0.5, profile: STRAP,
     fn: 'Lifts the upper lip, deepening the fold that runs from the nose to the corner of the mouth.',
@@ -1523,9 +1556,9 @@ export const MUSCLES = [
   {
     id: 'risorius', name: 'Risorius', region: 'Face',
     group: 'head', layer: 1, mirror: true, shape: 'tube',
-    path: [
+    path: conformFacePath([
       [0.0540, 1.6254, 0.0430], [0.0390, 1.6242, 0.0720], [0.0262, 1.6244, 0.0828],
-    ],
+    ], { offset: 0.0028 }),
     alignRadial: [0, 0.005],
     width: 0.0046, flat: 0.38, profile: STRAP,
     fn: 'Pulls the corner of the mouth straight sideways, producing a tight, closed smile or a grimace.',
@@ -1536,11 +1569,13 @@ export const MUSCLES = [
   {
     id: 'orbicularis-oris', name: 'Orbicularis oris', region: 'Face',
     group: 'head', layer: 2, mirror: false, shape: 'tube',
-    path: [
+    // A closed loop around the mouth, riding the filled outline so it does not
+    // drop into the mouth socket. The ring's own topology is untouched here.
+    path: conformFacePath([
       [-0.0245, 1.6242, 0.0790], [-0.0140, 1.6378, 0.0865], [0, 1.6413, 0.0905],
       [0.0140, 1.6378, 0.0865], [0.0245, 1.6242, 0.0790], [0.0140, 1.6106, 0.0860],
       [0, 1.6071, 0.0895], [-0.0140, 1.6106, 0.0860], [-0.0245, 1.6242, 0.0790],
-    ],
+    ], { offset: 0.0041, smooth: 0 }),
     alignRadial: [0, 0.005],
     width: 0.0092, flat: 0.34, squareness: 3.0,
     profile: [[0, 0.85], [0.5, 1.0], [1, 0.85]],
@@ -1552,9 +1587,12 @@ export const MUSCLES = [
   {
     id: 'depressor-anguli-oris', name: 'Depressor anguli oris', region: 'Face',
     group: 'head', layer: 1, mirror: true, shape: 'tube',
-    path: [
+    // From the oblique line of the mandible up to the corner of the mouth. It
+    // was standing 9mm off the lower face; the curve of the jaw is what it
+    // should be following.
+    path: conformFacePath([
       [0.0330, 1.5935, 0.0690], [0.0295, 1.6100, 0.0790], [0.0255, 1.6224, 0.0830],
-    ],
+    ], { offset: 0.0037 }),
     alignRadial: [0, 0.005],
     width: 0.0060, flat: 0.45, profile: TAPERED,
     fn: 'Pulls the corner of the mouth down. The muscle of a frown, and of the turned-down mouth of sadness.',
@@ -1565,9 +1603,11 @@ export const MUSCLES = [
   {
     id: 'mentalis', name: 'Mentalis', region: 'Face',
     group: 'head', layer: 2, mirror: true, shape: 'tube',
-    path: [
+    // The worst of the floaters: 9mm clear of the chin along its whole length.
+    // Conforming it puts it on the chin contour rather than translating it.
+    path: conformFacePath([
       [0.0075, 1.5864, 0.0765], [0.0095, 1.5970, 0.0830], [0.0105, 1.6047, 0.0855],
-    ],
+    ], { offset: 0.0039 }),
     alignRadial: [0, 0.005],
     width: 0.0052, flat: 0.55, profile: STRAP,
     fn: 'Lifts and pushes out the lower lip, wrinkling the chin. The muscle that makes a pout, and the one that quivers before crying.',

@@ -51,6 +51,18 @@ const HOLLOWS = [
   [-0.052, 1.651, 0.070, 0.026, 0.004],    // left temple hollow
 ];
 
+/**
+ * The nasal centreline, hoisted out of buildFace so the path conformer can see
+ * it. Muscles that run over the nose have to stay on the nose rather than on
+ * the head shell behind it, and the only way to know where the nose is, is to
+ * ask the same curve that draws it.
+ */
+const NOSE_PATH = [
+  [0, 1.6880, 0.0768], [0, 1.6785, 0.0832], [0, 1.6685, 0.0875],
+  [0, 1.6575, 0.0890], [0, 1.6480, 0.0880], [0, 1.6410, 0.0838],
+];
+const NOSE_WIDTH = 0.0112;
+
 const RADIAL = 56;
 // Columns per ring. The ring is closed by wrapping the index, so this is also
 // the vertex count per ring. The shell carries no texture map, only vertex
@@ -181,6 +193,198 @@ function carve(geo) {
   pos.needsUpdate = true;
 }
 
+// --------------------------------------------------------- path conforming --
+/*
+ * Facial muscles were authored as free-space coordinates, so some floated a
+ * centimetre off the face and others cut through it. What follows answers one
+ * question - "where is the face surface, and which way is out?" - and then
+ * walks a muscle path onto it.
+ *
+ * The surface is evaluated from the same SLICES / CORE / SQUARENESS maths the
+ * shell mesh is built from, so the two cannot drift apart. It is deliberately
+ * not a sphere or a cylinder: a radial projection is 43 degrees off the true
+ * normal at the chin, which is exactly where the worst offenders were.
+ */
+
+/** The four slice values at an arbitrary height, clamped past the ends. */
+function sliceAt(y) {
+  const rows = SLICES;
+  if (y >= rows[0][0]) return rows[0].slice(1);
+  if (y <= rows[rows.length - 1][0]) return rows[rows.length - 1].slice(1);
+  for (let i = 0; i < rows.length - 1; i++) {
+    const a = rows[i];
+    const b = rows[i + 1];
+    if (y <= a[0] && y >= b[0]) {
+      const t = (a[0] - y) / (a[0] - b[0] || 1);
+      return [1, 2, 3, 4].map((k) => a[k] + (b[k] - a[k]) * t);
+    }
+  }
+  return rows[rows.length - 1].slice(1);
+}
+
+/**
+ * A point on the shell. `az` is measured the way headGeometry sweeps it, from
+ * +z round towards +x. With `fillHollows` the carved sockets are ignored, so
+ * the query returns the uncarved outline: that is what a muscle crossing the
+ * orbit or the mouth should ride over instead of sinking into.
+ */
+function shellPoint(y, az, fillHollows, out = new Vector3()) {
+  const [wFront, wBack, zFront, zBack] = sliceAt(y);
+  const p = 2 / SQUARENESS;
+  const s = Math.sin(az);
+  const c = Math.cos(az);
+  const w = (c >= 0 ? wFront : wBack) * CORE;
+  const depth = (c >= 0 ? zFront : -zBack) * CORE;
+  const ex = Math.sign(s) * Math.abs(s) ** p;
+  const ez = Math.sign(c) * Math.abs(c) ** p;
+  out.set(ex * w, y, ez * depth);
+  if (!fillHollows) {
+    const inward = new Vector3();
+    const centre = new Vector3();
+    for (const [cx, cy, cz, radius, depthH] of HOLLOWS) {
+      centre.set(cx, cy, cz);
+      const d = out.distanceTo(centre);
+      if (d >= radius) continue;
+      const k = Math.cos((d / radius) * Math.PI * 0.5) ** 2;
+      inward.set(out.x, 0, out.z - 0.005);
+      if (inward.lengthSq() < 1e-8) continue;
+      out.addScaledVector(inward.normalize(), -depthH * k);
+    }
+  }
+  return out;
+}
+
+/** Outward normal, by finite difference across the two surface parameters. */
+function shellNormal(y, az, fillHollows) {
+  const dy = 0.0015;
+  const da = 0.02;
+  const a = shellPoint(y, az + da, fillHollows, new Vector3());
+  const b = shellPoint(y, az - da, fillHollows, new Vector3());
+  const c = shellPoint(y + dy, az, fillHollows, new Vector3());
+  const d = shellPoint(y - dy, az, fillHollows, new Vector3());
+  const n = new Vector3().crossVectors(a.sub(b), c.sub(d)).normalize();
+  const here = shellPoint(y, az, fillHollows, new Vector3());
+  // Point it away from the head's axis rather than into it.
+  if (n.dot(new Vector3(here.x, 0, here.z - 0.005)) < 0) n.negate();
+  return n;
+}
+
+/**
+ * Nearest point on the shell, searched over both surface parameters. Seeding
+ * from the cylindrical angle and then descending in (y, az) matters: near the
+ * chin and the jaw the closest point is well above the query's own height, and
+ * a pure radial lookup lands on the wrong part of the surface.
+ */
+function nearestOnShell(q, fillHollows) {
+  let y = q.y;
+  let az = Math.atan2(q.x, q.z);
+  let stepY = 0.012;
+  let stepA = 0.25;
+  const probe = new Vector3();
+  let best = shellPoint(y, az, fillHollows, new Vector3()).distanceTo(q);
+  for (let pass = 0; pass < 24; pass++) {
+    let moved = false;
+    for (const [dy, da] of [[stepY, 0], [-stepY, 0], [0, stepA], [0, -stepA],
+                            [stepY, stepA], [stepY, -stepA], [-stepY, stepA], [-stepY, -stepA]]) {
+      const d = shellPoint(y + dy, az + da, fillHollows, probe).distanceTo(q);
+      if (d < best - 1e-7) { best = d; y += dy; az += da; moved = true; break; }
+    }
+    if (!moved) { stepY *= 0.55; stepA *= 0.55; }
+    if (stepY < 1e-5) break;
+  }
+  return { y, az, point: shellPoint(y, az, fillHollows, new Vector3()), normal: shellNormal(y, az, fillHollows) };
+}
+
+/** Closest approach to the nasal centreline, for muscles that cross the nose. */
+function nearestOnNose(q) {
+  let best = Infinity;
+  let closest = null;
+  const a = new Vector3();
+  const b = new Vector3();
+  const ab = new Vector3();
+  const aq = new Vector3();
+  for (let i = 0; i < NOSE_PATH.length - 1; i++) {
+    a.set(...NOSE_PATH[i]);
+    b.set(...NOSE_PATH[i + 1]);
+    ab.subVectors(b, a);
+    aq.subVectors(q, a);
+    const t = Math.min(1, Math.max(0, aq.dot(ab) / Math.max(ab.lengthSq(), 1e-9)));
+    const p = a.clone().addScaledVector(ab, t);
+    const d = p.distanceTo(q);
+    if (d < best) { best = d; closest = p; }
+  }
+  return { point: closest, dist: best };
+}
+
+/**
+ * Walk a facial muscle path onto the face.
+ *
+ * @param {number[][]} points   the authored path, origin first
+ * @param {object} o
+ * @param {number} o.offset     metres along the outward normal from the shell.
+ *        Set it to the muscle's own half-depth plus about a millimetre and the
+ *        belly rests on the face instead of hovering over it or sinking in.
+ * @param {boolean} o.fillHollows  ride over the carved orbit/mouth sockets
+ *        rather than dropping into them. True for anything crossing a feature.
+ * @param {number} o.noseRadius  minimum distance from the nasal centreline.
+ *        The nose tapers along its length, so this is given as an absolute
+ *        radius per muscle rather than derived from the tube's full width.
+ * @param {number[]} o.pin      indices left exactly as authored, for endpoints
+ *        that already sit on their landmark.
+ * @param {number|number[]} o.blend  how far each point moves towards its
+ *        conformed position; 1 is fully conformed.
+ * @param {number} o.smooth     light smoothing of the interior points, so the
+ *        conformed path does not kink between neighbours.
+ */
+export function conformFacePath(points, {
+  offset = 0.003,
+  fillHollows = true,
+  noseRadius = 0,
+  pin = [],
+  blend = 1,
+  smooth = 0.3,
+} = {}) {
+  const q = new Vector3();
+  const conformed = points.map((src, i) => {
+    q.set(src[0], src[1], src[2]);
+    const mirrored = q.x < 0;
+    // The shell is symmetric, so solve on the right and mirror back. That also
+    // keeps a mirrored pair identical rather than letting the search drift.
+    if (mirrored) q.x = -q.x;
+    const hit = nearestOnShell(q, fillHollows);
+    const target = hit.point.clone().addScaledVector(hit.normal, offset);
+    if (noseRadius > 0) {
+      const nose = nearestOnNose(target);
+      const want = noseRadius;
+      if (nose.dist < want) {
+        const outward = target.clone().sub(nose.point);
+        if (outward.lengthSq() < 1e-10) outward.set(0, 0, 1);
+        target.copy(nose.point).addScaledVector(outward.normalize(), want);
+      }
+    }
+    const k = pin.includes(i) || pin.includes(i - points.length)
+      ? 0
+      : (Array.isArray(blend) ? (blend[i] ?? 1) : blend);
+    const res = q.clone().lerp(target, k);
+    if (mirrored) res.x = -res.x;
+    return [res.x, res.y, res.z];
+  });
+
+  // One light Laplacian pass over the interior, leaving the ends alone.
+  if (smooth > 0 && conformed.length > 2) {
+    const sm = conformed.map((p) => p.slice());
+    for (let i = 1; i < conformed.length - 1; i++) {
+      if (pin.includes(i)) continue;
+      for (let k = 0; k < 3; k++) {
+        const mid = (conformed[i - 1][k] + conformed[i + 1][k]) / 2;
+        sm[i][k] = conformed[i][k] + (mid - conformed[i][k]) * smooth;
+      }
+    }
+    return sm.map((p) => p.map((n) => +n.toFixed(5)));
+  }
+  return conformed.map((p) => p.map((n) => +n.toFixed(5)));
+}
+
 /**
  * The head surface plus the features that make it read as a face rather than
  * an ovoid: nose, ears, eyes.
@@ -206,11 +410,8 @@ export function buildFace() {
   // beak in profile. The root now starts at the nasion and the dorsum rises
   // less steeply; the alar width and the base are left where they were.
   const nose = new Mesh(tubeLoft({
-    path: [
-      [0, 1.6880, 0.0768], [0, 1.6785, 0.0832], [0, 1.6685, 0.0875],
-      [0, 1.6575, 0.0890], [0, 1.6480, 0.0880], [0, 1.6410, 0.0838],
-    ],
-    width: 0.0112, flat: 0.92, squareness: 2.2,
+    path: NOSE_PATH,
+    width: NOSE_WIDTH, flat: 0.92, squareness: 2.2,
     profile: [[0, 0.34], [0.28, 0.58], [0.62, 0.94], [0.80, 1.0], [1, 0.76]],
     segments: 26, radial: 16,
   }), flesh);
