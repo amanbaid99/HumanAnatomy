@@ -20,7 +20,7 @@
 
 import { Y, X, Z, P } from './landmarks.js';
 import { FUSIFORM, STRAP, TAPERED } from '../geometry/loft.js';
-import { conformFacePath } from './face.js';
+import { conformFacePath, orbitRing, apertureRing, faceNormalAt } from './face.js';
 
 /*
  * Facial muscle paths are authored anatomically and then walked onto the face
@@ -32,6 +32,64 @@ import { conformFacePath } from './face.js';
  * (clearNose); buccinator is pushed the other way, since it is the deepest
  * muscle of the face.
  */
+
+/*
+ * ----------------------------------------------------------- the orbit ring --
+ *
+ * Orbicularis oculi is the one facial muscle that is a ring, and it is built
+ * from four closed contours rather than a centreline. Each row below says how
+ * far one edge of the muscle lies from the centre of the globe in a given
+ * direction, measured along the face: 0 degrees is lateral, away from the
+ * nose, and 90 is superior.
+ *
+ * The innermost contour is derived from the lid margins rather than chosen, so
+ * the hole through the muscle is the palpebral aperture and moving a lid moves
+ * the muscle with it. Everything outside that is anatomy: narrow medially
+ * where the nose crowds it, widest laterally where it runs out towards the
+ * temple, and spreading over the brow and the cheek.
+ */
+
+/** Points round each contour. More than enough for a 45mm ring to read smooth. */
+const RING_PTS = 40;
+
+/** How far the two rings sit off the face. Each is its own half-depth, plus a
+ *  millimetre of clearance; the thicker orbital ring therefore stands proud of
+ *  the thin lid band, which is the step you can feel at the orbital margin. */
+const PALPEBRAL_OFFSET = 0.0028;
+const ORBITAL_OFFSET = 0.0034;
+
+/**
+ * The hole: clear of the outside of the lid rims by 1.5mm all the way round,
+ * solved against the lids themselves rather than typed in.
+ */
+const PALPEBRAL_INNER = apertureRing({ clear: 0.0015, offset: PALPEBRAL_OFFSET });
+
+/** The lid band is widest over the middle of each lid and pinches at the canthi. */
+const PALPEBRAL_WIDTH = [
+  [0, 0.0026], [45, 0.0030], [90, 0.0028], [135, 0.0030],
+  [180, 0.0024], [225, 0.0028], [270, 0.0034], [315, 0.0030],
+];
+const PALPEBRAL_OUTER = PALPEBRAL_INNER.map(
+  ([d, r], i) => [d, r + PALPEBRAL_WIDTH[i][1]],
+);
+
+/**
+ * The orbital ring starts just inside where the lid band stops. The two parts
+ * of this muscle are continuous in the body, so they are overlapped rather
+ * than butted: a visible join between two rings around an eye reads as a
+ * target, and the thicker orbital ring riding over the thin lid band is what
+ * you see at the orbital margin anyway.
+ */
+const ORBITAL_INNER = PALPEBRAL_OUTER.map(([d, r]) => [d, r - 0.0007]);
+
+/**
+ * Brow above, cheek below, temple laterally, and pulled up short medially by
+ * the nose - which is the whole reason this is a table and not a radius.
+ */
+const ORBITAL_OUTER = [
+  [0, 0.0292], [45, 0.0272], [90, 0.0214], [135, 0.0202],
+  [180, 0.0188], [225, 0.0190], [270, 0.0220], [315, 0.0250],
+];
 
 /** Tendon-heavy profile: short belly, long tapering tendon at the insertion. */
 const TENDINOUS = [[0, 0.45], [0.22, 1.0], [0.52, 0.95], [0.80, 0.48], [1, 0.30]];
@@ -1477,25 +1535,42 @@ export const MUSCLES = [
     nerve: 'Temporal and zygomatic branches of the facial nerve (CN VII)',
   },
   {
-    id: 'orbicularis-oculi', name: 'Orbicularis oculi', region: 'Face',
-    group: 'head', layer: 1, mirror: true, shape: 'tube',
-    // A closed loop around the orbit, so it rides the filled outline: dropped
-    // onto the carved shell it would fall into the socket and sit behind the
-    // eye. Smoothing is off because the loop's ends are the same point.
-    // The ring's own topology is untouched here.
-    path: conformFacePath([
-      [0.0100, 1.6826, 0.0870], [0.0150, 1.6973, 0.0870], [0.0305, 1.7038, 0.0845],
-      [0.0465, 1.6973, 0.0780], [0.0520, 1.6826, 0.0730], [0.0465, 1.6678, 0.0780],
-      [0.0305, 1.6614, 0.0850], [0.0150, 1.6678, 0.0870], [0.0100, 1.6826, 0.0870],
-    ], { offset: 0.004, smooth: 0 }),
-    alignRadial: [0, 0.005],
-    width: 0.0115, flat: 0.26, squareness: 3.2,
-    profile: [[0, 0.85], [0.5, 1.0], [1, 0.85]],
-    fn: 'Closes the eye. The inner ring blinks, the outer ring screws the eye tightly shut. A broad flat disc, not a thin band, which is why the whole area around the eye moves when you squint.',
-    or: 'Medial orbital margin, nasal bone and the medial palpebral ligament',
+    id: 'orbicularis-oculi', name: 'Orbicularis oculi (orbital part)', region: 'Face',
+    group: 'head', layer: 1, mirror: true, shape: 'sheet',
+    // The broad outer ring. A flat ribbon with a hole through it, not a tube
+    // bent into a circle: a swept cross-section has a thickness in every
+    // direction, which around the eye read as a rubber washer. Both edges are
+    // closed loops, so the loft engine sweeps it as an annulus.
+    //
+    // Nothing here is circular. The muscle is crowded by the nose medially,
+    // reaches furthest round towards the temple, and spreads up over the brow
+    // and down over the cheek - so every edge is given per-direction, as a
+    // distance from the centre of the globe measured along the face.
+    origin: orbitRing({ radii: ORBITAL_OUTER, count: RING_PTS, offset: ORBITAL_OFFSET }),
+    insertion: orbitRing({ radii: ORBITAL_INNER, count: RING_PTS, offset: ORBITAL_OFFSET }),
+    thickness: 0.0042, bulge: 0.0011, outward: faceNormalAt,
+    uSeg: RING_PTS, vSeg: 6,
+    fn: 'Screws the eye tightly shut, the way you do against bright sun or a gust of wind. Being a broad flat ring rather than a thin band is why the whole area around the eye - brow, temple and cheek - moves when you squint.',
+    or: 'Medial orbital margin, nasal part of the frontal bone and the medial palpebral ligament',
     ins: 'Circles the orbit and returns to its own origin',
     nerve: 'Temporal and zygomatic branches of the facial nerve (CN VII)',
-    clinical: 'When the facial nerve is paralysed, as in Bell’s palsy, this muscle stops working and the eye on that side will not close, leaving the cornea exposed and at risk of drying out.',
+    clinical: 'Part of the upper face, which is relatively spared in a central (upper motor neurone) lesion such as a stroke, because the forehead and orbital fibres are driven from both hemispheres. A peripheral facial nerve lesion spares nothing on that side, which is how the two are told apart at the bedside.',
+  },
+  {
+    id: 'orbicularis-oculi-palpebral', name: 'Orbicularis oculi (palpebral part)', region: 'Face',
+    group: 'head', layer: 1, mirror: true, shape: 'sheet',
+    // The thin ring inside the lids. Its hole is the palpebral aperture, taken
+    // from the lid margins themselves, so it rings the opening rather than
+    // covering the eye, and it lies behind the lid rims rather than over them.
+    origin: orbitRing({ radii: PALPEBRAL_OUTER, count: RING_PTS, offset: PALPEBRAL_OFFSET }),
+    insertion: orbitRing({ radii: PALPEBRAL_INNER, count: RING_PTS, offset: PALPEBRAL_OFFSET }),
+    thickness: 0.0026, bulge: 0.0004, outward: faceNormalAt,
+    uSeg: RING_PTS, vSeg: 3,
+    fn: 'Blinks. A gentle sweep of the lids that runs all day without being thought about, and the part that closes the eye in sleep.',
+    or: 'Medial palpebral ligament and the medial orbital margin',
+    ins: 'Lateral palpebral raphe, having passed through both lids',
+    nerve: 'Temporal and zygomatic branches of the facial nerve (CN VII)',
+    clinical: 'When the facial nerve is paralysed, as in Bell’s palsy, this is the part that fails and the eye on that side will not close, leaving the cornea exposed and at risk of drying out.',
   },
   {
     id: 'nasalis', name: 'Nasalis', region: 'Face',

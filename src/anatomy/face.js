@@ -63,6 +63,45 @@ const NOSE_PATH = [
 ];
 const NOSE_WIDTH = 0.0112;
 
+/**
+ * The globe, on the right side; mirror x for the left. Hoisted out of
+ * buildFace for the same reason NOSE_PATH was: the orbital muscle has to be
+ * built around the eye that is actually drawn, not around a second set of
+ * numbers that can drift away from it.
+ */
+const EYE = { x: 0.0305, y: 1.6826, z: 0.0714, r: 0.0120 };
+
+/**
+ * The two lid margins as Stage 1 placed them: how far above or below the
+ * centre of the globe each one crosses, and its half-width. The gap between
+ * them is the palpebral aperture.
+ */
+const LIDS = [
+  { dy: 0.0079, w: 0.0036, name: 'upper' },
+  { dy: -0.0071, w: 0.0029, name: 'lower' },
+];
+
+/**
+ * Medial canthus, mid-lid, lateral canthus: how far along the globe each lies,
+ * and what fraction of the margin's full height the lid reaches there.
+ */
+const LID_ARC = [[-0.0115, 0.34], [0, 1], [0.0117, 0.30]];
+
+/**
+ * How far the outside edge of the lid rims lies from the centre of the globe,
+ * in four directions. This is the boundary anything ringing the eye has to
+ * stay clear of, and it is read off the lids rather than measured from a
+ * render, so moving a lid moves the muscle with it. Above and below, the rims
+ * are at their full width; at the canthi they have tapered, so half of it is
+ * allowed there.
+ */
+const APERTURE = {
+  lat: Math.max(...LID_ARC.map(([dx]) => dx)) + LIDS[0].w * 0.5,
+  med: -Math.min(...LID_ARC.map(([dx]) => dx)) + LIDS[0].w * 0.5,
+  up: LIDS[0].dy + LIDS[0].w,
+  down: -(LIDS[1].dy - LIDS[1].w),
+};
+
 const RADIAL = 56;
 // Columns per ring. The ring is closed by wrapping the index, so this is also
 // the vertex count per ring. The shell carries no texture map, only vertex
@@ -385,6 +424,164 @@ export function conformFacePath(points, {
   return conformed.map((p) => p.map((n) => +n.toFixed(5)));
 }
 
+// ------------------------------------------------------- local face frames --
+/*
+ * `conformFacePath` answers where the face is. What follows answers which way
+ * it faces, and lets a shape be laid out in distances measured along it.
+ */
+
+/**
+ * Which way is out, at the point on the face nearest `p`.
+ *
+ * A flat muscle lying on the face has to be thickened along the facial surface
+ * normal. The loft engine's own default - outward from the body's vertical
+ * axis - drifts from that by a few degrees around the eye and by tens of
+ * degrees over the jaw, which tips a muscle meant to lie flat onto its edge.
+ */
+export function faceNormalAt(p) {
+  const q = new Vector3(p.x, p.y, p.z);
+  const mirrored = q.x < 0;
+  if (mirrored) q.x = -q.x;
+  const n = nearestOnShell(q, true).normal;
+  if (mirrored) n.x = -n.x;
+  return n;
+}
+
+/**
+ * The azimuth that lies `arc` metres across the face from `az0`, at height y.
+ *
+ * Needed because azimuth is not a distance: a radian is worth far more across
+ * the front of the face than it is once the surface has turned towards the
+ * temple. Marching in short steps at the local rate keeps a contour's width in
+ * millimetres honest all the way round to the side of the head, where a single
+ * scale factor would have stretched it.
+ */
+function azAtArc(y, az0, arc) {
+  const dir = Math.sign(arc) || 1;
+  const target = Math.abs(arc);
+  const a = new Vector3();
+  const b = new Vector3();
+  let az = az0;
+  let walked = 0;
+  while (walked < target - 1e-9) {
+    shellPoint(y, az, true, a);
+    shellPoint(y, az + 0.01 * dir, true, b);
+    const rate = a.distanceTo(b) / 0.01;        // metres per radian, here
+    const take = Math.min(0.004, target - walked);
+    az += (take / Math.max(rate, 1e-6)) * dir;
+    walked += take;
+  }
+  return az;
+}
+
+/** Periodic lookup over [[degrees, value], ...], smoothed between anchors. */
+function aroundOrbit(keys, deg) {
+  const d = ((deg % 360) + 360) % 360;
+  const ks = keys.slice().sort((a, b) => a[0] - b[0]);
+  const ease = (k) => k * k * (3 - 2 * k);
+  for (let i = 0; i < ks.length - 1; i++) {
+    const [d0, v0] = ks[i];
+    const [d1, v1] = ks[i + 1];
+    if (d >= d0 && d <= d1) return v0 + (v1 - v0) * ease((d - d0) / (d1 - d0 || 1));
+  }
+  // Outside the anchors, wrap from the last round to the first.
+  const [dl, vl] = ks[ks.length - 1];
+  const [df, vf] = ks[0];
+  const kd = d >= dl ? d : d + 360;
+  return vl + (vf - vl) * ease((kd - dl) / (df + 360 - dl || 1));
+}
+
+/**
+ * The surface parameters of the face directly in front of the globe. The
+ * contour is a feature of the surface, so it is centred on the surface rather
+ * than on the globe's own centre.
+ */
+function orbitAnchor() {
+  return nearestOnShell(new Vector3(EYE.x, EYE.y, EYE.z + EYE.r), true);
+}
+
+/** One point on an orbital contour: `arc` metres from the anchor, towards `deg`. */
+function orbitPoint(anchor, deg, arc, offset, out = new Vector3()) {
+  const rad = (deg * Math.PI) / 180;
+  const y = anchor.y + arc * Math.sin(rad);
+  const az = azAtArc(y, anchor.az, arc * Math.cos(rad));
+  shellPoint(y, az, true, out);
+  return out.addScaledVector(shellNormal(y, az, true), offset);
+}
+
+/**
+ * A closed contour around the right orbit, lying on the face.
+ *
+ * Laid out in the shell's own two surface parameters rather than in space, so
+ * a radius given in millimetres is a distance measured along the face. The
+ * alternative - drawing the ring in the frontal plane and pushing it back onto
+ * the head - squashes the lateral side, which is the one side the muscle has
+ * to reach furthest round.
+ *
+ * Built for the right side only; the left comes from mirroring, which the
+ * symmetric shell makes exact.
+ *
+ * @param {Array} radii   [[degrees, metres], ...]. 0 degrees is lateral, away
+ *        from the nose, and 90 is superior. The distance is from the centre of
+ *        the globe, measured along the face.
+ * @param {number} count  points around the loop
+ * @param {number} offset metres along the outward normal
+ */
+export function orbitRing({ radii, count = 40, offset = 0.004 }) {
+  const anchor = orbitAnchor();
+  const pts = [];
+  for (let i = 0; i < count; i++) {
+    const deg = (i / count) * 360;
+    const p = orbitPoint(anchor, deg, aroundOrbit(radii, deg), offset);
+    pts.push([+p.x.toFixed(5), +p.y.toFixed(5), +p.z.toFixed(5)]);
+  }
+  // A loop, closed by repeating its first point. That is how the loft engine
+  // recognises a ring and sweeps it without a seam.
+  pts.push(pts[0].slice());
+  return pts;
+}
+
+/**
+ * The contour that clears the outside of the lid rims by `clear` metres, as a
+ * radii table `orbitRing` can sweep.
+ *
+ * This is a search rather than a list of numbers because the two measurements
+ * are in different units. The lids are placed against the globe; a contour is
+ * laid out along the face; and the two only agree head-on. Laterally the face
+ * turns away from the globe, so the same clearance in front of the eye costs a
+ * third again as much distance across the surface, 18.0mm against 13.6mm
+ * medially. Solving for it rather than typing it in means the hole through the
+ * muscle is the palpebral aperture by construction: move a lid and the muscle
+ * follows.
+ */
+export function apertureRing({ clear = 0.0015, offset = 0.004, count = 8 } = {}) {
+  const anchor = orbitAnchor();
+  const p = new Vector3();
+  const table = [];
+  for (let i = 0; i < count; i++) {
+    const deg = (i / count) * 360;
+    const rad = (deg * Math.PI) / 180;
+    const c = Math.cos(rad);
+    const si = Math.sin(rad);
+    // The lid rims' outer boundary, as an ellipse seen head-on.
+    const rx = (c >= 0 ? APERTURE.lat : APERTURE.med) + clear;
+    const ry = (si >= 0 ? APERTURE.up : APERTURE.down) + clear;
+    const want = 1 / Math.hypot(c / rx, si / ry);
+    // How far out the point sits, seen head-on, grows with the arc radius, so
+    // bisection is safe.
+    let lo = 0.004;
+    let hi = 0.045;
+    for (let k = 0; k < 40; k++) {
+      const mid = (lo + hi) / 2;
+      orbitPoint(anchor, deg, mid, offset, p);
+      const seen = (p.x - EYE.x) * c + (p.y - EYE.y) * si;
+      if (seen < want) lo = mid; else hi = mid;
+    }
+    table.push([deg, +((lo + hi) / 2).toFixed(5)]);
+  }
+  return table;
+}
+
 /**
  * The head surface plus the features that make it read as a face rather than
  * an ovoid: nose, ears, eyes.
@@ -448,25 +645,25 @@ export function buildFace() {
     // at 24mm and seated 3mm deeper than it was; the lids are derived from it
     // rather than being placed by hand, because by hand both of them had ended
     // up above the globe entirely, which is what made the face stare.
-    const EYE = { x: 0.0305 * side, y: 1.6826, z: 0.0714, r: 0.0120 };
+    const eye = { x: EYE.x * side, y: EYE.y, z: EYE.z, r: EYE.r };
 
-    const sclera = new Mesh(new SphereGeometry(EYE.r, 20, 16), skinMaterial(0xc6bfb2, 0.38));
-    sclera.position.set(EYE.x, EYE.y, EYE.z);
+    const sclera = new Mesh(new SphereGeometry(eye.r, 20, 16), skinMaterial(0xc6bfb2, 0.38));
+    sclera.position.set(eye.x, eye.y, eye.z);
     sclera.name = `face.sclera.${s}`;
     group.add(sclera);
 
     // The iris rim sits on the globe, so its flattened cap stands slightly
     // proud the way a cornea does.
     const irisR = 0.0059;
-    const irisZ = EYE.z + Math.sqrt(EYE.r * EYE.r - irisR * irisR);
+    const irisZ = eye.z + Math.sqrt(eye.r * eye.r - irisR * irisR);
     const iris = new Mesh(new SphereGeometry(irisR, 18, 14), skinMaterial(0x6d7f86, 0.30));
-    iris.position.set(EYE.x + 0.0008 * side, EYE.y - 0.0004, irisZ);
+    iris.position.set(eye.x + 0.0008 * side, eye.y - 0.0004, irisZ);
     iris.scale.set(1, 1, 0.42);
     iris.name = `face.iris.${s}`;
     group.add(iris);
 
     const pupil = new Mesh(new SphereGeometry(0.0023, 12, 10), skinMaterial(0x140f0c, 0.25));
-    pupil.position.set(EYE.x + 0.0009 * side, EYE.y - 0.0004, irisZ + 0.0021);
+    pupil.position.set(eye.x + 0.0009 * side, eye.y - 0.0004, irisZ + 0.0021);
     pupil.scale.set(1, 1, 0.35);
     pupil.name = `face.pupil.${s}`;
     group.add(pupil);
@@ -475,13 +672,12 @@ export function buildFace() {
     // centre of the globe the margin crosses, and the arc is drawn on a sphere
     // a little larger than the globe so the lid lies on it rather than in it.
     // The upper lid is the thicker of the two and covers more of the globe.
-    [[0.0079, 0.0036, 'upper'], [-0.0071, 0.0029, 'lower']].forEach(([dy, lw, which]) => {
-      const shell = EYE.r + lw * 0.55;
-      // medial canthus, mid-lid, lateral canthus
-      const arc = [[-0.0115, 0.34], [0, 1], [0.0117, 0.30]].map(([dx, k]) => {
+    LIDS.forEach(({ dy, w: lw, name: which }) => {
+      const shell = eye.r + lw * 0.55;
+      const arc = LID_ARC.map(([dx, k]) => {
         const yy = dy * k;
         const inside = shell * shell - dx * dx - yy * yy;
-        return [EYE.x + dx * side, EYE.y + yy, EYE.z + Math.sqrt(Math.max(inside, 1e-6))];
+        return [eye.x + dx * side, eye.y + yy, eye.z + Math.sqrt(Math.max(inside, 1e-6))];
       });
       const rim = new Mesh(tubeLoft({
         path: arc,

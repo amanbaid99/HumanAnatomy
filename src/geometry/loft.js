@@ -228,8 +228,31 @@ function tendonWeight(scale) {
   return Math.min(1, Math.max(0, (0.70 - scale) / 0.46));
 }
 
+/**
+ * A polyline is taken to be a closed loop when its last point repeats its
+ * first. That is the only signal needed: a caller that wants a ring says so by
+ * drawing one.
+ */
+function isLoop(points) {
+  if (!Array.isArray(points) || points.length < 4) return false;
+  const a = points[0];
+  const b = points[points.length - 1];
+  return Math.abs(a[0] - b[0]) < 1e-7
+    && Math.abs(a[1] - b[1]) < 1e-7
+    && Math.abs(a[2] - b[2]) < 1e-7;
+}
+
 /** Sample a polyline (given as control points) at parameter u in [0,1]. */
-function sampleLine(points, u, tension = 0.5) {
+function sampleLine(points, u, tension = 0.5, closed = false) {
+  if (closed) {
+    // Drop the repeated point; a closed curve joins the ends itself, and
+    // leaving the duplicate in puts a cusp at the join.
+    const curve = new CatmullRomCurve3(
+      points.slice(0, -1).map((p) => new Vector3(p[0], p[1], p[2])),
+      true, 'catmullrom', tension,
+    );
+    return curve.getPointAt(((u % 1) + 1) % 1);
+  }
   if (points.length === 1) return new Vector3(...points[0]);
   if (points.length === 2) {
     const a = new Vector3(...points[0]);
@@ -247,12 +270,24 @@ function sampleLine(points, u, tension = 0.5) {
  * bulged outward so it drapes over the trunk rather than cutting through it,
  * then thickened into a solid.
  *
- * @param {number[][]} origin     broad bony attachment, as a polyline
- * @param {number[][]} insertion  narrow attachment, as a polyline
+ * Both edges may instead be closed loops - a polyline whose last point repeats
+ * its first - and the sheet is then swept as an annulus: a ribbon with a hole
+ * through it rather than a strip with two free ends. That is what a muscle like
+ * orbicularis oculi is. There is no seam column, because the grid wraps in u,
+ * and only the two loop edges need stitching.
+ *
+ * @param {number[][]} origin     broad bony attachment, as a polyline or loop
+ * @param {number[][]} insertion  narrow attachment, as a polyline or loop
  * @param {number}     thickness  slab thickness (meters)
  * @param {number}     bulge      outward displacement at mid-span
- * @param {string|number[]} outward 'radial' (away from the body's Y axis) or a fixed direction
- * @param {Array} taper  [[v, scale], ...] narrowing from origin to insertion
+ * @param {string|number[]|Function} outward which way is out: 'radial' (away
+ *        from the body's Y axis), a fixed direction, or a function of a point
+ *        returning the local surface normal there. The function form is what a
+ *        sheet lying on a curved surface needs - the slab is then thickened
+ *        along that surface rather than along a radius from the body's axis,
+ *        which around the eye is tens of degrees out.
+ * @param {Array} taper  [[v, scale], ...] narrowing from origin to insertion.
+ *        Ignored for a loop, which has no edges to draw in.
  */
 export function sheetLoft({
   origin,
@@ -267,23 +302,31 @@ export function sheetLoft({
 }) {
   const grid = [];
   const fixedOut = Array.isArray(outward) ? new Vector3(...outward).normalize() : null;
+  const outFn = typeof outward === 'function' ? outward : null;
+  const closed = isLoop(origin) && isLoop(insertion);
+  // A ring has no seam column: the last column's neighbour is the first.
+  const cols = closed ? uSeg : uSeg + 1;
+  const uWrap = (iu) => (closed ? (iu + cols) % cols : Math.min(Math.max(iu, 0), uSeg));
 
   for (let iv = 0; iv <= vSeg; iv++) {
     const v = iv / vSeg;
     const row = [];
-    for (let iu = 0; iu <= uSeg; iu++) {
+    for (let iu = 0; iu < cols; iu++) {
       const u = iu / uSeg;
-      // Taper pulls the sheet's edges toward its centre as it nears the insertion.
-      const shrink = taper ? keyframe(taper, v) : 1;
-      const uu = 0.5 + (u - 0.5) * shrink;
+      // Taper pulls the sheet's edges toward its centre as it nears the
+      // insertion. A loop has no edges to pull, so it is left alone.
+      const shrink = taper && !closed ? keyframe(taper, v) : 1;
+      const uu = closed ? u : 0.5 + (u - 0.5) * shrink;
 
-      const p0 = sampleLine(origin, uu);
-      const p1 = sampleLine(insertion, uu);
+      const p0 = sampleLine(origin, uu, 0.5, closed);
+      const p1 = sampleLine(insertion, uu, 0.5, closed);
       const p = p0.clone().lerp(p1, v);
 
       // Bulge outward, peaking mid-span, so the sheet has believable relief.
       let dir;
-      if (fixedOut) {
+      if (outFn) {
+        dir = new Vector3().fromArray(outFn(p).toArray ? outFn(p).toArray() : outFn(p)).normalize();
+      } else if (fixedOut) {
         dir = fixedOut.clone();
       } else {
         const axis = new Vector3(0, p.y, 0);
@@ -294,28 +337,38 @@ export function sheetLoft({
         dir.normalize();
       }
       // Fade the bulge at both attachments; muscles are flat where they anchor.
-      const arch = Math.sin(Math.PI * v) * Math.sin(Math.PI * Math.min(Math.max(uu, 0), 1)) ** 0.5;
-      p.add(dir.multiplyScalar(bulge * arch));
+      // A ring fades only across its width, since it never ends in u.
+      const archU = closed ? 1 : Math.sin(Math.PI * Math.min(Math.max(uu, 0), 1)) ** 0.5;
+      p.add(dir.clone().multiplyScalar(bulge * Math.sin(Math.PI * v) * archU));
       row.push(p);
     }
     grid.push(row);
   }
 
-  // Surface normals from grid neighbours.
+  // Surface normals. Where the caller can say which way is out, that answer is
+  // used directly, because it knows the surface the sheet lies on and the grid
+  // only knows the sheet. Otherwise take them from the grid's own neighbours.
   const normals = grid.map((row, iv) => row.map((p, iu) => {
-    const a = grid[iv][Math.min(iu + 1, uSeg)].clone().sub(grid[iv][Math.max(iu - 1, 0)]);
+    if (outFn) {
+      const n = outFn(p);
+      return new Vector3().fromArray(n.toArray ? n.toArray() : n).normalize();
+    }
+    const a = grid[iv][uWrap(iu + 1)].clone().sub(grid[iv][uWrap(iu - 1)]);
     const b = grid[Math.min(iv + 1, vSeg)][iu].clone().sub(grid[Math.max(iv - 1, 0)][iu]);
     const n = _v().crossVectors(b, a);
     if (n.lengthSq() < 1e-12) n.set(0, 0, 1);
     return n.normalize();
   }));
 
-  // Flip so normals point away from the body axis.
+  // Flip so normals point away from the body axis. Not needed when the caller
+  // supplied them: those already point out of the surface.
   let flip = 0;
-  for (let iv = 0; iv <= vSeg; iv += Math.max(1, Math.floor(vSeg / 4))) {
-    const p = grid[iv][Math.floor(uSeg / 2)];
-    const out = new Vector3(p.x, 0, p.z);
-    if (out.lengthSq() > 1e-8) flip += normals[iv][Math.floor(uSeg / 2)].dot(out.normalize()) < 0 ? 1 : -1;
+  if (!outFn) {
+    for (let iv = 0; iv <= vSeg; iv += Math.max(1, Math.floor(vSeg / 4))) {
+      const p = grid[iv][Math.floor(uSeg / 2)];
+      const out = new Vector3(p.x, 0, p.z);
+      if (out.lengthSq() > 1e-8) flip += normals[iv][Math.floor(uSeg / 2)].dot(out.normalize()) < 0 ? 1 : -1;
+    }
   }
   if (flip > 0) normals.forEach((row) => row.forEach((n) => n.negate()));
 
@@ -331,54 +384,69 @@ export function sheetLoft({
   [1, -1].forEach((side) => {
     shellStart.push(verts.length / 3);
     for (let iv = 0; iv <= vSeg; iv++) {
-      for (let iu = 0; iu <= uSeg; iu++) {
+      for (let iu = 0; iu < cols; iu++) {
         // Thin the slab toward its edges so it does not end in a hard wall.
-        const edge = Math.sin(Math.PI * (iu / uSeg)) ** 0.35 * Math.sin(Math.PI * (iv / vSeg)) ** 0.25;
+        // A ring is only thinned across its width; thinning it in u would
+        // pinch it to nothing at an arbitrary point on the loop.
+        const edgeU = closed ? 1 : Math.sin(Math.PI * (iu / uSeg)) ** 0.35;
+        const edge = edgeU * Math.sin(Math.PI * (iv / vSeg)) ** 0.25;
         const t = half * (0.25 + 0.75 * edge);
         const n = normals[iv][iu];
         const p = grid[iv][iu].clone().add(n.clone().multiplyScalar(side * t));
         verts.push(p.x, p.y, p.z);
         const nn = n.clone().multiplyScalar(side);
         norms.push(nn.x, nn.y, nn.z);
-        uvs.push(iu / uSeg, iv / vSeg);
-        // Sheets go aponeurotic where they meet bone, at both v edges.
+        // A ring's u wraps, so it is divided by the column count; an open
+        // sheet still runs 0 to 1 across its last column.
+        uvs.push(iu / (closed ? cols : uSeg), iv / vSeg);
+        // Sheets go aponeurotic where they meet bone, at both v edges. A ring
+        // meets no bone along an edge - it has no origin or insertion line at
+        // all - so it stays belly all the way across. Leaving the rule on put
+        // a pale circle round each margin, and two of those around an eye read
+        // as a target rather than as a muscle.
         const v = iv / vSeg;
-        tendon.push(Math.min(1, Math.max(0, 1 - Math.sin(Math.PI * v) / 0.40)));
+        tendon.push(closed ? 0 : Math.min(1, Math.max(0, 1 - Math.sin(Math.PI * v) / 0.40)));
       }
     }
   });
 
-  const perRow = uSeg + 1;
+  const perRow = cols;
+  const quads = closed ? cols : uSeg;
   shellStart.forEach((start, si) => {
     for (let iv = 0; iv < vSeg; iv++) {
-      for (let iu = 0; iu < uSeg; iu++) {
+      for (let iu = 0; iu < quads; iu++) {
         const a = start + iv * perRow + iu;
+        const a1 = start + iv * perRow + uWrap(iu + 1);
         const b = a + perRow;
-        if (si === 0) idx.push(a, b, a + 1, b, b + 1, a + 1);
-        else idx.push(a, a + 1, b, b, a + 1, b + 1);
+        const b1 = a1 + perRow;
+        if (si === 0) idx.push(a, b, a1, b, b1, a1);
+        else idx.push(a, a1, b, b, a1, b1);
       }
     }
   });
 
   // Stitch the two shells around the border so the slab is watertight.
   const [o, i2] = shellStart;
-  const border = [];
-  for (let iu = 0; iu < uSeg; iu++) border.push([iu, iu + 1]);
-  border.forEach(([u1, u2]) => {
+  for (let iu = 0; iu < quads; iu++) {
+    const u1 = iu;
+    const u2 = uWrap(iu + 1);
     // top edge (v = 0)
     idx.push(o + u1, o + u2, i2 + u1, i2 + u1, o + u2, i2 + u2);
     // bottom edge (v = vSeg)
     const bo = vSeg * perRow;
     idx.push(o + bo + u2, o + bo + u1, i2 + bo + u1, o + bo + u2, i2 + bo + u1, i2 + bo + u2);
-  });
-  for (let iv = 0; iv < vSeg; iv++) {
-    const r1 = iv * perRow;
-    const r2 = (iv + 1) * perRow;
-    // left edge (u = 0)
-    idx.push(o + r2, o + r1, i2 + r1, o + r2, i2 + r1, i2 + r2);
-    // right edge (u = uSeg)
-    const e = uSeg;
-    idx.push(o + r1 + e, o + r2 + e, i2 + r1 + e, i2 + r1 + e, o + r2 + e, i2 + r2 + e);
+  }
+  // A ring has no free ends in u, so only the two loop edges above need it.
+  if (!closed) {
+    for (let iv = 0; iv < vSeg; iv++) {
+      const r1 = iv * perRow;
+      const r2 = (iv + 1) * perRow;
+      // left edge (u = 0)
+      idx.push(o + r2, o + r1, i2 + r1, o + r2, i2 + r1, i2 + r2);
+      // right edge (u = uSeg)
+      const e = uSeg;
+      idx.push(o + r1 + e, o + r2 + e, i2 + r1 + e, i2 + r1 + e, o + r2 + e, i2 + r2 + e);
+    }
   }
 
   return buildGeometry(verts, norms, uvs, idx, tendon);

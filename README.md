@@ -104,15 +104,18 @@ src/anatomy/landmarks.js    shared landmark table (one source of truth)
 src/anatomy/muscles.js      muscle definitions: attachments, actions, notes
 src/anatomy/skeleton.js     bone construction
 src/anatomy/face.js         the head: lofted shell, carved sockets, features
-
-A band lying on a curved surface, like orbicularis oculi around the eye, cannot use
-the transported frames the rest of the model relies on: they drift around a closed
-loop and the ribbon ends up standing edge-on to the face. `tubeLoft` takes an
-`alignRadial` axis for those, holding the thin side of the cross-section along the
-outward direction so the band lies flat.
 src/anatomy/build.js        definitions to meshes, and the muscle material
 vendor/                     three.js r0.185, vendored so there is no CDN dependency
 ```
+
+A muscle lying on a curved surface cannot use the transported frames the rest of
+the model relies on, because they drift and the muscle ends up standing on its
+edge instead of lying flat. The face answers that itself: `face.js` can say where
+the facial surface is and which way it faces at any point, and `sheetLoft` takes
+that answer directly, so the slab is thickened along the face rather than along a
+radius from the body's axis. The same engine sweeps a closed loop as an annulus
+when both of its edges are rings, which is what orbicularis oculi is: a flat
+ribbon with the palpebral aperture as its hole, not a tube bent into a circle.
 
 `landmarks.js` is what keeps the model coherent. Bones and muscles both position
 themselves against the same named points, so a muscle's origin lands on the bone it
