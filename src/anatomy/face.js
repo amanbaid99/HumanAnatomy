@@ -582,6 +582,208 @@ export function apertureRing({ clear = 0.0015, offset = 0.004, count = 8 } = {})
   return table;
 }
 
+// ---------------------------------------------------------------- the mouth --
+/*
+ * The lips are two tubes rather than one, because the line between them - the
+ * oral fissure - is what makes a mouth read as a mouth. With a single band
+ * there was no upper lip, no lower lip and nothing between them, and the dark
+ * patch that passed for an opening was the band itself in shadow.
+ *
+ * Each lip is laid against the fissure, so the gap between them is set here
+ * once and not by two numbers that happen to agree. The muscle round the mouth
+ * is then read off the lips, the way the orbital ring is read off the lids.
+ */
+
+/** Half the width of the mouth, commissure to midline. */
+const MOUTH_HALF = 0.022;
+/** Height of the fissure at the commissure, and at the midline (stomion). */
+const COMMISSURE_Y = 1.6236;
+const STOMION_Y = 1.6262;
+/** How far the front of each lip sits forward at the commissure. */
+const LIP_FRONT_CORNER = 0.0818;
+/** Rings along each lip, and points round each ring. */
+const LIP_SEGMENTS = 20;
+const LIP_RADIAL = 12;
+
+/** The fissure arches gently, highest at the midline. */
+function fissureY(x) {
+  return COMMISSURE_Y + (STOMION_Y - COMMISSURE_Y) * (1 - (x / MOUTH_HALF) ** 2);
+}
+
+/** Half the gap between the lips: a millimetre open at the midline, closing at the corners. */
+function fissureGap(x) {
+  return 0.0001 + 0.0005 * (1 - (x / MOUTH_HALF) ** 2);
+}
+
+/**
+ * Each lip, on the right side, as [x from the midline, fraction of full
+ * height]. The upper lip is lowest at the midline and fullest over the
+ * philtral columns either side of it, which is the Cupid's bow; the lower lip
+ * is fullest in the middle. Both thin to the commissures.
+ */
+const LIPS = {
+  upper: {
+    dir: 1, width: 0.0036, flat: 1.05, front: 0.0925,
+    shape: [[0, 0.84], [0.0045, 1.0], [0.0120, 0.92], [MOUTH_HALF, 0.42]],
+  },
+  lower: {
+    dir: -1, width: 0.0044, flat: 0.95, front: 0.0918,
+    shape: [[0, 1.0], [0.0045, 0.98], [0.0120, 0.85], [MOUTH_HALF, 0.38]],
+  },
+};
+
+/**
+ * Sweep one lip. The cross-section is held on the outward direction from the
+ * head's axis, so its height is vertical everywhere and the lip lies against
+ * the fissure at a known distance; a transported frame tilted the band by a
+ * quarter of a right angle and closed the gap from both sides.
+ */
+function lipGeometry(which) {
+  const L = LIPS[which];
+  const half = L.shape.map(([x, k]) => {
+    const w = L.width * k;
+    const y = fissureY(x) + L.dir * (fissureGap(x) + w);
+    const front = L.front - (L.front - LIP_FRONT_CORNER) * (x / MOUTH_HALF) ** 2;
+    return [x, y, front - w * L.flat];
+  });
+  const path = [...half.slice(1).reverse().map(([x, y, z]) => [-x, y, z]), ...half];
+  const keys = [...L.shape.slice(1).reverse(), ...L.shape];
+  // Profile keys at each control point, spaced by chord so they land on it.
+  const chord = [0];
+  for (let i = 1; i < path.length; i++) {
+    chord.push(chord[i - 1] + Math.hypot(...[0, 1, 2].map((k) => path[i][k] - path[i - 1][k])));
+  }
+  const total = chord[chord.length - 1];
+  return tubeLoft({
+    path,
+    width: L.width, flat: L.flat, squareness: 2.6,
+    profile: keys.map(([, k], i) => [chord[i] / total, k]),
+    segments: LIP_SEGMENTS, radial: LIP_RADIAL,
+    alignRadial: [0, 0.005],
+  });
+}
+
+/**
+ * The outside border of one lip, right half, midline first: for every ring of
+ * the swept lip, the vertex furthest from the fissure. Read off the geometry
+ * that is drawn, so the muscle cannot drift away from the lip it surrounds.
+ */
+function lipBorder(which) {
+  const geo = lipGeometry(which);
+  const pos = geo.attributes.position;
+  const perRing = LIP_RADIAL + 1;
+  const rings = LIP_SEGMENTS + 1;
+  const dir = LIPS[which].dir;
+  const out = [];
+  for (let i = (rings - 1) / 2; i < rings; i++) {
+    let best = null;
+    for (let j = 0; j < perRing; j++) {
+      const v = new Vector3().fromBufferAttribute(pos, i * perRing + j);
+      if (!best || v.y * dir > best.y * dir) best = v;
+    }
+    out.push(best);
+  }
+  out[0].x = 0;                  // exactly on the midline, so the mirror closes
+  return out;
+}
+
+/**
+ * Walk `dist` metres across the face from a surface hit, heading in the
+ * frontal-plane direction (dx, dy). Each step is taken in the tangent plane
+ * and dropped back onto the surface, so the distance is measured along the
+ * face rather than through it.
+ */
+function walkFace(hit, dx, dy, dist) {
+  const d = new Vector3();
+  let here = hit;
+  let walked = 0;
+  while (walked < dist - 1e-9) {
+    const take = Math.min(0.0005, dist - walked);
+    d.set(dx, dy, 0).addScaledVector(here.normal, -d.dot(here.normal)).normalize();
+    here = nearestOnShell(here.point.clone().addScaledVector(d, take), true);
+    walked += take;
+  }
+  return here;
+}
+
+/** Smoothed lookup over [[x, value], ...], clamped past the ends. */
+function alongMouth(keys, x) {
+  if (x <= keys[0][0]) return keys[0][1];
+  for (let i = 0; i < keys.length - 1; i++) {
+    const [x0, v0] = keys[i];
+    const [x1, v1] = keys[i + 1];
+    if (x <= x1) {
+      const k = (x - x0) / (x1 - x0 || 1);
+      return v0 + (v1 - v0) * k * k * (3 - 2 * k);
+    }
+  }
+  return keys[keys.length - 1][1];
+}
+
+/**
+ * The two edges of one half of the muscle round the mouth, lying on the face.
+ *
+ * The inner edge follows the outside border of a lip, `clear` metres beyond
+ * it; the outer edge lies `widths` further on, measured across the face and at
+ * right angles to the lip, so the band fans out round the corner of the mouth
+ * rather than stopping square. Past the commissure both halves run on by
+ * `extend` and finish at a shared point lateral to the corner, the modiolus,
+ * where the muscles of the cheek converge on the mouth: that is what closes
+ * the ring without a gap or a knot at each corner.
+ *
+ * Built on the right side and mirrored, so the two sides are identical. Both
+ * edges run corner to corner: left to right above the mouth, right to left
+ * below it. The sheet's v runs from the outer edge in towards the lip, so it
+ * runs down in one part and up in the other; turning u round with it keeps
+ * both parts wound the same way, with their front faces out of the face.
+ * Wound the other way, the front of the sheet is culled and what shows is
+ * its inner face, lit from behind, which reads as a dark hole.
+ *
+ * @param {'upper'|'lower'} lip
+ * @param {Array} widths  [[x, metres], ...] band width, by distance from the
+ *        midline. Past MOUTH_HALF is the run-on beyond the corner.
+ * @param {number} clear  gap between the lip's border and the muscle's edge
+ * @param {number} offset metres along the facial normal
+ * @param {number} extend how far past the commissure the band runs on
+ */
+export function perioralArc({ lip, widths, clear = 0.0004, offset = 0.002, extend = 0.004 }) {
+  const dir = LIPS[lip].dir;
+  const border = lipBorder(lip);
+  // The shared end point, just lateral to the commissure.
+  const corner = new Vector3(MOUTH_HALF + extend, COMMISSURE_Y, LIP_FRONT_CORNER);
+  const pts = [...border, corner];
+
+  const inner = [];
+  const outer = [];
+  const lift = (h) => h.point.clone().addScaledVector(h.normal, offset);
+  pts.forEach((p, k) => {
+    // Tangent of the border in the frontal plane; the midline is level by
+    // symmetry.
+    const prev = k === 0 ? new Vector3(-pts[1].x, pts[1].y, 0) : pts[k - 1];
+    const next = pts[Math.min(k + 1, pts.length - 1)];
+    const tx = next.x - prev.x;
+    const ty = next.y - prev.y;
+    const len = Math.hypot(tx, ty) || 1;
+    // At right angles to it, away from the fissure.
+    const nx = (-ty / len) * dir;
+    const ny = (tx / len) * dir;
+    const onFace = nearestOnShell(p, true);
+    const start = k === pts.length - 1 ? onFace : walkFace(onFace, nx, ny, clear);
+    const end = walkFace(start, nx, ny, alongMouth(widths, Math.abs(p.x)));
+    inner.push(lift(start));
+    outer.push(lift(end));
+  });
+
+  const full = (side) => {
+    const right = side.map((v) => [+v.x.toFixed(5), +v.y.toFixed(5), +v.z.toFixed(5)]);
+    right[0][0] = 0;
+    const left = right.slice(1).reverse().map(([x, y, z]) => [-x, y, z]);
+    const both = [...left, ...right];
+    return dir > 0 ? both : both.reverse();
+  };
+  return { inner: full(inner), outer: full(outer) };
+}
+
 /**
  * The head surface plus the features that make it read as a face rather than
  * an ovoid: nose, ears, eyes.
@@ -615,17 +817,14 @@ export function buildFace() {
   nose.name = 'face.nose';
   group.add(nose);
 
-  // Lips, as a low band around the mouth.
-  const lips = new Mesh(tubeLoft({
-    path: [
-      [-0.022, 1.6236, 0.0800], [0, 1.6271, 0.0878], [0.022, 1.6236, 0.0800],
-    ],
-    width: 0.0085, flat: 0.5, squareness: 2.6,
-    profile: [[0, 0.4], [0.5, 1.0], [1, 0.4]],
-    segments: 16, radial: 12,
-  }), skinMaterial(0xa9564a, 0.58));
-  lips.name = 'face.lips';
-  group.add(lips);
+  // Lips, upper and lower, with the oral fissure between them. The same
+  // footprint as the single band they replace; the mouth socket behind them
+  // is what shows through the gap.
+  ['upper', 'lower'].forEach((which) => {
+    const lip = new Mesh(lipGeometry(which), skinMaterial(0xa9564a, 0.58));
+    lip.name = `face.lip.${which}`;
+    group.add(lip);
+  });
 
   [1, -1].forEach((side) => {
     const s = side > 0 ? 'r' : 'l';

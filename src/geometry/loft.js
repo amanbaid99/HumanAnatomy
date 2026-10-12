@@ -288,6 +288,9 @@ function sampleLine(points, u, tension = 0.5, closed = false) {
  *        which around the eye is tens of degrees out.
  * @param {Array} taper  [[v, scale], ...] narrowing from origin to insertion.
  *        Ignored for a loop, which has no edges to draw in.
+ * @param {boolean} margins  pale the origin and insertion edges as aponeurosis.
+ *        Right for a sheet that meets bone along them; false for one that ends
+ *        in skin or other muscle and is fleshy right to its edge.
  */
 export function sheetLoft({
   origin,
@@ -299,6 +302,7 @@ export function sheetLoft({
   vSeg = 18,
   taper = null,
   axisY = null,
+  margins = true,
 }) {
   const grid = [];
   const fixedOut = Array.isArray(outward) ? new Vector3(...outward).normalize() : null;
@@ -404,8 +408,9 @@ export function sheetLoft({
         // all - so it stays belly all the way across. Leaving the rule on put
         // a pale circle round each margin, and two of those around an eye read
         // as a target rather than as a muscle.
+        // The same holds for an open sheet whose edges end in soft tissue.
         const v = iv / vSeg;
-        tendon.push(closed ? 0 : Math.min(1, Math.max(0, 1 - Math.sin(Math.PI * v) / 0.40)));
+        tendon.push(closed || !margins ? 0 : Math.min(1, Math.max(0, 1 - Math.sin(Math.PI * v) / 0.40)));
       }
     }
   });

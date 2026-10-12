@@ -126,6 +126,7 @@ function geometryFor(def) {
       bulge: def.bulge ?? 0.018,
       outward: def.outward ?? 'radial',
       taper: def.taper ?? null,
+      margins: def.margins ?? true,
       uSeg: def.uSeg ?? 16,
       vSeg: def.vSeg ?? 12,
     });

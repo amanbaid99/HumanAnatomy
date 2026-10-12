@@ -20,7 +20,9 @@
 
 import { Y, X, Z, P } from './landmarks.js';
 import { FUSIFORM, STRAP, TAPERED } from '../geometry/loft.js';
-import { conformFacePath, orbitRing, apertureRing, faceNormalAt } from './face.js';
+import {
+  conformFacePath, orbitRing, apertureRing, faceNormalAt, perioralArc,
+} from './face.js';
 
 /*
  * Facial muscle paths are authored anatomically and then walked onto the face
@@ -90,6 +92,35 @@ const ORBITAL_OUTER = [
   [0, 0.0292], [45, 0.0272], [90, 0.0214], [135, 0.0202],
   [180, 0.0188], [225, 0.0190], [270, 0.0220], [315, 0.0250],
 ];
+
+/*
+ * ----------------------------------------------------------- the mouth arcs --
+ *
+ * Orbicularis oris is laid out from the lips the same way the orbital ring is
+ * laid out from the lids: each part's inner edge follows the outside border of
+ * one lip, and its outer edge lies a given width further across the face. The
+ * widths are anatomy. Above the lip the band is held narrow under the nose and
+ * nostrils, which crowd it; below, it is broadest at the midline, over the
+ * upper slope of the chin. Both thin towards the corners and run on past them
+ * to a point at the modiolus, where the two parts meet.
+ *
+ * Keyed by distance from the midline; MOUTH_HALF is 22mm, so the last row of
+ * each is the run-on beyond the commissure.
+ */
+const ORIS_UPPER_WIDTH = [
+  [0, 0.0030], [0.0060, 0.0032], [0.0130, 0.0044], [0.0175, 0.0056],
+  [0.0220, 0.0042], [0.0260, 0.0018],
+];
+const ORIS_LOWER_WIDTH = [
+  [0, 0.0098], [0.0060, 0.0094], [0.0130, 0.0080], [0.0185, 0.0060],
+  [0.0220, 0.0042], [0.0260, 0.0018],
+];
+/** Thin, as a sheet under the skin of the lips should be; still selectable. */
+const ORIS_THICKNESS = 0.0026;
+/** Its own half-depth plus a little, off the face the lips sit on. */
+const ORIS_OFFSET = 0.0018;
+const ORIS_UPPER = perioralArc({ lip: 'upper', widths: ORIS_UPPER_WIDTH, offset: ORIS_OFFSET });
+const ORIS_LOWER = perioralArc({ lip: 'lower', widths: ORIS_LOWER_WIDTH, offset: ORIS_OFFSET });
 
 /** Tendon-heavy profile: short belly, long tapering tendon at the insertion. */
 const TENDINOUS = [[0, 0.45], [0.22, 1.0], [0.52, 0.95], [0.80, 0.48], [1, 0.30]];
@@ -1642,22 +1673,35 @@ export const MUSCLES = [
     nerve: 'Buccal branch of the facial nerve (CN VII)',
   },
   {
-    id: 'orbicularis-oris', name: 'Orbicularis oris', region: 'Face',
-    group: 'head', layer: 2, mirror: false, shape: 'tube',
-    // A closed loop around the mouth, riding the filled outline so it does not
-    // drop into the mouth socket. The ring's own topology is untouched here.
-    path: conformFacePath([
-      [-0.0245, 1.6242, 0.0790], [-0.0140, 1.6378, 0.0865], [0, 1.6413, 0.0905],
-      [0.0140, 1.6378, 0.0865], [0.0245, 1.6242, 0.0790], [0.0140, 1.6106, 0.0860],
-      [0, 1.6071, 0.0895], [-0.0140, 1.6106, 0.0860], [-0.0245, 1.6242, 0.0790],
-    ], { offset: 0.0041, smooth: 0 }),
-    alignRadial: [0, 0.005],
-    width: 0.0092, flat: 0.34, squareness: 3.0,
-    profile: [[0, 0.85], [0.5, 1.0], [1, 0.85]],
+    id: 'orbicularis-oris', name: 'Orbicularis oris (upper part)', region: 'Face',
+    group: 'head', layer: 2, mirror: false, shape: 'sheet',
+    // A curved band over the upper lip, not a tube bent into a ring: the
+    // torus it replaces was 66mm across, 5mm deep, buried the lips and stood
+    // in the nose. Its lower edge is read off the upper lip's border, so it
+    // follows the Cupid's bow; its upper edge stops short of the nose; and it
+    // runs past each corner to the modiolus, where it meets the lower part.
+    origin: ORIS_UPPER.outer,
+    insertion: ORIS_UPPER.inner,
+    thickness: ORIS_THICKNESS, bulge: 0.0006, outward: faceNormalAt, margins: false,
+    uSeg: 30, vSeg: 5,
     fn: 'Closes and purses the lips. Everything that converges on the mouth blends into this ring, which is why so many muscles radiate away from it on a plate.',
-    or: 'Encircles the mouth, with no bony attachment of its own',
-    ins: 'Skin and mucous membrane of the lips',
-    nerve: 'Buccal and mandibular branches of the facial nerve (CN VII)',
+    or: 'Encircles the mouth, with no bony attachment of its own; deep slips reach the maxilla near the midline',
+    ins: 'Skin and mucous membrane of the upper lip',
+    nerve: 'Buccal branch of the facial nerve (CN VII)',
+  },
+  {
+    id: 'orbicularis-oris-lower', name: 'Orbicularis oris (lower part)', region: 'Face',
+    group: 'head', layer: 2, mirror: false, shape: 'sheet',
+    // The same construction under the lower lip, broadest in the middle where
+    // the lower lip is fullest and over the chin's upper slope.
+    origin: ORIS_LOWER.outer,
+    insertion: ORIS_LOWER.inner,
+    thickness: ORIS_THICKNESS, bulge: 0.0006, outward: faceNormalAt, margins: false,
+    uSeg: 30, vSeg: 5,
+    fn: 'Closes the mouth from below and presses the lower lip against the teeth. Together with the upper part it forms the sphincter of the mouth.',
+    or: 'Encircles the mouth, with no bony attachment of its own; deep slips reach the mandible near the midline',
+    ins: 'Skin and mucous membrane of the lower lip',
+    nerve: 'Mandibular and buccal branches of the facial nerve (CN VII)',
   },
   {
     id: 'depressor-anguli-oris', name: 'Depressor anguli oris', region: 'Face',
