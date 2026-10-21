@@ -1496,7 +1496,7 @@ export const MUSCLES = [
     // this far back, which rippled the fan.
     taper: [[0, 0.84], [0.2, 0.99], [0.32, 1.0], [0.6, 0.84], [0.86, 0.58], [1, 0.48]],
     thickness: 0.0085, bulge: 0.004,
-    margins: 'insertion', orient: true,
+    margins: 'insertion',
     uSeg: 24, vSeg: 16,
     fn: 'Closes the jaw and draws it backward. The broad fan over the temple that you can feel bunch under your fingers when you clench.',
     or: 'Temporal fossa, the flat area on the side of the skull',
@@ -1523,7 +1523,7 @@ export const MUSCLES = [
     // of each slice meet, and the surface normal turns sharply there.
     taper: [[0, 0.76], [0.22, 0.94], [0.55, 1.0], [0.84, 0.95], [1, 0.80]],
     thickness: 0.011, bulge: 0.0065,
-    margins: 'origin', orient: true,
+    margins: 'origin',
     uSeg: 20, vSeg: 14,
     fn: 'Clamps the jaw shut. Pound for pound the strongest muscle in the body, and the slab you can feel bulge at the angle of the jaw when you bite down.',
     or: 'Zygomatic arch, the bar of bone across the cheek',
@@ -1573,7 +1573,7 @@ export const MUSCLES = [
     // it ends in the skin of the brow and interlaces with orbicularis oculi.
     taper: [[0, 0.93], [0.3, 1.0], [0.6, 0.97], [0.8, 0.88], [0.93, 0.74], [1, 0.62]],
     thickness: 0.0055, bulge: 0.0035, outward: faceNormalAt,
-    margins: 'insertion', orient: true,
+    margins: 'insertion',
     uSeg: 20, vSeg: 16,
     fn: 'Raises the eyebrows and wrinkles the forehead. The pair of vertical straps that give the forehead its shape, separated by the pale aponeurosis running down between them.',
     or: 'Epicranial aponeurosis, the sheet over the top of the skull',
