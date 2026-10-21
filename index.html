@@ -10,6 +10,18 @@
 <meta property="og:description" content="Interactive 3D muscle and skeletal anatomy you can rotate, peel and search.">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#129452;</text></svg>">
+<script>
+  // Pick the theme before the first paint, so a light-mode visitor never
+  // sees a dark flash: a saved choice wins, otherwise follow the system.
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('theme'); } catch (e) {}
+    if (t !== 'light' && t !== 'dark') {
+      t = window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
 <style>
   :root{
     --bg:#0d1116;
@@ -29,6 +41,49 @@
     --bone:#e6ded0;
     --radius:9px;
     --panel-w:352px;
+    /* Surfaces that float over the figure, and their washes. */
+    --float:rgba(16,22,30,.82);
+    --float-solid:rgba(10,14,19,.94);
+    --float-label:rgba(10,14,19,.86);
+    --sheet:rgba(18,25,33,.94);
+    --field:#0b1015;
+    --menu:#101820;
+    --hover:#18222c;
+    --wash:rgba(67,179,167,.10);
+    --wash-soft:rgba(67,179,167,.07);
+    --wash-strong:rgba(67,179,167,.12);
+    --shadow:rgba(0,0,0,.5);
+    --shadow-deep:rgba(0,0,0,.55);
+    color-scheme:dark;
+  }
+  /* Light: a pale clinical page. Only the interface changes; the tissue,
+     bone and lighting of the model are identical in both, because their
+     colours carry information. */
+  :root[data-theme="light"]{
+    --bg:#e9ecef;
+    --bg-2:#dde2e7;
+    --panel:#fbfcfd;
+    --panel-2:#f2f4f7;
+    --line:#cbd3db;
+    --line-soft:#dde3e9;
+    --text:#1b222a;
+    --text-2:#465361;
+    --text-3:#5f6b78;
+    --accent:#18786f;
+    --accent-dim:#4ea79d;
+    --float:rgba(251,252,253,.86);
+    --float-solid:rgba(255,255,255,.96);
+    --float-label:rgba(255,255,255,.92);
+    --sheet:rgba(251,252,253,.96);
+    --field:#ffffff;
+    --menu:#ffffff;
+    --hover:#eef2f5;
+    --wash:rgba(24,120,111,.10);
+    --wash-soft:rgba(24,120,111,.07);
+    --wash-strong:rgba(24,120,111,.12);
+    --shadow:rgba(20,32,44,.16);
+    --shadow-deep:rgba(20,32,44,.20);
+    color-scheme:light;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;height:100%;overflow:hidden;}
@@ -61,7 +116,7 @@
   /* ---------- floating controls ---------- */
   .dock{
     position:absolute;z-index:4;display:flex;gap:6px;align-items:center;
-    background:rgba(16,22,30,.82);backdrop-filter:blur(12px);
+    background:var(--float);backdrop-filter:blur(12px);
     border:1px solid var(--line-soft);border-radius:11px;padding:5px;
   }
   #view-dock{bottom:20px;left:24px;}
@@ -72,7 +127,23 @@
   #view-dock button:hover{background:var(--bg-2);color:var(--text);}
   #view-dock .sep{width:1px;height:18px;background:var(--line);margin:0 3px;}
   #cuff-view{color:var(--accent) !important;font-weight:500;}
-  #cuff-view:hover{background:rgba(67,179,167,.12) !important;}
+  #cuff-view:hover{background:var(--wash-strong) !important;}
+
+  /* Light / dark switch, top right of the view. */
+  #theme-toggle{
+    position:absolute;top:16px;right:16px;z-index:5;
+    width:38px;height:38px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--float);backdrop-filter:blur(12px);
+    border:1px solid var(--line-soft);color:var(--text-2);
+    transition:background .15s,color .15s;
+  }
+  #theme-toggle:hover{background:var(--bg-2);color:var(--text);}
+  #theme-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  #theme-toggle svg{width:18px;height:18px;}
+  #theme-toggle .moon{display:none;}
+  :root[data-theme="light"] #theme-toggle .sun{display:none;}
+  :root[data-theme="light"] #theme-toggle .moon{display:block;}
 
   #stats{
     position:absolute;bottom:22px;right:calc(var(--panel-w) + 24px);z-index:4;
@@ -83,9 +154,9 @@
   #tooltip{
     position:fixed;z-index:20;pointer-events:none;
     transform:translate(14px,-50%);
-    background:rgba(10,14,19,.94);border:1px solid var(--line);
+    background:var(--float-solid);border:1px solid var(--line);
     padding:5px 10px;border-radius:6px;font-size:12.5px;white-space:nowrap;
-    box-shadow:0 6px 22px rgba(0,0,0,.5);
+    box-shadow:0 6px 22px var(--shadow);
   }
   #tooltip[hidden]{display:none;}
 
@@ -96,7 +167,7 @@
     display:flex;align-items:center;gap:6px;
     font-size:10.5px;letter-spacing:1.1px;text-transform:uppercase;
     color:var(--text);
-    background:rgba(10,14,19,.86);border:1px solid var(--line);
+    background:var(--float-label);border:1px solid var(--line);
     padding:3px 8px 3px 6px;border-radius:5px;white-space:nowrap;
   }
   .attach-label[hidden]{display:none;}
@@ -127,23 +198,23 @@
   .search-wrap{position:relative;}
   #search{
     width:100%;padding:9px 12px;border-radius:var(--radius);
-    border:1px solid var(--line);background:#0b1015;color:var(--text);outline:none;
+    border:1px solid var(--line);background:var(--field);color:var(--text);outline:none;
     transition:border-color .15s;
   }
   #search::placeholder{color:var(--text-3);}
   #search:focus{border-color:var(--accent-dim);}
   #results{
     position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:30;
-    background:#101820;border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--menu);border:1px solid var(--line);border-radius:var(--radius);
     max-height:290px;overflow-y:auto;padding:4px;
-    box-shadow:0 14px 34px rgba(0,0,0,.55);
+    box-shadow:0 14px 34px var(--shadow-deep);
   }
   #results[hidden]{display:none;}
   .result{
     display:flex;align-items:center;gap:9px;width:100%;text-align:left;
     padding:7px 9px;border-radius:6px;
   }
-  .result:hover{background:#18222c;}
+  .result:hover{background:var(--hover);}
   .result .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
   .result .r-name{flex:1;font-size:13.5px;}
   .result .r-region{font-size:11px;color:var(--text-3);}
@@ -169,7 +240,7 @@
   .chip input{display:none;}
   .chip em{font-style:normal;color:var(--text-3);font-size:10.5px;}
   .chip:has(input:checked){
-    border-color:var(--accent-dim);color:var(--text);background:rgba(67,179,167,.10);
+    border-color:var(--accent-dim);color:var(--text);background:var(--wash);
   }
   .chip:has(input:not(:checked)){opacity:.42;}
 
@@ -194,7 +265,7 @@
   #detail-pane{flex:1;overflow-y:auto;padding:15px 18px 24px;}
   #detail-empty{font-size:13px;color:var(--text-3);line-height:1.65;}
   #detail-empty kbd{
-    background:#0b1015;border:1px solid var(--line);border-radius:4px;
+    background:var(--field);border:1px solid var(--line);border-radius:4px;
     padding:1px 5px;font-size:11px;font-family:inherit;color:var(--text-2);
   }
   #d-name{
@@ -213,7 +284,7 @@
   }
   .field p{margin:0;font-size:13.5px;line-height:1.6;color:var(--text);}
   .field.clinical{
-    background:rgba(67,179,167,.07);border-left:2px solid var(--accent-dim);
+    background:var(--wash-soft);border-left:2px solid var(--accent-dim);
     padding:10px 12px;border-radius:0 6px 6px 0;
   }
   .field.clinical label{color:var(--accent);}
@@ -234,10 +305,10 @@
       position:fixed;left:10px;right:10px;
       bottom:calc(52px + env(safe-area-inset-bottom, 0px) + 8px);
       z-index:12;
-      background:rgba(18,25,33,.94);backdrop-filter:blur(14px);
+      background:var(--sheet);backdrop-filter:blur(14px);
       border:1px solid var(--line);border-radius:13px;
       padding:9px 15px 11px;
-      box-shadow:0 12px 34px rgba(0,0,0,.55);
+      box-shadow:0 12px 34px var(--shadow-deep);
       display:block;
       animation:peekIn .22s cubic-bezier(.2,.8,.3,1);
       touch-action:none;
@@ -348,6 +419,11 @@
       <button id="cuff-view" title="Peel to the deep layer and frame the rotator cuff">Rotator cuff</button>
       <button id="reset" title="Reset everything">Reset</button>
     </div>
+
+    <button id="theme-toggle" type="button" aria-label="Switch to light mode" title="Switch to light mode">
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.6A8.3 8.3 0 0 1 9.4 4a8.3 8.3 0 1 0 10.6 10.6z"/></svg>
+    </button>
 
     <div id="stats"><span id="stat-visible">0</span> of <span id="muscle-total">0</span> muscles shown</div>
   </div>
@@ -467,7 +543,7 @@
 
 <script type="module" src="./src/app.js"></script>
 <noscript>
-  <p style="padding:24px;color:#9aa7b4">This anatomy explorer renders in 3D and needs JavaScript enabled.</p>
+  <p style="padding:24px;color:var(--text-2)">This anatomy explorer renders in 3D and needs JavaScript enabled.</p>
 </noscript>
 </body>
 </html>
