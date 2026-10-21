@@ -378,6 +378,15 @@
       transition:transform .28s cubic-bezier(.4,0,.2,1);
     }
     #panel.open{transform:translateY(0);}
+    /* On a phone the sheet scrolls as one page. A fixed 62vh with everything
+       stacked inside it pushed the detail card below the bottom of the
+       screen with a few pixels of height, and nothing could scroll to it. */
+    #panel{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+    #detail-pane{flex:none;overflow:visible;}
+    #panel-toggle{
+      position:sticky;top:0;z-index:2;flex-shrink:0;
+      background:var(--panel);
+    }
     #panel::before{
       content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);
       width:36px;height:4px;border-radius:2px;background:var(--line);

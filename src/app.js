@@ -448,10 +448,20 @@ function frame(rec) {
   controls.flyTo(target, radius, front ? theta : Math.PI - theta * 0.6, 1.42);
 }
 
+/** On a phone the sheet is one scrolling page; bring the detail card into view. */
+function revealDetail() {
+  if (!isNarrow()) return;
+  const panel = $('#panel');
+  const pane = $('#detail-pane');
+  const handle = $('#panel-toggle').offsetHeight;
+  panel.scrollTop = Math.max(0, pane.offsetTop - handle);
+}
+
 function showDetail(rec) {
   $('#detail-empty').hidden = true;
   const d = $('#detail');
   d.hidden = false;
+  requestAnimationFrame(revealDetail);
   $('#d-name').textContent = rec.name;
   $('#d-side').textContent = rec.side ? rec.side : 'midline';
   $('#d-region').textContent = rec.region;
@@ -766,7 +776,7 @@ $('#peek-close').addEventListener('click', () => select(null));
 $('#peek-more').addEventListener('click', () => {
   $('#peek').hidden = true;
   $('#panel').classList.add('open');
-  $('#detail-pane').scrollTop = 0;
+  requestAnimationFrame(revealDetail);
 });
 
 // Keyboard
