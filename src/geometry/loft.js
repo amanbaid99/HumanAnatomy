@@ -288,6 +288,15 @@ function sampleLine(points, u, tension = 0.5, closed = false) {
  *        which around the eye is tens of degrees out.
  * @param {Array} taper  [[v, scale], ...] narrowing from origin to insertion.
  *        Ignored for a loop, which has no edges to draw in.
+ * @param {boolean|string} margins  pale the origin and insertion edges as
+ *        aponeurosis. Right for a sheet that meets bone along them; false for
+ *        one that ends in skin or other muscle and is fleshy right to its edge;
+ *        'origin' or 'insertion' for one that is tendinous at one end only.
+ * @param {boolean} orient  wind the triangles so their front faces point the
+ *        way the normals do. Without it, a sheet whose two edges run the
+ *        "wrong" way round - which mirroring guarantees for one side of every
+ *        pair - has its outer face culled and shows its inner one, lit from
+ *        behind, as a dark hole.
  */
 export function sheetLoft({
   origin,
@@ -299,6 +308,8 @@ export function sheetLoft({
   vSeg = 18,
   taper = null,
   axisY = null,
+  margins = true,
+  orient = false,
 }) {
   const grid = [];
   const fixedOut = Array.isArray(outward) ? new Vector3(...outward).normalize() : null;
@@ -404,8 +415,11 @@ export function sheetLoft({
         // all - so it stays belly all the way across. Leaving the rule on put
         // a pale circle round each margin, and two of those around an eye read
         // as a target rather than as a muscle.
+        // The same holds for an open sheet whose edges end in soft tissue.
         const v = iv / vSeg;
-        tendon.push(closed ? 0 : Math.min(1, Math.max(0, 1 - Math.sin(Math.PI * v) / 0.40)));
+        const pale = closed || !margins
+          || (margins === 'origin' && v > 0.5) || (margins === 'insertion' && v < 0.5);
+        tendon.push(pale ? 0 : Math.min(1, Math.max(0, 1 - Math.sin(Math.PI * v) / 0.40)));
       }
     }
   });
@@ -449,7 +463,30 @@ export function sheetLoft({
     }
   }
 
+  if (orient) orientToNormals(verts, norms, idx);
   return buildGeometry(verts, norms, uvs, idx, tendon);
+}
+
+/**
+ * Reverse every triangle if, on balance, they face against their normals.
+ * The two shells and the border walls are all wound from the same grid, so
+ * they are either all right or all wrong together.
+ */
+function orientToNormals(verts, norms, idx) {
+  const at = (arr, i) => new Vector3(arr[i * 3], arr[i * 3 + 1], arr[i * 3 + 2]);
+  let vote = 0;
+  for (let i = 0; i < idx.length; i += 3) {
+    const a = at(verts, idx[i]);
+    const face = at(verts, idx[i + 1]).sub(a).cross(at(verts, idx[i + 2]).sub(a));
+    const n = at(norms, idx[i]).add(at(norms, idx[i + 1])).add(at(norms, idx[i + 2]));
+    vote += Math.sign(face.dot(n));
+  }
+  if (vote >= 0) return;
+  for (let i = 0; i < idx.length; i += 3) {
+    const t = idx[i + 1];
+    idx[i + 1] = idx[i + 2];
+    idx[i + 2] = t;
+  }
 }
 
 function buildGeometry(verts, norms, uvs, idx, tendon) {

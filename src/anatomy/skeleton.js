@@ -76,9 +76,14 @@ export function buildSkeleton() {
       [0.040 * s2, 1.6785, 0.0660], [0.059 * s2, 1.6825, 0.0300],
       [0.0715 * s2, 1.6865, -0.0080],
     ], 0.0060, { flat: 0.58, squareness: 2.8, profile: [[0, 0.8], [0.5, 1], [1, 0.9]] }));
+    // Chin, back along the body of the jaw, round the angle and up the ramus to
+    // the condyle. It used to run straight from the chin up the cheek to the
+    // joint, which left no angle at all. The two ends are where they were;
+    // the path between follows the lower border of the face, 7mm inside it.
     head.add(tube(`mandible.${s2 > 0 ? 'r' : 'l'}`, [
-      [0, 1.588, 0.068], [0.036 * s2, 1.627, 0.046], [0.046 * s2, 1.646, -0.004],
-      [0.044 * s2, 1.670, -0.014],
+      [0, 1.588, 0.068], [0.0170 * s2, 1.5865, 0.0495], [0.0285 * s2, 1.5875, 0.0250],
+      [0.0365 * s2, 1.5925, 0.0060], [0.0420 * s2, 1.6150, -0.0040],
+      [0.0440 * s2, 1.6450, -0.0110], [0.044 * s2, 1.670, -0.014],
     ], 0.0078, { flat: 0.72, profile: [[0, 0.85], [0.5, 1], [1, 0.6]] }));
   });
 

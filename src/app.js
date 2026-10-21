@@ -28,8 +28,16 @@ const $$ = (sel) => [...document.querySelectorAll(sel)];
 
 const wrap = $('#stage');
 const scene = new Scene();
-scene.background = new Color(0x0d1116);
-scene.fog = new Fog(0x0d1116, 3.6, 9.5);
+// The page behind the figure, per theme. The fog matches it so the far end of
+// the body fades into the page rather than into a different colour. The
+// figure itself - tissue, bone, lights - is the same in both.
+const THEMES = {
+  dark: { page: 0x0d1116, ghost: 0x241e1d },
+  light: { page: 0xe9ecef, ghost: 0xd6d1cb },
+};
+const themeNow = () => (document.documentElement.dataset.theme === 'light' ? 'light' : 'dark');
+scene.background = new Color(THEMES[themeNow()].page);
+scene.fog = new Fog(THEMES[themeNow()].page, 3.6, 9.5);
 
 const camera = new PerspectiveCamera(36, 1, 0.05, 60);
 
@@ -220,7 +228,8 @@ const byId = new Map(records.map((r) => [r.uid, r]));
  * (depthTest off) so the anchors stay readable however far inside the body they
  * are, with a dashed line between them showing the line of pull.
  */
-const GHOST_TINT = new Color(0x241e1d);
+// What dimmed muscles recede towards: dark on a dark page, pale on a light one.
+const GHOST_TINT = new Color(THEMES[themeNow()].ghost);
 const _tint = new Color();
 
 const markers = new Group();
@@ -817,6 +826,39 @@ function animate() {
     camera.layers.set(0);
   }
 }
+
+// ---------------------------------------------------------------- theme ----
+
+function setTheme(name, remember) {
+  const t = THEMES[name] ? name : 'dark';
+  document.documentElement.dataset.theme = t;
+  scene.background.setHex(THEMES[t].page);
+  scene.fog.color.setHex(THEMES[t].page);
+  GHOST_TINT.setHex(THEMES[t].ghost);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', `#${THEMES[t].page.toString(16).padStart(6, '0')}`);
+  const other = t === 'light' ? 'dark' : 'light';
+  const btn = $('#theme-toggle');
+  btn.setAttribute('aria-label', `Switch to ${other} mode`);
+  btn.title = `Switch to ${other} mode`;
+  if (remember) {
+    try { localStorage.setItem('theme', t); } catch (e) { /* private mode: choice lasts the visit */ }
+  }
+  applyVisibility();
+}
+
+$('#theme-toggle').addEventListener('click', () => {
+  setTheme(themeNow() === 'light' ? 'dark' : 'light', true);
+});
+
+// Until the visitor picks one, follow the system as it changes.
+const systemLight = window.matchMedia ? matchMedia('(prefers-color-scheme: light)') : null;
+systemLight?.addEventListener?.('change', (e) => {
+  let saved = null;
+  try { saved = localStorage.getItem('theme'); } catch (err) { /* ignore */ }
+  if (!saved) setTheme(e.matches ? 'light' : 'dark', false);
+});
+setTheme(themeNow(), false);
 
 applyVisibility();
 $('#muscle-total').textContent = records.length;
