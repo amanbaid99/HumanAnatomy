@@ -127,7 +127,7 @@ const TENDINOUS = [[0, 0.45], [0.22, 1.0], [0.52, 0.95], [0.80, 0.48], [1, 0.30]
 /** Two-headed / bulging belly, e.g. the calf. */
 const BULGING = [[0, 0.55], [0.18, 1.0], [0.42, 1.0], [0.75, 0.62], [1, 0.22]];
 
-export const MUSCLES = [
+const ALL_MUSCLES = [
 
   // ===================== NECK =====================
   {
@@ -1780,3 +1780,13 @@ export const MUSCLES = [
     nerve: 'Cervical branch of the facial nerve (CN VII)',
   },
 ];
+
+/**
+ * The face is drawn as a plain head for reference, without its muscles. The
+ * muscles of the face and jaw are still defined above, laid on the face the
+ * way stages 2 to 4 left them; set this to true to bring them back as
+ * selectable muscles. The neck, platysma included, is unaffected.
+ */
+const SHOW_FACE_MUSCLES = false;
+
+export const MUSCLES = ALL_MUSCLES.filter((m) => SHOW_FACE_MUSCLES || m.group !== 'head');

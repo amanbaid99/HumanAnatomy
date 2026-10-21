@@ -15,7 +15,7 @@
 
 import {
   Group, Mesh, MeshStandardMaterial, SphereGeometry, BufferGeometry,
-  BufferAttribute, Vector3, Color,
+  BufferAttribute, Vector3,
 } from '../../vendor/three.module.min.js';
 import { tubeLoft } from '../geometry/loft.js';
 import { applyOcclusionToMaterial } from '../geometry/occlusion.js';
@@ -44,8 +44,8 @@ const SLICES = [
 
 /** Hollows pressed into the shell after lofting: [x, y, z, radius, depth]. */
 const HOLLOWS = [
-  [0.0305, 1.6838, 0.086, 0.021, 0.0100],  // right orbit
-  [-0.0305, 1.6838, 0.086, 0.021, 0.0100], // left orbit
+  [0.0305, 1.6838, 0.086, 0.018, 0.0060],  // right orbit: shallow under skin
+  [-0.0305, 1.6838, 0.086, 0.018, 0.0060], // left orbit
   [0, 1.6248, 0.088, 0.024, 0.004],        // mouth
   [0.052, 1.651, 0.070, 0.026, 0.004],     // right temple hollow
   [-0.052, 1.651, 0.070, 0.026, 0.004],    // left temple hollow
@@ -69,7 +69,7 @@ const NOSE_WIDTH = 0.0112;
  * built around the eye that is actually drawn, not around a second set of
  * numbers that can drift away from it.
  */
-const EYE = { x: 0.0305, y: 1.6826, z: 0.0714, r: 0.0120 };
+const EYE = { x: 0.0305, y: 1.6826, z: 0.0684, r: 0.0120 };
 
 /**
  * The two lid margins as Stage 1 placed them: how far above or below the
@@ -181,7 +181,7 @@ function relief(y, az) {
   d += 0.0024 * bell(A - 40, 15) * bell(y - 1.6625, 0.0085);
   // Zygomatic arch, a low bar running back towards the ear between the
   // temporalis above and the masseter below, stopping short of the ear.
-  d += 0.0020 * smoothstep(38, 52, A) * (1 - smoothstep(92, 106, A)) * bell(y - 1.6650, 0.0028);
+  d += 0.0008 * smoothstep(38, 52, A) * (1 - smoothstep(92, 106, A)) * bell(y - 1.6650, 0.0045);
   // Parietal eminence: the skull is widest high and behind, not at the temple.
   d += 0.0030 * bell(A - 115, 22) * bell(y - 1.738, 0.022);
   // Occiput. Only the back of the head moves - nothing in front of the ear -
@@ -234,14 +234,11 @@ const CORE = 0.962;
 const SQUARENESS = 2.3;   // slightly fuller than an ellipse; heads are not eggs
 
 /**
- * The aponeurosis does not stop at a line. It fades into the frontalis above
- * the brow, so the shell carries a colour gradient rather than being split in
- * two, which was reading as a swim cap.
+ * The head is drawn as a plain face, for reference: one even skin tone over
+ * the shell and its features, with no muscle on it to select. The body below
+ * keeps its muscles.
  */
-const FLESH = new Color(0xc47a69);
-const APONEUROSIS = new Color(0xded4c2);
-const FADE_LOW = 1.722;   // all muscle below this
-const FADE_HIGH = 1.774;  // all aponeurosis above it
+const SKIN = 0xd2a68c;
 
 export function skinMaterial(color = 0xbe9a80, roughness = 0.78) {
   const mat = new MeshStandardMaterial({ color, roughness, metalness: 0 });
@@ -256,9 +253,7 @@ function headGeometry() {
   const idx = [];
   const perRing = RADIAL;
   const rows = shellRows();
-  const colors = [];
   const v = new Vector3();
-  const tint = new Color();
   // One column per step, with the ring closing back onto column 0 rather than
   // repeating it. A repeated column is a second vertex at the same point, and
   // computeVertexNormals averages per vertex, so the two sides of the join
@@ -271,7 +266,6 @@ function headGeometry() {
       surfaceAt(y, a, slice, v);
       verts.push(v.x, v.y, v.z);
       uvs.push(j / RADIAL, row / Math.max(1, rows.length - 1));
-      colors.push(...scalpTint(y, tint));
     }
   });
 
@@ -292,7 +286,6 @@ function headGeometry() {
     const centre = verts.length / 3;
     verts.push(0, y, row === 0 ? -0.006 : -0.004);
     uvs.push(0.5, row === 0 ? 0 : 1);
-    colors.push(...scalpTint(y, tint));
     const base = row * perRing;
     for (let j = 0; j < RADIAL; j++) {
       const wrap = (j + 1) % RADIAL;
@@ -304,7 +297,6 @@ function headGeometry() {
   const g = new BufferGeometry();
   g.setAttribute('position', new BufferAttribute(new Float32Array(verts), 3));
   g.setAttribute('uv', new BufferAttribute(new Float32Array(uvs), 2));
-  g.setAttribute('color', new BufferAttribute(new Float32Array(colors), 3));
   g.setIndex(idx);
   carve(g);
   g.computeVertexNormals();
@@ -312,12 +304,6 @@ function headGeometry() {
   return g;
 }
 
-/** Muscle at the face, aponeurosis at the crown, smoothly between. */
-function scalpTint(y, out) {
-  const t = Math.min(1, Math.max(0, (y - FADE_LOW) / (FADE_HIGH - FADE_LOW)));
-  out.copy(FLESH).lerp(APONEUROSIS, t * t * (3 - 2 * t));
-  return [out.r, out.g, out.b];
-}
 
 /**
  * Press the hollows in. An eye sitting on a smooth ovoid bulges out and stares;
@@ -899,12 +885,9 @@ export function buildFace() {
   const group = new Group();
   group.name = 'face';
 
-  // Facial muscle mass, graded into the aponeurosis over the crown. The named
-  // muscles sit proud of this, but even where one is not modelled individually
-  // the face still reads as muscle.
-  const flesh = skinMaterial(0xc47a69, 0.60);
-  const shellMat = skinMaterial(0xffffff, 0.58);
-  shellMat.vertexColors = true;
+  // Skin, for the shell and everything modelled in it.
+  const flesh = skinMaterial(SKIN, 0.62);
+  const shellMat = flesh;
 
   const shell = new Mesh(headGeometry(), shellMat);
   shell.name = 'face.shell';
@@ -928,7 +911,7 @@ export function buildFace() {
   // footprint as the single band they replace; the mouth socket behind them
   // is what shows through the gap.
   ['upper', 'lower'].forEach((which) => {
-    const lip = new Mesh(lipGeometry(which), skinMaterial(0xa9564a, 0.58));
+    const lip = new Mesh(lipGeometry(which), skinMaterial(0xb06a5c, 0.58));
     lip.name = `face.lip.${which}`;
     group.add(lip);
   });
@@ -939,7 +922,7 @@ export function buildFace() {
     // Ear: a flattened disc set against the side of the head.
     // Raised so the top of the ear meets brow level, the way it does on a real
     // head, and widened: at 0.30 it was a 16mm sliver that vanished in profile.
-    const ear = new Mesh(new SphereGeometry(0.024, 16, 12), skinMaterial(0xc2a08c, 0.68));
+    const ear = new Mesh(new SphereGeometry(0.024, 16, 12), skinMaterial(SKIN, 0.66));
     ear.position.set(0.072 * side, 1.672, -0.016);
     ear.scale.set(0.42, 1.2508, 0.60);
     ear.rotation.z = -0.12 * side;

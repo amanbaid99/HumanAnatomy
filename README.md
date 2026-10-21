@@ -10,10 +10,11 @@ attachments, nerve supply and, where relevant, a clinical note.
 
 ## What it does
 
-- **206 muscles** across eleven regions, each modelled as real geometry rather than a stick
-- **A head with a face**, lofted from cross-sections with orbital sockets pressed into
-  it. The skin is the superficial layer of the head, so peeling it reveals the muscles
-  of facial expression underneath, then the skull
+- **180 muscles** across ten regions, each modelled as real geometry rather than a stick
+- **A plain head for reference**: a skin-toned face lofted from cross-sections, with
+  eyes, nose, lips and ears and a skull-shaped silhouette, but no muscles to select. The
+  facial muscles are still defined in `muscles.js` and come back with one switch,
+  `SHOW_FACE_MUSCLES`
 - **A full skeleton** underneath: curved spine, twelve rib pairs, scapula with its
   spine, acromion and coracoid, and long bones with proper wide ends
 - **Peel by layer** (superficial, intermediate, deep) or fade the outer layers with a

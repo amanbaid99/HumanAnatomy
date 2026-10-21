@@ -493,8 +493,11 @@ function pick(clientX, clientY) {
   ndc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(ndc, camera);
   const targets = muscleGroup.children.filter((m) => m.visible);
+  // The face is solid: a click on it is a click on the head, not on whatever
+  // muscle happens to lie behind it.
+  if (face.visible) face.children.forEach((m) => { if (m.isMesh) targets.push(m); });
   const hits = raycaster.intersectObjects(targets, false);
-  return hits.length ? hits[0].object.userData.record : null;
+  return hits.length ? hits[0].object.userData.record ?? null : null;
 }
 
 renderer.domElement.addEventListener('pointerdown', (e) => {
@@ -546,6 +549,7 @@ $$('[data-layer]').forEach((cb) => {
 const regionBox = $('#regions');
 GROUPS.forEach((g) => {
   const count = records.filter((r) => r.group === g.id).length;
+  if (!count) return;     // a region with nothing in it is not a filter
   const label = document.createElement('label');
   label.className = 'chip';
   label.innerHTML = `<input type="checkbox" checked data-group="${g.id}">
