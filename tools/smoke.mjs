@@ -103,9 +103,13 @@ check('hover shows a tooltip', !(await page.locator('#tooltip').isHidden()),
       await page.textContent('#tooltip').catch(() => ''));
 
 // 10c. selecting shows where the muscle attaches
-check('attachment labels appear on selection',
-      !(await page.locator('#label-origin').isHidden())
-      || !(await page.locator('#label-insertion').isHidden()));
+// Wait for the camera and label projection to settle rather than assuming a
+// fixed frame rate (software WebGL can take longer than the camera flight).
+const labelsAppeared = await page.waitForFunction(() =>
+  !document.querySelector('#label-origin').hidden || !document.querySelector('#label-insertion').hidden,
+  null, { timeout: 15000 },
+).then(() => true, () => false);
+check('attachment labels appear on selection', labelsAppeared);
 
 // 10d. focus mode dims everything except the selection
 check('focus mode dims the other muscles', await page.evaluate(() => {

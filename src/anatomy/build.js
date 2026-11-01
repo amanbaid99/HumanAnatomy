@@ -91,10 +91,17 @@ function muscleMaterial(layer, anatomical = false) {
     mat.onBeforeCompile = (shader) => {
       applyOcclusionToMaterial(shader);
       shader.uniforms.uTendonColor = { value: TENDON_COLOR };
+      shader.uniforms.uRim = { value: mat.userData.rim || 0 };
+      shader.uniforms.uRimColor = { value: RIM_COLOR };
+      mat.userData.shader = shader;
       shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nattribute float tendon; varying float vTendon;')
         .replace('#include <begin_vertex>', '#include <begin_vertex>\nvTendon = tendon;');
-      shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vTendon; uniform vec3 uTendonColor;')
-        .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb = mix(diffuseColor.rgb, uTendonColor, smoothstep(0.1, 0.9, vTendon) * 0.93);');
+      shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vTendon; uniform vec3 uTendonColor; uniform float uRim; uniform vec3 uRimColor;')
+        .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb = mix(diffuseColor.rgb, uTendonColor, smoothstep(0.1, 0.9, vTendon) * 0.93);')
+        .replace('#include <opaque_fragment>', `
+          float edge = 1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0);
+          outgoingLight += uRimColor * smoothstep(0.58, 0.94, edge) * uRim;
+          #include <opaque_fragment>`);
     };
     return mat;
   }

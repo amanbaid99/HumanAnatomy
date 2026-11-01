@@ -5,8 +5,9 @@
   "scripts": {
     "shot": "node tools/screenshot.mjs",
     "serve": "node tools/serve.mjs",
-    "test": "node tools/smoke.mjs && node tools/smoke-mobile.mjs",
-    "test:mobile": "node tools/smoke-mobile.mjs"
+    "test": "node tools/smoke.mjs && node tools/smoke-mobile.mjs && node tools/smoke-studies.mjs",
+    "test:mobile": "node tools/smoke-mobile.mjs",
+    "test:studies": "node tools/smoke-studies.mjs"
   },
   "repository": {
     "type": "git",

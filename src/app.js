@@ -15,8 +15,10 @@ import {
   PMREMGenerator, EquirectangularReflectionMapping,
 } from '../vendor/three.module.min.js';
 
-import { OrbitControls } from './controls.js';
-import { buildMuscles, LAYERS, GROUPS } from './anatomy/build.js';
+import { STUDIES } from './studies.js';
+
+import { OrbitControls } from './controls.js?v=study-views-1';
+import { buildMuscles, LAYERS, GROUPS } from './anatomy/build.js?v=study-views-1';
 import { loadAtlas } from './anatomy/atlas.js';
 import { bakeOcclusion } from './geometry/occlusion.js';
 
@@ -284,6 +286,9 @@ function positionLabels() {
     return;
   }
   const rect = renderer.domElement.getBoundingClientRect();
+  const blocked = ['#masthead', '.stage-actions', '#study-guide', '#peek', '#panel', '#view-dock', '#pick-choices']
+    .map((selector) => $(selector)).filter((element) => !element.hidden)
+    .map((element) => element.getBoundingClientRect()).filter((box) => box.width && box.height);
   [[originDot, labelOrigin], [insertionDot, labelInsertion]].forEach(([m, el]) => {
     _proj.copy(m.position).project(camera);
     // Behind the camera, or off screen: hide rather than pinning to an edge.
@@ -291,13 +296,22 @@ function positionLabels() {
       el.hidden = true;
       return;
     }
+    const x = rect.left + (_proj.x * .5 + .5) * rect.width;
+    const y = rect.top + (-_proj.y * .5 + .5) * rect.height;
+    if (blocked.some((box) => x + 100 > box.left && x < box.right && y + 12 > box.top && y - 12 < box.bottom)) {
+      el.hidden = true;
+      return;
+    }
     el.hidden = false;
-    el.style.left = `${rect.left + (_proj.x * 0.5 + 0.5) * rect.width}px`;
-    el.style.top = `${rect.top + (-_proj.y * 0.5 + 0.5) * rect.height}px`;
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
   });
 }
 
 // ---------------------------------------------------------------- state ----
+
+let activeStudy = null;
+let studyStep = 0;
 
 const state = {
   layers: { 1: true, 2: true, 3: true },
@@ -368,7 +382,8 @@ function applyVisibility() {
     m.material.color.copy(_tint.setHex(m.userData.baseColor)).lerp(GHOST_TINT, marking ? 0.86 : 0);
   });
 
-  face.visible = state.layers[1];
+  head.visible = !state.skeletonFilter;
+  face.visible = state.layers[1] && !state.skeletonFilter;
   skeleton.visible = state.skeleton;
   setSkeletonFilter(state.skeletonFilter, state.sideFilter);
   updateCounts();
@@ -403,7 +418,7 @@ function setHighlight(rec, on, strong) {
     // rather than the teal wash it used to take on.
     mat.emissive.setHex(on ? (strong ? 0x120806 : 0x090403) : 0x000000);
     mat.emissiveIntensity = on ? (strong ? 0.8 : 0.5) : 0;
-    const level = on ? (strong ? 0.16 : 0.06) : 0;
+    const level = on ? (strong ? 0.40 : 0.12) : 0;
     mat.userData.rim = level;
     if (mat.userData.shader) mat.userData.shader.uniforms.uRim.value = level;
   });
@@ -412,6 +427,8 @@ function setHighlight(rec, on, strong) {
 function select(rec, fly = true) {
   if (state.selected) setHighlight(state.selected, false);
   state.selected = rec;
+  $('#return-body').hidden = !rec && !activeStudy;
+  $('#selection-status').textContent = rec ? `${rec.name}${rec.sideLabel} selected.` : 'Selection cleared.';
   if (!rec) {
     $('#detail').hidden = true;
     $('#detail-empty').hidden = false;
@@ -506,34 +523,101 @@ const raycaster = new Raycaster();
 const ndc = new Vector2();
 const tooltip = $('#tooltip');
 let downAt = null;
+const pointers = new Set();
+let multiTouch = false;
+renderer.domElement.tabIndex = 0;
+renderer.domElement.setAttribute('aria-label', 'Interactive anatomy model. Drag to rotate; tap to select. Hold a touch to choose nearby muscles.');
 
-function pick(clientX, clientY) {
+function hitAt(clientX, clientY) {
   const rect = renderer.domElement.getBoundingClientRect();
   ndc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
   ndc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(ndc, camera);
   const targets = muscleGroup.children.filter((m) => m.visible);
-  // The face is solid: a click on it is a click on the head, not on whatever
-  // muscle happens to lie behind it.
-  if (face.visible) face.children.forEach((m) => { if (m.isMesh) targets.push(m); });
-  const hits = raycaster.intersectObjects(targets, false);
-  return hits.length ? hits[0].object.userData.record ?? null : null;
+  // Reference facial structures block selection of muscles behind the head.
+  for (const group of [face, head]) {
+    if (group.visible) group.children.forEach((m) => { if (m.isMesh && m.visible) targets.push(m); });
+  }
+  return raycaster.intersectObjects(targets, false)[0] || null;
 }
 
+function pick(clientX, clientY) {
+  return hitAt(clientX, clientY)?.object.userData.record ?? null;
+}
+
+function nearbyMuscles(x, y) {
+  const centre = hitAt(x, y);
+  if (centre && !centre.object.userData.record) return [];
+  const candidates = new Map();
+  // CSS pixels keep the tolerance the same on retina and ordinary displays.
+  const offsets = [[0, 0], [-10, 0], [10, 0], [0, -10], [0, 10], [-7, -7], [7, -7], [-7, 7], [7, 7]];
+  for (const [dx, dy] of offsets) {
+    const rec = pick(x + dx, y + dy);
+    if (rec && !candidates.has(rec.uid)) candidates.set(rec.uid, rec);
+  }
+  return [...candidates.values()].slice(0, 4);
+}
+
+function closeChoices(restoreFocus = false) {
+  $('#pick-choices').hidden = true;
+  if (restoreFocus) renderer.domElement.focus({ preventScroll: true });
+}
+
+function showChoices(candidates, x, y) {
+  const options = $('#pick-options');
+  options.replaceChildren();
+  for (const rec of candidates) {
+    const button = document.createElement('button');
+    button.textContent = rec.name;
+    const side = document.createElement('small');
+    side.textContent = `${rec.region}${rec.sideLabel}`;
+    button.append(side);
+    button.addEventListener('click', () => { closeChoices(); select(rec); });
+    options.append(button);
+  }
+  const popup = $('#pick-choices');
+  popup.hidden = false;
+  popup.style.left = `${Math.max(12, Math.min(x - 140, innerWidth - 292))}px`;
+  popup.style.top = `${Math.max(12, Math.min(y + 16, innerHeight - popup.offsetHeight - 70))}px`;
+  options.querySelector('button')?.focus({ preventScroll: true });
+}
+
+$('#pick-close').addEventListener('click', () => closeChoices(true));
+document.addEventListener('pointerdown', (event) => {
+  if (!event.target.closest('#pick-choices')) closeChoices();
+  if (!event.target.closest('#study-picker')) $('#study-picker').open = false;
+});
+
 renderer.domElement.addEventListener('pointerdown', (e) => {
-  downAt = { x: e.clientX, y: e.clientY, t: performance.now() };
+  pointers.add(e.pointerId);
+  if (pointers.size > 1) { multiTouch = true; downAt = null; return; }
+  downAt = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId, travelled: 0 };
+});
+
+renderer.domElement.addEventListener('pointercancel', (e) => {
+  pointers.delete(e.pointerId);
+  downAt = null;
+  if (!pointers.size) multiTouch = false;
 });
 
 renderer.domElement.addEventListener('pointerup', (e) => {
-  if (!downAt) return;
-  const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
+  pointers.delete(e.pointerId);
+  if (multiTouch) { if (!pointers.size) multiTouch = false; downAt = null; return; }
+  if (!downAt || downAt.id !== e.pointerId || e.button > 0) { downAt = null; return; }
+  const gesture = downAt;
   downAt = null;
-  if (moved > 6) return; // a drag, not a click
+  if (Math.max(gesture.travelled, Math.hypot(e.clientX - gesture.x, e.clientY - gesture.y)) > 6) return;
   const rec = pick(e.clientX, e.clientY);
+  if (e.pointerType === 'touch' && (!rec || performance.now() - gesture.t > 450)) {
+    const candidates = nearbyMuscles(e.clientX, e.clientY);
+    if (candidates.length > 1) { showChoices(candidates, e.clientX, e.clientY); return; }
+    if (candidates.length === 1) { select(candidates[0]); return; }
+  }
   select(rec, !!rec);
 });
 
 renderer.domElement.addEventListener('pointermove', (e) => {
+  if (downAt) downAt.travelled = Math.max(downAt.travelled, Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y));
   if (e.pointerType === 'touch' || downAt) { tooltip.hidden = true; return; }
   const rec = pick(e.clientX, e.clientY);
   if (rec !== state.hovered) {
@@ -631,11 +715,21 @@ const VIEWS = {
 $$('[data-view]').forEach((btn) => {
   btn.addEventListener('click', () => {
     const [theta, phi] = VIEWS[btn.dataset.view];
+    if (activeStudy) restoreFullBody({ fly: false });
     controls.flyTo(new Vector3(0, 0.94, 0), HOME.radius, theta, phi);
   });
 });
 
-$('#reset').addEventListener('click', () => {
+function restoreFullBody({ fly = true } = {}) {
+  activeStudy = null;
+  studyStep = 0;
+  $('#study-guide').hidden = true;
+  $('#study-picker').open = false;
+  closeChoices();
+  $('#panel').classList.remove('open');
+  $('#panel-toggle').setAttribute('aria-expanded', 'false');
+  $('#search').value = '';
+  $('#results').hidden = true;
   setLayers([1, 2, 3]);
   setRegions('all');
   state.isolate = false; $('#toggle-isolate').checked = false;
@@ -646,7 +740,59 @@ $('#reset').addEventListener('click', () => {
   state.xray = 1; $('#xray').value = 100; $('#xray-val').textContent = '100%';
   select(null);
   applyVisibility();
-  controls.flyTo(new Vector3(0, 0.94, 0), HOME.radius, HOME.theta, HOME.phi);
+  if (fly) {
+    controls.flyTo(new Vector3(0, 0.94, 0), isNarrow() ? 3.95 : 3.0, HOME.theta, HOME.phi);
+    $('#study-picker summary').focus({ preventScroll: true });
+  }
+}
+$('#reset').addEventListener('click', () => restoreFullBody());
+$('#return-body').addEventListener('click', () => restoreFullBody());
+$('#detail-full-body').addEventListener('click', () => restoreFullBody());
+$('#study-exit').addEventListener('click', () => restoreFullBody());
+
+function runStudyStep() {
+  const study = STUDIES[activeStudy];
+  const step = study.steps[studyStep];
+  const rec = byId.get(`${step.muscle}.right`);
+  setLayers(step.layers);
+  setRegions(study.groups);
+  state.sideFilter = study.bothSides ? null : 'right';
+  state.skeletonFilter = study.bones;
+  state.skeleton = true; $('#toggle-skeleton').checked = true;
+  state.focus = true; $('#toggle-focus').checked = true;
+  state.isolate = false; $('#toggle-isolate').checked = false;
+  state.xray = 1; $('#xray').value = 100; $('#xray-val').textContent = '100%';
+  $('#panel').classList.remove('open');
+  $('#panel-toggle').setAttribute('aria-expanded', 'false');
+  $('#study-picker').open = false;
+  $('#study-guide').hidden = false;
+  $('#study-progress').textContent = `${study.title} · ${studyStep + 1} of ${study.steps.length}`;
+  $('#study-muscle').textContent = rec.name;
+  $('#study-hint').textContent = step.hint;
+  $('#study-prev').disabled = studyStep === 0;
+  $('#study-next').textContent = studyStep === study.steps.length - 1 ? 'Finish study →' : 'Next →';
+  select(rec, false);
+  const anchor = skeleton.children.find((bone) => bone.name === study.anchor);
+  const target = new Box3().setFromObject(anchor || rec.mesh).getCenter(new Vector3());
+  const radius = study.radius * (isNarrow() ? 1.8 : 1);
+  // Keep the joint in the open space between the guide and the detail card.
+  if (isNarrow()) target.y += radius * .05;
+  controls.flyTo(target, radius, step.angle, 1.42, 850);
+}
+
+for (const [id, study] of Object.entries(STUDIES)) {
+  const button = document.createElement('button');
+  button.dataset.study = id;
+  const title = document.createElement('strong'); title.textContent = study.title;
+  const description = document.createElement('span'); description.textContent = study.description;
+  button.append(title, description);
+  button.addEventListener('click', () => { activeStudy = id; studyStep = 0; runStudyStep(); });
+  $('#study-options').append(button);
+}
+$('#study-prev').addEventListener('click', () => { if (studyStep > 0) { studyStep--; runStudyStep(); } });
+$('#study-next').addEventListener('click', () => {
+  if (studyStep === STUDIES[activeStudy].steps.length - 1) restoreFullBody();
+  else { studyStep++; runStudyStep(); }
 });
 
 /**
@@ -655,6 +801,7 @@ $('#reset').addEventListener('click', () => {
  * the supraspinatus running under the acromion.
  */
 $('#cuff-view').addEventListener('click', () => {
+  restoreFullBody({ fly: false });
   setLayers([3]);
   setRegions(['shoulder']);
   state.skeleton = true;
@@ -681,13 +828,17 @@ function runSearch() {
 
   // One row per muscle rather than one per side; picking a row selects the right side.
   const seen = new Set();
-  const matches = [];
+  const ranked = [];
   for (const rec of records) {
     if (seen.has(rec.id)) continue;
-    const hay = `${rec.name} ${rec.region} ${rec.fn}`.toLowerCase();
-    if (hay.includes(q)) { seen.add(rec.id); matches.push(rec); }
-    if (matches.length >= 10) break;
+    seen.add(rec.id);
+    const name = rec.name.toLowerCase();
+    const rank = name === q ? 0 : name.startsWith(q) ? 1 : name.includes(q) ? 2
+      : rec.region.toLowerCase().includes(q) ? 3 : rec.fn.toLowerCase().includes(q) ? 4 : Infinity;
+    if (Number.isFinite(rank)) ranked.push({ rec, rank });
   }
+  // A muscle's name is a better match than a mention in another muscle's action.
+  const matches = ranked.sort((a, b) => a.rank - b.rank).slice(0, 10).map(({ rec }) => rec);
 
   if (!matches.length) {
     resultsBox.hidden = false;
@@ -702,6 +853,14 @@ function runSearch() {
     row.innerHTML = `<span class="dot" style="background:#${LAYERS[rec.layer].color.toString(16).padStart(6, '0')}"></span>
       <span class="r-name">${rec.name}</span><span class="r-region">${rec.region}</span>`;
     row.addEventListener('click', () => {
+      // Leaving a scoped study restores the full anatomical context, including
+      // bones, before the result is selected.
+      if (activeStudy || state.skeletonFilter) {
+        activeStudy = null;
+        $('#study-guide').hidden = true;
+        setLayers([1, 2, 3]); setRegions('all');
+        state.sideFilter = null; state.skeletonFilter = null;
+      }
       // Make sure the muscle is actually showing before we fly to it.
       if (!state.layers[rec.layer]) {
         state.layers[rec.layer] = true;
@@ -815,7 +974,11 @@ window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { searchInput.blur(); resultsBox.hidden = true; }
     return;
   }
-  if (e.key === 'Escape') select(null);
+  if (e.key === 'Escape') {
+    if (!$('#pick-choices').hidden) { closeChoices(true); return; }
+    if ($('#study-picker').open) { $('#study-picker').open = false; $('#study-picker summary').focus(); return; }
+    select(null);
+  }
   if (e.key === '/') { e.preventDefault(); searchInput.focus(); }
   if (e.key >= '1' && e.key <= '3') {
     const cb = $(`[data-layer="${e.key}"]`);
@@ -842,14 +1005,13 @@ function animate() {
   requestAnimationFrame(animate);
   const moving = controls.isMoving;
   controls.update();
+  // Labels also follow moving sheets even when the 3D scene is idle.
+  camera.updateMatrixWorld();
+  positionLabels();
   // Static anatomy needs no repeated GPU work while idle. This also keeps
   // the mobile sheet responsive on devices with a slower graphics processor.
   if (!renderDirty && !moving) return;
   renderDirty = false;
-  // Project labels against a current camera matrix; the renderer only refreshes
-  // it during render, so doing this first would lag the camera by a frame.
-  camera.updateMatrixWorld();
-  positionLabels();
 
   renderer.clear();
   camera.layers.set(0);

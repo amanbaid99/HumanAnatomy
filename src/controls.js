@@ -118,6 +118,17 @@ export class OrbitControls {
 
   /** Smoothly frame a point at a given distance and, optionally, a new angle. */
   flyTo(point, radius, theta = null, phi = null, ms = 620) {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this._flight = null;
+      this._goalTarget.copy(point);
+      this._goalSpherical.set(
+        clamp(radius, this.minRadius, this.maxRadius),
+        phi === null ? this._goalSpherical.phi : clamp(phi, this.minPolar, this.maxPolar),
+        theta ?? this._goalSpherical.theta,
+      );
+      this._reducedJump = true;
+      return;
+    }
     this._flight = {
       t0: performance.now(),
       ms,
@@ -135,6 +146,7 @@ export class OrbitControls {
   }
 
   update(immediate = false) {
+    if (this._reducedJump) { immediate = true; this._reducedJump = false; }
     if (this._flight) {
       const f = this._flight;
       const k = clamp((performance.now() - f.t0) / f.ms, 0, 1);
@@ -172,7 +184,7 @@ export class OrbitControls {
   }
 
   get isMoving() {
-    return !!this._flight
+    return !!this._reducedJump || !!this._flight
       || this.target.distanceToSquared(this._goalTarget) > 1e-8
       || Math.abs(this.spherical.radius - this._goalSpherical.radius) > 1e-4
       || Math.abs(this.spherical.theta - this._goalSpherical.theta) > 1e-4

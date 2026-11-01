@@ -14,6 +14,8 @@ layers, search muscles, and inspect actions, attachment descriptions and nerve s
 - Three muscle layers, transparency, region filters, isolation and selection highlighting.
 - Origin and insertion markers, clinical notes, and a dedicated rotator cuff view.
 - Light and dark themes, keyboard controls and a mobile details sheet.
+- Three-step shoulder, knee, hip and spine studies with automatic framing and peeling.
+- Touch targeting assistance, a hold-to-choose muscle menu, and full-body return shortcuts.
 
 ## Links from other apps
 
@@ -40,12 +42,27 @@ fetch the anatomical assets; opening the HTML as a local file is unsupported.
 ```sh
 npm install
 npm run serve   # http://localhost:8123
-npm test        # desktop and mobile interaction checks; requires Playwright Chromium
+npm test        # desktop, mobile, study and selection checks; requires Playwright Chromium
 npm run shot    # screenshots in tools/shots/
 ```
 
 The local anatomical binary is approximately 18 MB. No external model host or CDN
 is required. Model loading errors are displayed on the loading screen.
+
+## Guided studies and touch selection
+
+Open **Study views** above the model. Each guide has three stops and selects the
+relevant layer, region, bones and camera angle. Previous and Next move through the
+study; Finish study or Back to full body restores all structures and clears search.
+Search can reveal muscles outside the current guided area.
+
+On a phone, a small missed tap can find a muscle within ten CSS pixels. Hold a
+stationary touch to choose among nearby visible muscles by name. Rotation, canceled
+touches and two-finger gestures do not select a muscle. Search remains available
+for structures that are hidden or too small to pick comfortably.
+
+`src/studies.js` contains the guide prompts and presets. Run `npm run test:studies`
+to verify guide navigation, filtering, keyboard dismissal and touch targeting.
 
 ## Geometry and rendering
 
