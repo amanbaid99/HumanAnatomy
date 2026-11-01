@@ -1,146 +1,74 @@
 # Human Anatomy Explorer
 
-An interactive 3D model of human musculoskeletal anatomy that runs in a browser.
-Rotate the figure, peel away muscle layers, and click any muscle for its action,
-attachments, nerve supply and, where relevant, a clinical note.
+An interactive browser atlas of musculoskeletal anatomy. Rotate the body, peel
+layers, search muscles, and inspect actions, attachment descriptions and nerve supply.
 
-![The model seen from the front](docs/preview.png)
+**Live:** https://amanbaid99.github.io/HumanAnatomy/
 
-**Live:** https://amanbaid99.github.io/HumanAnatomy/ (once Pages is switched on, see below)
+## Features
 
-## What it does
+- 180 muscle selections across ten body regions.
+- Anatomical meshes adapted from Z-Anatomy / BodyParts3D: 178 selectable muscle
+  meshes, plus a reference skeleton and facial structures. Semispinalis capitis,
+  absent from the imported source, retains its procedural approximation on both sides.
+- Three muscle layers, transparency, region filters, isolation and selection highlighting.
+- Origin and insertion markers, clinical notes, and a dedicated rotator cuff view.
+- Light and dark themes, keyboard controls and a mobile details sheet.
 
-- **180 muscles** across ten regions, each modelled as real geometry rather than a stick
-- **A plain head for reference**: a skin-toned face lofted from cross-sections, with
-  eyes, nose, lips and ears and a skull-shaped silhouette, but no muscles to select. The
-  facial muscles are still defined in `muscles.js` and come back with one switch,
-  `SHOW_FACE_MUSCLES`
-- **A full skeleton** underneath: curved spine, twelve rib pairs, scapula with its
-  spine, acromion and coracoid, and long bones with proper wide ends
-- **Peel by layer** (superficial, intermediate, deep) or fade the outer layers with a
-  slider to look through them
-- **Filter by region**, isolate a single muscle, or search by name, region or function
-- **Select anything and see where it connects**: the origin and insertion are marked
-  on the body with a line of pull between them, and everything else dims so a deep
-  muscle is readable even when three layers sit on top of it
-- **A dedicated rotator cuff view** that strips to the deep layer, narrows the skeleton
-  to the shoulder girdle, and frames the supraspinatus where it passes under the acromion
+## Run and verify
 
-## Running it
+This is a static site without a build step. Serve it over HTTP so the browser can
+fetch the anatomical assets; opening the HTML as a local file is unsupported.
 
-It is a static site with no build step. Open `index.html` directly, or:
-
-```
-npm run serve      # http://localhost:8123
+```sh
+npm install
+npm run serve   # http://localhost:8123
+npm test        # desktop and mobile interaction checks; requires Playwright Chromium
+npm run shot    # screenshots in tools/shots/
 ```
 
-Development helpers (need `npm install` first):
+The local anatomical binary is approximately 18 MB. No external model host or CDN
+is required. Model loading errors are displayed on the loading screen.
 
-```
-npm test           # 17 desktop interaction checks + 12 on a phone viewport
-npm run shot       # render views headlessly to tools/shots/
-```
+## Geometry and rendering
 
-## Deploying
+`src/anatomy/atlas.js` loads indexed geometry from `assets/anatomy/atlas.bin` using
+its JSON manifest. `build.js` connects source meshes to the existing muscle
+records and controls. The retained loft engine supplies the one missing muscle.
+Facial reference meshes are not individually selectable.
 
-`.github/workflows/pages.yml` publishes the repo root to GitHub Pages on every
-push. It needs Pages turned on once, by hand: the Actions token is not allowed
-to create a Pages site that has never existed.
+Ambient occlusion is baked at load time by depth group. The selected muscle is
+rendered again after clearing depth so it remains visible through overlying tissue.
+Lighting uses a procedural environment and directional lights.
 
-**Settings → Pages → Build and deployment → Source: GitHub Actions.**
+To regenerate the assets from the upstream `Startup.blend` file:
 
-Then re-run the workflow (Actions tab → Deploy to GitHub Pages → Re-run jobs),
-or just push again. After that every push deploys on its own.
-
-## How the geometry works
-
-There is no scan data here. Every shape is generated at load time from a table of
-anatomical landmarks, by two primitives in `src/geometry/loft.js`:
-
-- **`tubeLoft`** sweeps a variable elliptical cross-section along a curved centerline,
-  using rotation-minimizing frames so the mesh does not twist. This makes the fusiform
-  and strap muscles: biceps, sartorius, the calf.
-- **`sheetLoft`** builds a ruled surface between a broad bony origin and a narrow
-  insertion, bulges it outward so it drapes over the trunk, and thickens it into a
-  solid. This makes the flat fan muscles: trapezius, latissimus dorsi, pectoralis
-  major, gluteus maximus.
-
-Both emit a per-vertex `tendon` weight where the muscle narrows, which the material
-uses to shade tendon paler and glossier than the belly.
-
-### Occlusion
-
-Separate meshes read as separate objects unless the creases where they meet go dark.
-Screen-space AO would cost every frame, which is what a phone cannot spare, and none
-of this geometry moves. So `src/geometry/occlusion.js` voxelises the figure at load,
-marches a short bundle of rays from every vertex through that grid, and writes the
-result into the mesh as an `ao` attribute. About 140 ms once, then free.
-
-It bakes per depth: a deep muscle is occluded by bone and the deep layer only, so
-peeling the superficial layer away does not leave what is underneath still wearing a
-shadow cast by something no longer on screen.
-
-### Drawing the selection on top
-
-A selected muscle is rendered twice: once in the scene, then again after the depth
-buffer is cleared, using a camera layer to pick out just that muscle and its markers.
-Without the second pass a deep muscle highlights invisibly under everything else.
-Two traps worth knowing if you touch this: `renderer.autoClear` has to be off, and
-`scene.background` has to be detached for the overlay pass, because a background that
-is a `Color` forces a clear inside `render()` regardless of `autoClear` and silently
-wipes the pass before it.
-
-Lighting is image-based, from a gradient environment generated on a canvas and
-prefiltered at startup, so there is still no external asset to load.
-
-### Layout
-
-```
-index.html                  markup, styling, all the UI
-src/app.js                  scene, interaction, state
-src/controls.js             orbit / pan / dolly, with time-based damping
-src/geometry/loft.js        the two loft primitives
-src/geometry/occlusion.js   baked ambient occlusion
-src/anatomy/landmarks.js    shared landmark table (one source of truth)
-src/anatomy/muscles.js      muscle definitions: attachments, actions, notes
-src/anatomy/skeleton.js     bone construction
-src/anatomy/face.js         the head: lofted shell, carved sockets, features
-src/anatomy/build.js        definitions to meshes, and the muscle material
-vendor/                     three.js r0.185, vendored so there is no CDN dependency
+```sh
+blender -b --python tools/export-atlas.py -- path/to/Startup.blend
 ```
 
-A muscle lying on a curved surface cannot use the transported frames the rest of
-the model relies on, because they drift and the muscle ends up standing on its
-edge instead of lying flat. The face answers that itself: `face.js` can say where
-the facial surface is and which way it faces at any point, and `sheetLoft` takes
-that answer directly, so the slab is thickened along the face rather than along a
-radius from the body's axis. The same engine sweeps a closed loop as an annulus
-when both of its edges are rings, which is what orbicularis oculi is: a flat
-ribbon with the palpebral aperture as its hole, not a tube bent into a circle.
+The exporter loads only selected structures, reduces mesh density, transforms
+coordinates and triangle winding, and combines components by muscle selection. Tendon weights are retained from source
+material assignments.
+`assets/anatomy/source-selection.json` records every selected source object.
+See [model credits and licensing](assets/anatomy/NOTICE.md).
 
-`landmarks.js` is what keeps the model coherent. Bones and muscles both position
-themselves against the same named points, so a muscle's origin lands on the bone it
-actually comes from instead of near it.
+## Deployment
 
-## Accuracy, honestly
+`.github/workflows/pages.yml` publishes the repository root to GitHub Pages on
+pushes to `claude/anatomy-web-app-cgyqjz`. The repository's Pages source must be
+configured as GitHub Actions.
 
-The geometry is approximated from standard anatomical attachment descriptions and
-proportional landmarks for a 1.80 m adult male figure. It is **not** derived from
-medical imaging or a licensed anatomy dataset.
+## Accuracy and limitations
 
-What that means in practice:
+This is an educational reference viewer, not a clinically validated atlas.
+Layer assignments are approximate. Attachment markers start from the original
+procedural coordinates and are projected onto the imported muscle surface; they
+are approximate reference locations rather than validated anatomical endpoints. Meshes have been simplified for the
+web. The viewer does not depict all anatomical structures or individual variation.
 
-- Attachment points, layering order and the relationships between structures are
-  reliable. Which muscle lies under which, what runs where, what attaches to what.
-- Muscle cross-sections are scaled to real published dimensions, so the proportions
-  are close, but the exact contour of any individual belly is an approximation.
-- There is no skin, fat, fascia, vasculature or nerve tissue, and no viscera.
-- Some regions are rougher than others. The shoulder and rotator cuff got the most
-  attention; the hands and feet are the least detailed.
+## License
 
-It is a study aid for learning the relationships. It is not a clinical tool and
-should not be used for diagnosis.
-
-## Licence
-
-MIT for the code. three.js is MIT, bundled under `vendor/`.
+Application code: MIT. Vendored three.js: MIT.
+Adapted anatomical model assets: CC BY-SA 4.0, with Z-Anatomy and original
+BodyParts3D attribution preserved in [NOTICE.md](assets/anatomy/NOTICE.md).

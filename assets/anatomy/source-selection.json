@@ -1,0 +1,2282 @@
+[
+  {
+    "name": "Sternocleidomastoid muscle.r",
+    "id": "sternocleidomastoid",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Sternocleidomastoid muscle.l",
+    "id": "sternocleidomastoid",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Scalenus anterior muscle.r",
+    "id": "scalenes",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Scalenus medius muscle.r",
+    "id": "scalenes",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Scalenus posterior muscle.r",
+    "id": "scalenes",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Scalenus anterior muscle.l",
+    "id": "scalenes",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Scalenus medius muscle.l",
+    "id": "scalenes",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Scalenus posterior muscle.l",
+    "id": "scalenes",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Levator scapulae.r",
+    "id": "levator-scapulae",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Levator scapulae.l",
+    "id": "levator-scapulae",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Splenius capitis muscle.r",
+    "id": "splenius-capitis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Splenius capitis muscle.l",
+    "id": "splenius-capitis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Longus colli muscle.r",
+    "id": "longus-colli",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Longus colli muscle.l",
+    "id": "longus-colli",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Supraspinatus muscle.r",
+    "id": "supraspinatus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Supraspinatus muscle.l",
+    "id": "supraspinatus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Infraspinatus muscle.r",
+    "id": "infraspinatus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Infraspinatus muscle.l",
+    "id": "infraspinatus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Teres minor muscle.r",
+    "id": "teres-minor",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Teres minor muscle.l",
+    "id": "teres-minor",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Subscapularis muscle.r",
+    "id": "subscapularis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Subscapularis muscle.l",
+    "id": "subscapularis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Clavicular part of deltoid muscle.r",
+    "id": "deltoid-anterior",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Clavicular part of deltoid muscle.l",
+    "id": "deltoid-anterior",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Acromial part of deltoid muscle.r",
+    "id": "deltoid-lateral",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Acromial part of deltoid muscle.l",
+    "id": "deltoid-lateral",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Scapular spinal part of deltoid muscle.r",
+    "id": "deltoid-posterior",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Scapular spinal part of deltoid muscle.l",
+    "id": "deltoid-posterior",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Teres major muscle.r",
+    "id": "teres-major",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Teres major muscle.l",
+    "id": "teres-major",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Coracobrachialis muscle.r",
+    "id": "coracobrachialis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Coracobrachialis muscle.l",
+    "id": "coracobrachialis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Clavicular head of pectoralis major muscle.r",
+    "id": "pectoralis-major",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Sternocostal head of pectoralis major muscle.r",
+    "id": "pectoralis-major",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "(Abdominal part of pectoralis major muscle).r",
+    "id": "pectoralis-major",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Clavicular head of pectoralis major muscle.l",
+    "id": "pectoralis-major",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Sternocostal head of pectoralis major muscle.l",
+    "id": "pectoralis-major",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "(Abdominal part of pectoralis major muscle).l",
+    "id": "pectoralis-major",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Pectoralis minor muscle.r",
+    "id": "pectoralis-minor",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Pectoralis minor muscle.l",
+    "id": "pectoralis-minor",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Serratus anterior muscle.r",
+    "id": "serratus-anterior",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Serratus anterior muscle.l",
+    "id": "serratus-anterior",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Descending part of trapezius muscle.r",
+    "id": "trapezius-upper",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Descending part of trapezius muscle.l",
+    "id": "trapezius-upper",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Transverse part of trapezius muscle.r",
+    "id": "trapezius-middle",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Transverse part of trapezius muscle.l",
+    "id": "trapezius-middle",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Ascending part of trapezius muscle.r",
+    "id": "trapezius-lower",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Ascending part of trapezius muscle.l",
+    "id": "trapezius-lower",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Latissimus dorsi muscle.r",
+    "id": "latissimus-dorsi",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Latissimus dorsi muscle.l",
+    "id": "latissimus-dorsi",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Rhomboid major muscle.r",
+    "id": "rhomboid-major",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Rhomboid major muscle.l",
+    "id": "rhomboid-major",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Rhomboid minor muscle.r",
+    "id": "rhomboid-minor",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Rhomboid minor muscle.l",
+    "id": "rhomboid-minor",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Iliocostalis lumborum muscle.r",
+    "id": "erector-spinae",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Iliocostalis thoracis muscle.r",
+    "id": "erector-spinae",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Longissimus thoracis muscle.r",
+    "id": "erector-spinae",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Spinalis thoracis muscle.r",
+    "id": "erector-spinae",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Iliocostalis lumborum muscle.l",
+    "id": "erector-spinae",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Iliocostalis thoracis muscle.l",
+    "id": "erector-spinae",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Longissimus thoracis muscle.l",
+    "id": "erector-spinae",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Spinalis thoracis muscle.l",
+    "id": "erector-spinae",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Quadratus lumborum muscle.r",
+    "id": "quadratus-lumborum",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Quadratus lumborum muscle.l",
+    "id": "quadratus-lumborum",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Long head of biceps brachii.r",
+    "id": "biceps-long",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Long head of biceps brachii.l",
+    "id": "biceps-long",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Short head of biceps brachii.r",
+    "id": "biceps-short",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Short head of biceps brachii.l",
+    "id": "biceps-short",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Brachialis muscle.r",
+    "id": "brachialis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Brachialis muscle.l",
+    "id": "brachialis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Long head of triceps brachii.r",
+    "id": "triceps-long",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Long head of triceps brachii.l",
+    "id": "triceps-long",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Lateral head of triceps brachii.r",
+    "id": "triceps-lateral",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Lateral head of triceps brachii.l",
+    "id": "triceps-lateral",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Medial head of triceps brachii.r",
+    "id": "triceps-medial",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Medial head of triceps brachii.l",
+    "id": "triceps-medial",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Anconeus muscle.r",
+    "id": "anconeus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Anconeus muscle.l",
+    "id": "anconeus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Brachioradialis muscle.r",
+    "id": "brachioradialis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Brachioradialis muscle.l",
+    "id": "brachioradialis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Flexor carpi radialis.r",
+    "id": "flexor-carpi-radialis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Flexor carpi radialis.l",
+    "id": "flexor-carpi-radialis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Palmaris longus muscle.r",
+    "id": "palmaris-longus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Palmaris longus muscle.l",
+    "id": "palmaris-longus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Ulnar head of flexor carpi ulnaris.r",
+    "id": "flexor-carpi-ulnaris",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Humeral head of flexor carpi ulnaris.r",
+    "id": "flexor-carpi-ulnaris",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Ulnar head of flexor carpi ulnaris.l",
+    "id": "flexor-carpi-ulnaris",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Humeral head of flexor carpi ulnaris.l",
+    "id": "flexor-carpi-ulnaris",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Radial head of flexor digitorum superficialis.r",
+    "id": "flexor-digitorum-superficialis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Humero-ulnar head of flexor digitorum superficialis.r",
+    "id": "flexor-digitorum-superficialis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Radial head of flexor digitorum superficialis.l",
+    "id": "flexor-digitorum-superficialis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Humero-ulnar head of flexor digitorum superficialis.l",
+    "id": "flexor-digitorum-superficialis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Extensor carpi radialis longus.r",
+    "id": "extensor-carpi-radialis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Extensor carpi radialis brevis.r",
+    "id": "extensor-carpi-radialis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Extensor carpi radialis longus.l",
+    "id": "extensor-carpi-radialis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Extensor carpi radialis brevis.l",
+    "id": "extensor-carpi-radialis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Extensor digitorum.r",
+    "id": "extensor-digitorum",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Extensor digitorum.l",
+    "id": "extensor-digitorum",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Ulnar head of extensor carpi ulnaris.r",
+    "id": "extensor-carpi-ulnaris",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Humeral head of extensor carpi ulnaris.r",
+    "id": "extensor-carpi-ulnaris",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Ulnar head of extensor carpi ulnaris.l",
+    "id": "extensor-carpi-ulnaris",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Humeral head of extensor carpi ulnaris.l",
+    "id": "extensor-carpi-ulnaris",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Supinator.r",
+    "id": "supinator",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Supinator.l",
+    "id": "supinator",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Rectus abdominis muscle.r",
+    "id": "rectus-abdominis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Rectus abdominis muscle.l",
+    "id": "rectus-abdominis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "External abdominal oblique muscle.r",
+    "id": "external-oblique",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "External abdominal oblique muscle.l",
+    "id": "external-oblique",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Internal abdominal oblique muscle.r",
+    "id": "internal-oblique",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Internal abdominal oblique muscle.l",
+    "id": "internal-oblique",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Transversus abdominis muscle.r",
+    "id": "transversus-abdominis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Transversus abdominis muscle.l",
+    "id": "transversus-abdominis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Gluteus maximus muscle.r",
+    "id": "gluteus-maximus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Gluteus maximus muscle.l",
+    "id": "gluteus-maximus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Gluteus medius muscle.r",
+    "id": "gluteus-medius",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Gluteus medius muscle.l",
+    "id": "gluteus-medius",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Gluteus minimus muscle.r",
+    "id": "gluteus-minimus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Gluteus minimus muscle.l",
+    "id": "gluteus-minimus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Piriformis muscle.r",
+    "id": "piriformis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Piriformis muscle.l",
+    "id": "piriformis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Psoas major.r",
+    "id": "psoas-major",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Psoas major.l",
+    "id": "psoas-major",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Iliacus muscle.r",
+    "id": "iliacus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Iliacus muscle.l",
+    "id": "iliacus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Tensor fasciae latae.r",
+    "id": "tensor-fasciae-latae",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Tensor fasciae latae.l",
+    "id": "tensor-fasciae-latae",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Iliotibial tract.r",
+    "id": "iliotibial-band",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Iliotibial tract.l",
+    "id": "iliotibial-band",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Rectus femoris muscle.r",
+    "id": "rectus-femoris",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Rectus femoris muscle.l",
+    "id": "rectus-femoris",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Vastus lateralis muscle.r",
+    "id": "vastus-lateralis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Vastus lateralis muscle.l",
+    "id": "vastus-lateralis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Vastus medialis muscle.r",
+    "id": "vastus-medialis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Vastus medialis muscle.l",
+    "id": "vastus-medialis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Vastus intermedius muscle.r",
+    "id": "vastus-intermedius",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Vastus intermedius muscle.l",
+    "id": "vastus-intermedius",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Sartorius muscle.r",
+    "id": "sartorius",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Sartorius muscle.l",
+    "id": "sartorius",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Gracilis muscle.r",
+    "id": "gracilis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Gracilis muscle.l",
+    "id": "gracilis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Adductor longus.r",
+    "id": "adductor-longus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Adductor longus.l",
+    "id": "adductor-longus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Adductor magnus.r",
+    "id": "adductor-magnus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Adductor magnus.l",
+    "id": "adductor-magnus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Pectineus muscle.r",
+    "id": "pectineus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Pectineus muscle.l",
+    "id": "pectineus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Long head of biceps femoris.r",
+    "id": "biceps-femoris-long",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Long head of biceps femoris.l",
+    "id": "biceps-femoris-long",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Short head of biceps femoris.r",
+    "id": "biceps-femoris-short",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Short head of biceps femoris.l",
+    "id": "biceps-femoris-short",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Semitendinosus muscle.r",
+    "id": "semitendinosus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Semitendinosus muscle.l",
+    "id": "semitendinosus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Semimembranosus muscle.r",
+    "id": "semimembranosus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Semimembranosus muscle.l",
+    "id": "semimembranosus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Medial head of gastrocnemius.r",
+    "id": "gastrocnemius-medial",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Medial head of gastrocnemius.l",
+    "id": "gastrocnemius-medial",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Lateral head of gastrocnemius.r",
+    "id": "gastrocnemius-lateral",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Lateral head of gastrocnemius.l",
+    "id": "gastrocnemius-lateral",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Soleus muscle.r",
+    "id": "soleus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Soleus muscle.l",
+    "id": "soleus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Calcaneal tendon.r",
+    "id": "achilles-tendon",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Calcaneal tendon.l",
+    "id": "achilles-tendon",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Tibialis anterior muscle.r",
+    "id": "tibialis-anterior",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Tibialis anterior muscle.l",
+    "id": "tibialis-anterior",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Extensor digitorum longus.r",
+    "id": "extensor-digitorum-longus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Extensor digitorum longus.l",
+    "id": "extensor-digitorum-longus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Fibularis longus muscle.r",
+    "id": "peroneus-longus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Fibularis longus muscle.l",
+    "id": "peroneus-longus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Tibialis posterior muscle.r",
+    "id": "tibialis-posterior",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Tibialis posterior muscle.l",
+    "id": "tibialis-posterior",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Flexor hallucis longus.r",
+    "id": "flexor-hallucis-longus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Flexor hallucis longus.l",
+    "id": "flexor-hallucis-longus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Sternohyoid muscle.r",
+    "id": "sternohyoid",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Sternohyoid muscle.l",
+    "id": "sternohyoid",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Omohyoid muscle.r",
+    "id": "omohyoid",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Omohyoid muscle.l",
+    "id": "omohyoid",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "External intercostal muscles.r",
+    "id": "intercostals",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Internal intercostal muscles.r",
+    "id": "intercostals",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Innermost intercostal muscles.r",
+    "id": "intercostals",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "External intercostal muscles.l",
+    "id": "intercostals",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Internal intercostal muscles.l",
+    "id": "intercostals",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Innermost intercostal muscles.l",
+    "id": "intercostals",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Multifidus lumborum muscle.r",
+    "id": "multifidus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Multifidus thoracis muscle.r",
+    "id": "multifidus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Multifidus colli muscle.r",
+    "id": "multifidus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Multifidus lumborum muscle.l",
+    "id": "multifidus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Multifidus thoracis muscle.l",
+    "id": "multifidus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Multifidus colli muscle.l",
+    "id": "multifidus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Serratus posterior inferior muscle.r",
+    "id": "serratus-posterior-inferior",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Serratus posterior inferior muscle.l",
+    "id": "serratus-posterior-inferior",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Quadratus femoris muscle.r",
+    "id": "quadratus-femoris",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Quadratus femoris muscle.l",
+    "id": "quadratus-femoris",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Obturator internus.r",
+    "id": "obturator-internus",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Obturator internus.l",
+    "id": "obturator-internus",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Abductor pollicis brevis.r",
+    "id": "thenar",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Opponens pollicis muscle.r",
+    "id": "thenar",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Superficial head of flexor pollicis brevis.r",
+    "id": "thenar",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Abductor pollicis brevis.l",
+    "id": "thenar",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Opponens pollicis muscle.l",
+    "id": "thenar",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Superficial head of flexor pollicis brevis.l",
+    "id": "thenar",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Abductor digiti minimi of hand.r",
+    "id": "hypothenar",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Opponens digiti minimi muscle of hand.r",
+    "id": "hypothenar",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Flexor digiti minimi of hand.r",
+    "id": "hypothenar",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Abductor digiti minimi of hand.l",
+    "id": "hypothenar",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Opponens digiti minimi muscle of hand.l",
+    "id": "hypothenar",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Flexor digiti minimi of hand.l",
+    "id": "hypothenar",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Dorsal interossei muscles of hand.r",
+    "id": "interossei",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Palmar interossei muscles.r",
+    "id": "interossei",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Dorsal interossei muscles of hand.l",
+    "id": "interossei",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Palmar interossei muscles.l",
+    "id": "interossei",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Extensor digitorum brevis.r",
+    "id": "extensor-digitorum-brevis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Extensor digitorum brevis.l",
+    "id": "extensor-digitorum-brevis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Abductor hallucis.r",
+    "id": "abductor-hallucis",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Abductor hallucis.l",
+    "id": "abductor-hallucis",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Platysma.r",
+    "id": "platysma",
+    "side": "right",
+    "kind": "muscle"
+  },
+  {
+    "name": "Platysma.l",
+    "id": "platysma",
+    "side": "left",
+    "kind": "muscle"
+  },
+  {
+    "name": "Zygomatic bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Zygomatic bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Xiphoid process",
+    "kind": "bone"
+  },
+  {
+    "name": "Vomer",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra T9",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra T8",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra T7",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra T6",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra T5",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra T4",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra T3",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra T2",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra T12",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra T11",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra T10",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra T1",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra L5",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra L4",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra L3",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra L2",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra L1",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra C7",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra C6",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra C5",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra C4",
+    "kind": "bone"
+  },
+  {
+    "name": "Vertebra C3",
+    "kind": "bone"
+  },
+  {
+    "name": "Ulna.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Ulna.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Trapezoid bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Trapezoid bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Tibia.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Tibia.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Temporal bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Temporal bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Talus.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Talus.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Scapula.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Scapula.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Scaphoid bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Sacrum",
+    "kind": "bone"
+  },
+  {
+    "name": "Radius.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Radius.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of third finger of hand.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of third finger of hand.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of third finger of foot.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of third finger of foot.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of second finger of hand.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of second finger of hand.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of second finger of foot.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of second finger of foot.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of fourth finger of hand.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of fourth finger of hand.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of fourth finger of foot.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of fourth finger of foot.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of first finger of hand.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of first finger of hand.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of first finger of foot.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of first finger of foot.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of fifth finger of hand.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of fifth finger of hand.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of fifth finger of foot.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Patella.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Sphenoid bone",
+    "kind": "bone"
+  },
+  {
+    "name": "Scaphoid bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Proximal phalanx of fifth finger of foot.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Pisiform bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Pisiform bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Patella.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Parietal bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Parietal bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Palatine bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Palatine bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Occipital bone",
+    "kind": "bone"
+  },
+  {
+    "name": "Navicular bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Navicular bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Nasal bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Nasal bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Middle phalanx of third finger of hand.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Middle phalanx of third finger of hand.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Middle phalanx of third finger of foot.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Middle phalanx of third finger of foot.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Middle phalanx of second finger of hand.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Middle phalanx of second finger of hand.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Middle phalanx of second finger of foot.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Middle phalanx of second finger of foot.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Middle phalanx of fourth finger of hand.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Middle phalanx of fourth finger of hand.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Middle phalanx of fourth finger of foot.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Middle phalanx of fourth finger of foot.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Middle phalanx of fifth finger of hand.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Middle phalanx of fifth finger of hand.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Middle phalanx of fifth finger of foot.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Middle phalanx of fifth finger of foot.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Medial cuneiform bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Medial cuneiform bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Maxilla.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Maxilla.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Manubrium of sternum",
+    "kind": "bone"
+  },
+  {
+    "name": "Mandible",
+    "kind": "bone"
+  },
+  {
+    "name": "Lunate bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Lunate bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Lateral cuneiform bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Lateral cuneiform bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Lacrimal bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Lacrimal bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Intermediate cuneiform bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Intermediate cuneiform bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Hyoid bone",
+    "kind": "bone"
+  },
+  {
+    "name": "Humerus.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Humerus.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Hip bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Hip bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Hamate bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Hamate bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Frontal bone",
+    "kind": "bone"
+  },
+  {
+    "name": "Fibula.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Fibula.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Femur.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Femur.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Ethmoid bone",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of third finger of hand.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of third finger of hand.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of third finger of foot.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of third finger of foot.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of second finger of hand.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of second finger of hand.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of second finger of foot.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of second finger of foot.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of fourth finger of hand.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of fourth finger of hand.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of fourth finger of foot.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of fourth finger of foot.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of first finger of hand.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of first finger of hand.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of first finger of foot.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of first finger of foot.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of fifth finger of hand.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of fifth finger of hand.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of fifth finger of foot.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Distal phalanx of fifth finger of foot.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Cuboid bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Cuboid bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Coccyx",
+    "kind": "bone"
+  },
+  {
+    "name": "Clavicle.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Clavicle.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Capitate bone.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Capitate bone.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Calcaneus.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Calcaneus.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Body of sternum",
+    "kind": "bone"
+  },
+  {
+    "name": "Zygomaticus minor muscle.r",
+    "kind": "face"
+  },
+  {
+    "name": "Zygomaticus minor muscle.l",
+    "kind": "face"
+  },
+  {
+    "name": "Zygomaticus major muscle.r",
+    "kind": "face"
+  },
+  {
+    "name": "Zygomaticus major muscle.l",
+    "kind": "face"
+  },
+  {
+    "name": "Temporalis muscle.r",
+    "kind": "face"
+  },
+  {
+    "name": "Temporalis muscle.l",
+    "kind": "face"
+  },
+  {
+    "name": "Sclera.r",
+    "kind": "face"
+  },
+  {
+    "name": "Sclera.l",
+    "kind": "face"
+  },
+  {
+    "name": "Risorius muscle.r",
+    "kind": "face"
+  },
+  {
+    "name": "Risorius muscle.l",
+    "kind": "face"
+  },
+  {
+    "name": "Procerus muscle.r",
+    "kind": "face"
+  },
+  {
+    "name": "Procerus muscle.l",
+    "kind": "face"
+  },
+  {
+    "name": "Orbicularis oris muscle.r",
+    "kind": "face"
+  },
+  {
+    "name": "Orbicularis oris muscle.l",
+    "kind": "face"
+  },
+  {
+    "name": "Occipitalis muscle.r",
+    "kind": "face"
+  },
+  {
+    "name": "Occipitalis muscle.l",
+    "kind": "face"
+  },
+  {
+    "name": "Nasalis muscle.r",
+    "kind": "face"
+  },
+  {
+    "name": "Nasalis muscle.l",
+    "kind": "face"
+  },
+  {
+    "name": "Mentalis muscle.r",
+    "kind": "face"
+  },
+  {
+    "name": "Mentalis muscle.l",
+    "kind": "face"
+  },
+  {
+    "name": "Levator labii superioris.r",
+    "kind": "face"
+  },
+  {
+    "name": "Levator labii superioris.l",
+    "kind": "face"
+  },
+  {
+    "name": "Frontalis muscle.r",
+    "kind": "face"
+  },
+  {
+    "name": "Frontalis muscle.l",
+    "kind": "face"
+  },
+  {
+    "name": "Epicranial aponeurosis.r",
+    "kind": "face"
+  },
+  {
+    "name": "Epicranial aponeurosis.l",
+    "kind": "face"
+  },
+  {
+    "name": "Depressor labii inferioris.r",
+    "kind": "face"
+  },
+  {
+    "name": "Depressor labii inferioris.l",
+    "kind": "face"
+  },
+  {
+    "name": "Depressor anguli oris.r",
+    "kind": "face"
+  },
+  {
+    "name": "Depressor anguli oris.l",
+    "kind": "face"
+  },
+  {
+    "name": "Upper second molar tooth.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Upper second molar tooth.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Upper first molar tooth.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Upper first molar tooth.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Twelfth rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Twelfth rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Third rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Third rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Tenth rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Tenth rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Superficial part of masseter.r",
+    "kind": "face"
+  },
+  {
+    "name": "Superficial part of masseter.l",
+    "kind": "face"
+  },
+  {
+    "name": "Superficial head of pronator teres.r",
+    "kind": "muscle",
+    "id": "pronator-teres",
+    "side": "right"
+  },
+  {
+    "name": "Superficial head of pronator teres.l",
+    "kind": "muscle",
+    "id": "pronator-teres",
+    "side": "left"
+  },
+  {
+    "name": "Sixth rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Sixth rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Seventh rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Seventh rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Second rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Palpebral part of orbicularis oculi.r",
+    "kind": "face"
+  },
+  {
+    "name": "Palpebral part of orbicularis oculi.l",
+    "kind": "face"
+  },
+  {
+    "name": "Orbital part of orbicularis oculi.r",
+    "kind": "face"
+  },
+  {
+    "name": "Orbital part of orbicularis oculi.l",
+    "kind": "face"
+  },
+  {
+    "name": "Second rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Ninth rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Ninth rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Lower second molar tooth.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Lower second molar tooth.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Lower first molar tooth.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Lower first molar tooth.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Fourth rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Fourth rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "First rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "First rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Fifth rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Fifth rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Eleventh rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Eleventh rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Eighth rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Eighth rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Deep part of masseter.r",
+    "kind": "face"
+  },
+  {
+    "name": "Deep part of masseter.l",
+    "kind": "face"
+  },
+  {
+    "name": "Deep head of pronator teres.r",
+    "kind": "muscle",
+    "id": "pronator-teres",
+    "side": "right"
+  },
+  {
+    "name": "Deep head of pronator teres.l",
+    "kind": "muscle",
+    "id": "pronator-teres",
+    "side": "left"
+  },
+  {
+    "name": "Costal cartilage of third rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of third rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of tenth rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of tenth rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of sixth rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of sixth rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of seventh rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of seventh rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of second rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of second rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of ninth rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of ninth rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of fourth rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of fourth rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of first rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of first rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of fifth rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of fifth rib.l",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of eighth rib.r",
+    "kind": "bone"
+  },
+  {
+    "name": "Costal cartilage of eighth rib.l",
+    "kind": "bone"
+  }
+]

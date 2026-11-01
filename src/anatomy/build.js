@@ -15,9 +15,9 @@ import { applyOcclusionToMaterial } from '../geometry/occlusion.js';
 import { MUSCLES } from './muscles.js';
 
 export const LAYERS = {
-  1: { key: 'superficial', label: 'Superficial', color: 0xc4705f },
-  2: { key: 'intermediate', label: 'Intermediate', color: 0xb35e4f },
-  3: { key: 'deep', label: 'Deep', color: 0xa14d42 },
+  1: { key: 'superficial', label: 'Superficial', color: 0xad5148 },
+  2: { key: 'intermediate', label: 'Intermediate', color: 0x9e493f },
+  3: { key: 'deep', label: 'Deep', color: 0x914035 },
 };
 
 export const GROUPS = [
@@ -59,7 +59,21 @@ function attachments(def) {
   return { from: def.path[0], to: def.path[def.path.length - 1] };
 }
 
-function muscleMaterial(layer) {
+// The original authored attachment coordinates are approximate. Project them
+// onto the imported muscle so reference markers stay on the displayed surface.
+function closestVertex(geometry, point) {
+  const positions = geometry.getAttribute('position');
+  let best = Infinity;
+  let result = point;
+  for (let i = 0; i < positions.count; i++) {
+    const candidate = [positions.getX(i), positions.getY(i), positions.getZ(i)];
+    const distance = candidate.reduce((sum, v, axis) => sum + (v - point[axis]) ** 2, 0);
+    if (distance < best) { best = distance; result = candidate; }
+  }
+  return result;
+}
+
+function muscleMaterial(layer, anatomical = false) {
   // Muscle is matte and damp, not wet. At 0.52 the broad highlight read as
   // plastic; this keeps enough of a sheen to show curvature and no more.
   const mat = new MeshStandardMaterial({
@@ -67,6 +81,23 @@ function muscleMaterial(layer) {
     roughness: 0.78,
     metalness: 0.0,
   });
+
+  if (anatomical) {
+    // Imported layers can share almost coincident boundary surfaces. Prefer
+    // superficial tissue there instead of flickering between two materials.
+    mat.polygonOffset = true;
+    mat.polygonOffsetFactor = (layer - 2) * 1.5;
+    mat.polygonOffsetUnits = (layer - 2) * 1.5;
+    mat.onBeforeCompile = (shader) => {
+      applyOcclusionToMaterial(shader);
+      shader.uniforms.uTendonColor = { value: TENDON_COLOR };
+      shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nattribute float tendon; varying float vTendon;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvTendon = tendon;');
+      shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vTendon; uniform vec3 uTendonColor;')
+        .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb = mix(diffuseColor.rgb, uTendonColor, smoothstep(0.1, 0.9, vTendon) * 0.93);');
+    };
+    return mat;
+  }
 
   mat.onBeforeCompile = (shader) => {
     applyOcclusionToMaterial(shader);
@@ -164,7 +195,7 @@ function sideVariant(def, flip) {
  * Build every muscle mesh.
  * @returns {{ group: Group, records: Array }}
  */
-export function buildMuscles() {
+export function buildMuscles(atlas = null) {
   const group = new Group();
   group.name = 'muscles';
   const records = [];
@@ -173,14 +204,20 @@ export function buildMuscles() {
     const sides = def.mirror ? [false, true] : [false];
     sides.forEach((flip) => {
       const variant = sideVariant(def, flip);
-      const geo = geometryFor(variant);
-      const mat = muscleMaterial(def.layer);
+      const sideKey = def.mirror ? (flip ? 'left' : 'right') : null;
+      const atlasGeometry = atlas?.get(`${def.id}.${sideKey}`);
+      const geo = atlasGeometry || geometryFor(variant);
+      const mat = muscleMaterial(def.layer, !!atlasGeometry);
       const mesh = new Mesh(geo, mat);
 
       const side = def.mirror ? (flip ? 'left' : 'right') : null;
       mesh.name = def.mirror ? `${def.id}.${side}` : def.id;
 
-      const { from, to } = attachments(variant);
+      let { from, to } = attachments(variant);
+      if (atlasGeometry) {
+        from = closestVertex(geo, from);
+        to = closestVertex(geo, to);
+      }
       const record = {
         ...def,
         uid: mesh.name,

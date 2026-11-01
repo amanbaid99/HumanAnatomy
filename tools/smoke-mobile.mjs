@@ -62,7 +62,15 @@ await page.click('#peek-close');
 await page.waitForTimeout(400);
 check('the close button dismisses the card', await page.locator('#peek').isHidden());
 
+// Restore the full-body camera before each new pick. A previous selection
+// reframes the model, so a fixed screen coordinate no longer hits the same muscle.
+async function resetCamera() {
+  await page.click('#reset');
+  await page.waitForTimeout(1600);
+}
+
 // Swiping the card down is what people actually reach for on a phone.
+await resetCamera();
 await page.touchscreen.tap(stage.x + stage.width / 2, stage.y + stage.height * 0.40);
 await page.waitForTimeout(900);
 const card = await page.locator('#peek').boundingBox();
@@ -79,6 +87,7 @@ await page.waitForTimeout(600);
 check('swiping the card down dismisses it', await page.locator('#peek').isHidden());
 
 // A short drag is not a dismissal; it should settle back.
+await resetCamera();
 await page.touchscreen.tap(stage.x + stage.width / 2, stage.y + stage.height * 0.40);
 await page.waitForTimeout(900);
 const card2 = await page.locator('#peek').boundingBox();

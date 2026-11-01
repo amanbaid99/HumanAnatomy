@@ -17,8 +17,7 @@ import {
 
 import { OrbitControls } from './controls.js';
 import { buildMuscles, LAYERS, GROUPS } from './anatomy/build.js';
-import { buildSkeleton, extractHead } from './anatomy/skeleton.js';
-import { buildFace } from './anatomy/face.js';
+import { loadAtlas } from './anatomy/atlas.js';
 import { bakeOcclusion } from './geometry/occlusion.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -27,6 +26,7 @@ const $$ = (sel) => [...document.querySelectorAll(sel)];
 // ---------------------------------------------------------------- scene ----
 
 const wrap = $('#stage');
+let renderDirty = true;
 const scene = new Scene();
 // The page behind the figure, per theme. The fog matches it so the far end of
 // the body fades into the page rather than into a different colour. The
@@ -49,7 +49,7 @@ renderer.outputColorSpace = SRGBColorSpace;
 // restrained. The evenness this pass is after comes from the light rig below,
 // not from the transfer curve.
 renderer.toneMapping = ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.16;
+renderer.toneMappingExposure = 1.02;
 // Two passes share one frame, so clearing is done by hand.
 renderer.autoClear = false;
 wrap.appendChild(renderer.domElement);
@@ -59,7 +59,9 @@ const controls = new OrbitControls(camera, renderer.domElement);
 // A phone in portrait is tall and narrow; pull back so the whole figure fits.
 const narrowQuery = window.matchMedia('(max-width: 860px)');
 const isNarrow = () => narrowQuery.matches;
-const HOME = { radius: isNarrow() ? 3.35 : 3.0, theta: 0.30, phi: 1.36 };
+const HOME = { radius: isNarrow() ? 3.95 : 3.0, theta: 0.30, phi: 1.36 };
+controls.target.set(0, 0.94, 0);
+controls._goalTarget.copy(controls.target);
 controls.spherical.radius = HOME.radius;
 controls._goalSpherical.radius = HOME.radius;
 controls.update(true);
@@ -106,12 +108,12 @@ scene.add(new AmbientLight(0xffffff, 0.07));
 // Key: frontal and only a little off to one side, so it models the form
 // without throwing half the face into shadow.
 const key = new DirectionalLight(0xfffaf4, 1.12);
-key.position.set(0.45, 1.70, 3.95);
+key.position.set(2.1, 2.9, 3.5);
 scene.add(key);
 
 // Fill is deliberately close to the key in strength. A 1.5:1 ratio reads as
 // even clinical illumination; the 3:1 it was reads as a portrait.
-const fill = new DirectionalLight(0xf4f7fa, 0.82);
+const fill = new DirectionalLight(0xf4f7fa, 0.50);
 fill.position.set(-2.2, 1.00, 3.05);
 scene.add(fill);
 
@@ -163,18 +165,18 @@ scene.add(contactShadow());
 const figure = new Group();
 scene.add(figure);
 
-const { group: muscleGroup, records } = buildMuscles();
+let atlas;
+try {
+  atlas = await loadAtlas();
+} catch (error) {
+  $('#loading .spin').hidden = true;
+  $('#loading p').textContent = error.message;
+  throw error;
+}
+const { group: muscleGroup, records } = buildMuscles(atlas.muscles);
 figure.add(muscleGroup);
-
-const skeleton = buildSkeleton();
-figure.add(skeleton);
-
-// The head stays regardless of the skeleton toggle.
-const head = extractHead(skeleton);
-figure.add(head);
-
-const face = buildFace();
-figure.add(face);
+const { skeleton, head, face } = atlas;
+figure.add(skeleton, head, face);
 
 // One material is shared by every bone, so dimming it dims the whole skeleton.
 const boneMat = skeleton.children.find((c) => c.material).material;
@@ -322,6 +324,7 @@ function meshVisible(rec) {
 }
 
 function applyVisibility() {
+  renderDirty = true;
   // With something selected, everything else drops back so the picked muscle
   // is readable even when it sits under three other layers.
   const focusing = state.focus && !!state.selected;
@@ -370,6 +373,7 @@ function updateCounts() {
 // ------------------------------------------------------------ highlight ----
 
 function setHighlight(rec, on, strong) {
+  renderDirty = true;
   if (!rec) return;
   // A selection lights both sides of a mirrored pair; a hover lights only the
   // mesh under the cursor.
@@ -611,7 +615,7 @@ const VIEWS = {
 $$('[data-view]').forEach((btn) => {
   btn.addEventListener('click', () => {
     const [theta, phi] = VIEWS[btn.dataset.view];
-    controls.flyTo(new Vector3(0, 1.02, 0), HOME.radius, theta, phi);
+    controls.flyTo(new Vector3(0, 0.94, 0), HOME.radius, theta, phi);
   });
 });
 
@@ -626,7 +630,7 @@ $('#reset').addEventListener('click', () => {
   state.xray = 1; $('#xray').value = 100; $('#xray-val').textContent = '100%';
   select(null);
   applyVisibility();
-  controls.flyTo(new Vector3(0, 1.02, 0), HOME.radius, HOME.theta, HOME.phi);
+  controls.flyTo(new Vector3(0, 0.94, 0), HOME.radius, HOME.theta, HOME.phi);
 });
 
 /**
@@ -808,6 +812,7 @@ window.addEventListener('keydown', (e) => {
 // ------------------------------------------------------------- lifecycle ---
 
 function resize() {
+  renderDirty = true;
   const w = wrap.clientWidth;
   const h = wrap.clientHeight;
   camera.aspect = w / h;
@@ -819,7 +824,12 @@ resize();
 
 function animate() {
   requestAnimationFrame(animate);
+  const moving = controls.isMoving;
   controls.update();
+  // Static anatomy needs no repeated GPU work while idle. This also keeps
+  // the mobile sheet responsive on devices with a slower graphics processor.
+  if (!renderDirty && !moving) return;
+  renderDirty = false;
   // Project labels against a current camera matrix; the renderer only refreshes
   // it during render, so doing this first would lag the camera by a frame.
   camera.updateMatrixWorld();
