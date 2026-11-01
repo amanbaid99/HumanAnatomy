@@ -281,3 +281,10 @@ input[type=range]:focus-visible{outline-offset:5px;}
  [data-embed="1"] .stage-actions button,[data-embed="1"] .stage-actions summary{font-size:11px;padding:9px 10px;}
  [data-embed="1"] .stage-actions summary{gap:8px;}
 }
+
+@media(max-width:860px){
+ #panel-toggle{touch-action:none;cursor:ns-resize;}
+ #panel-toggle::before{content:"↑";margin-right:8px;}
+ #panel.open #panel-toggle::before{content:"↓";}
+ #panel.open,#panel-content{overscroll-behavior:contain;}
+}

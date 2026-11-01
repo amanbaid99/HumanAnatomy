@@ -35,7 +35,8 @@ for i,o in enumerate(dst.objects):
   p=o.matrix_world@v.co;out['positions'].extend([-p.x*scale,p.z*scale,-p.y*scale])
  weights=[0.0]*len(mesh.vertices); counts=[0]*len(mesh.vertices)
  for tri in mesh.loop_triangles:
-  out['indices'].extend([off+tri.vertices[0],off+tri.vertices[2],off+tri.vertices[1]])
+  order=(0,1,2) if o.matrix_world.determinant()<0 else (0,2,1)
+  out['indices'].extend(off+tri.vertices[j] for j in order)
   mat=mesh.materials[tri.material_index] if tri.material_index<len(mesh.materials) else None
   tendon=bool(mat and any(t in mat.name.lower() for t in ['tendon','aponeuro','fascia'])) or spec.get('id') in ['achilles-tendon','iliotibial-band']
   for v in tri.vertices: weights[v]+=float(tendon); counts[v]+=1

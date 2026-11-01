@@ -20,8 +20,9 @@ import { createQuizRounds } from './quiz.js';
 import { createMovementController } from './movement.js';
 
 import { OrbitControls } from './controls.js?v=study-views-1';
-import { buildMuscles, LAYERS, GROUPS } from './anatomy/build.js?v=surface-definition-1';
-import { loadAtlas } from './anatomy/atlas.js?v=mobile-quiz-1';
+import { buildMuscles, LAYERS, GROUPS } from './anatomy/build.js?v=muscle-boundaries-2';
+import { loadAtlas } from './anatomy/atlas.js?v=muscle-boundaries-2';
+import { abdominalCutaway } from './anatomy/cutaway.js?v=muscle-boundaries-2';
 import { bakeOcclusion } from './geometry/occlusion.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -254,6 +255,15 @@ const byId = new Map(records.map((r) => [r.uid, r]));
   console.info(`occlusion baked in ${Math.round(performance.now() - t0)} ms`);
 })();
 
+// Prepare a fascia window after baking so both views retain their AO attributes.
+for (const rec of records) {
+  if (!['external-oblique', 'internal-oblique', 'transversus-abdominis'].includes(rec.id)) continue;
+  const rectus = records.find(r => r.id === 'rectus-abdominis' && r.side === rec.side);
+  if (!rectus) continue;
+  rec.coveredGeometry = rec.mesh.geometry;
+  rec.cutawayGeometry = abdominalCutaway(rec.coveredGeometry, rectus.mesh.geometry);
+}
+
 /**
  * Attachment markers.
  *
@@ -381,6 +391,10 @@ function applyVisibility() {
 
   records.forEach((rec) => {
     rec.mesh.visible = meshVisible(rec);
+    if (rec.cutawayGeometry) {
+      rec.mesh.geometry = $('#toggle-cutaway').checked ? rec.cutawayGeometry : rec.coveredGeometry;
+      if (rec.mesh.userData.boundary) rec.mesh.userData.boundary.geometry = rec.mesh.geometry;
+    }
     const isSelected = focusing && rec.id === state.selected.id;
 
     // X-ray fades the outer layers so the deep ones show through.
@@ -391,6 +405,10 @@ function applyVisibility() {
     if (mat.userData.shader?.uniforms.uDefinition) mat.userData.shader.uniforms.uDefinition.value = mat.userData.definition;
     mat.userData.tissueDetail = state.selected?.id === rec.id ? 1 : 0;
     if (mat.userData.shader?.uniforms.uFiberDetail) mat.userData.shader.uniforms.uFiberDetail.value = mat.userData.tissueDetail;
+    if (rec.mesh.userData.boundary) {
+      // Hide shells in translucent views so they do not obscure deeper anatomy.
+      rec.mesh.userData.boundary.visible = !!mat.userData.definition && opacity > .995;
+    }
     mat.opacity = opacity;
     mat.transparent = opacity < 0.995;
     mat.depthWrite = opacity > 0.72;
@@ -751,6 +769,7 @@ $('#xray').addEventListener('input', (e) => {
 
 // Toggles
 $('#toggle-definition').addEventListener('change', applyVisibility);
+$('#toggle-cutaway').addEventListener('change', applyVisibility);
 $('#toggle-skeleton').addEventListener('change', (e) => {
   state.skeleton = e.target.checked;
   applyVisibility();
@@ -1037,7 +1056,7 @@ document.addEventListener('click', (e) => {
 });
 
 // Panel toggle on small screens
-$('#panel-toggle').addEventListener('click', () => {
+function togglePanel() {
   movement.stop();
   if (quiz) restoreFullBody({ fly: false });
   const open = $('#panel').classList.toggle('open');
@@ -1047,7 +1066,38 @@ $('#panel-toggle').addEventListener('click', () => {
   else if (state.selected) showPeek(state.selected);
   updateSceneLayout(); resize();
   if (!open && state.selected && !activeStudy) frame(state.selected);
+}
+let suppressPanelClick = false;
+$('#panel-toggle').addEventListener('click', (event) => {
+  if (suppressPanelClick && event.detail > 0) { suppressPanelClick = false; event.preventDefault(); return; }
+  suppressPanelClick = false;
+  togglePanel();
 });
+
+// The bottom handle supports the same upward gesture as the summary card.
+{
+  const handle = $('#panel-toggle');
+  let gesture = null;
+  handle.addEventListener('pointerdown', (event) => {
+    if (!isNarrow() || event.button > 0) return;
+    suppressPanelClick = false;
+    gesture = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    handle.setPointerCapture(event.pointerId);
+  });
+  handle.addEventListener('pointerup', (event) => {
+    if (!gesture || gesture.id !== event.pointerId) return;
+    const dx = event.clientX - gesture.x, dy = event.clientY - gesture.y;
+    gesture = null;
+    if (Math.hypot(dx, dy) < 8) return;
+    suppressPanelClick = true;
+    const open = $('#panel').classList.contains('open');
+    if (Math.abs(dy) > 36 && Math.abs(dy) > Math.abs(dx) && (open ? dy > 0 : dy < 0)) {
+      togglePanel();
+      if (!open && state.selected) requestAnimationFrame(revealDetail);
+    }
+  });
+  handle.addEventListener('pointercancel', () => { gesture = null; });
+}
 
 $('#peek-close').addEventListener('click', () => select(null));
 
@@ -1084,9 +1134,9 @@ $('#peek-close').addEventListener('click', () => select(null));
     if (startY === null) return;
     const moveY = e.clientY - startY;
     const moveX = e.clientX - startX;
-    // Only take over once the gesture is clearly a downward drag.
+    // Capture vertical drags in either direction: up expands, down dismisses.
     if (!dragging) {
-      if (moveY > 6 && Math.abs(moveY) > Math.abs(moveX)) {
+      if (Math.abs(moveY) > 6 && Math.abs(moveY) > Math.abs(moveX)) {
         dragging = true;
         peek.classList.add('dragging');
         peek.setPointerCapture(e.pointerId);
@@ -1097,21 +1147,23 @@ $('#peek-close').addEventListener('click', () => select(null));
         return;
       }
     }
-    dy = Math.max(0, moveY);
+    dy = moveY;
     peek.style.transform = `translateY(${dy}px)`;
-    peek.style.opacity = String(Math.max(0, 1 - dy / 160));
+    peek.style.opacity = String(Math.max(0, 1 - Math.max(0, dy) / 160));
   });
 
   const release = () => {
     if (startY === null) return;
     const dismissed = dragging && dy > 48;
+    const expanded = dragging && dy < -36;
     startY = null;
     dragging = false;
-    if (dismissed) { reset(false); select(null); }
+    if (expanded) { reset(false); openMuscleDetails(); }
+    else if (dismissed) { reset(false); select(null); }
     else reset(true);
   };
   peek.addEventListener('pointerup', release);
-  peek.addEventListener('pointercancel', release);
+  peek.addEventListener('pointercancel', () => { startY = null; dragging = false; reset(false); });
 })();
 function openMuscleDetails(showMovement = false) {
   $('#peek').hidden = true;

@@ -103,6 +103,18 @@ texturing. The extra fascicle shading is disabled on unselected muscles.
 The **Surface definition** control strengthens contour and ambient-occlusion
 shading across atlas muscles. Subtle per-muscle colour variation separates adjacent
 structures, while camera-relative key, fill and rim lights keep rotated views readable.
+Thin outlines follow the actual muscle silhouettes; chest, rectus abdominis,
+external obliques and serratus have distinct illustrative tissue tones. Outlines
+are disabled when outer layers are transparent. Reflected atlas muscle winding
+is corrected before computing normals (`npm run test:geometry`).
+
+**Abdominal fascia cutaway** opens an illustrative window over the rectus
+abdominis footprint in the covering oblique sheets. Disable it to restore the
+complete source surfaces. Picking uses the cut geometry, so the exposed rectus
+can be selected directly.
+
+On phones, swipe the summary card or bottom handle upward to open full details.
+The card still dismisses downward, and the expanded panel scrolls normally.
 
 `npm run test:movement` verifies action mappings, play/stop, reduced motion, the
 mobile shortcut and the tissue shader.

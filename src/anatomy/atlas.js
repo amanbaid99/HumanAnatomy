@@ -50,6 +50,24 @@ export async function loadAtlas({ onProgress = () => {} } = {}) {
     geometry.setAttribute('position', new BufferAttribute(new Float32Array(binary, entry.positionOffset, entry.vertexCount * 3), 3));
     geometry.setIndex(new BufferAttribute(new Uint32Array(binary, entry.indexOffset, entry.indexCount), 1));
     geometry.setAttribute('tendon', new BufferAttribute(new Float32Array(binary, entry.tendonOffset, entry.vertexCount), 1));
+    // Reflected source objects can arrive with inward-facing triangle winding.
+    // Closed muscle surfaces must face outward before lighting and boundary shading.
+    if (entry.kind === 'muscle') {
+      const positions = geometry.attributes.position.array;
+      const indices = geometry.index.array;
+      let volume6 = 0;
+      for (let i = 0; i < indices.length; i += 3) {
+        const a = indices[i] * 3, b = indices[i + 1] * 3, c = indices[i + 2] * 3;
+        volume6 += positions[a] * (positions[b + 1] * positions[c + 2] - positions[b + 2] * positions[c + 1])
+          + positions[a + 1] * (positions[b + 2] * positions[c] - positions[b] * positions[c + 2])
+          + positions[a + 2] * (positions[b] * positions[c + 1] - positions[b + 1] * positions[c]);
+      }
+      if (volume6 < -1e-10) {
+        for (let i = 0; i < indices.length; i += 3) {
+          [indices[i + 1], indices[i + 2]] = [indices[i + 2], indices[i + 1]];
+        }
+      }
+    }
     geometry.computeVertexNormals();
     if (entry.kind === 'muscle') { muscles.set(entry.name, geometry); continue; }
     const pale = /aponeurosis|sclera/i.test(entry.name);

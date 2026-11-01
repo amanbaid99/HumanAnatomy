@@ -10,6 +10,7 @@ const browser = await chromium.launch({
 });
 const ctx = await browser.newContext({ ...devices['iPhone 13'] });
 const page = await ctx.newPage();
+page.setDefaultTimeout(60000);
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
@@ -97,6 +98,37 @@ await page.mouse.move(card2.x + card2.width / 2, card2.y + 44, { steps: 4 });
 await page.mouse.up();
 await page.waitForTimeout(500);
 check('a short drag settles back instead', !(await page.locator('#peek').isHidden()));
+// Real touch input: dragging up expands details without picking another muscle.
+const selectedName = await page.textContent('#peek-name');
+const touch = await ctx.newCDPSession(page);
+async function swipe(element, distance, cancel = false) {
+  const box = await element.boundingBox();
+  const x = box.x + box.width / 2, y = box.y + Math.min(24, box.height / 2);
+  await touch.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+  for (const fraction of [.15, .35, .65, 1]) {
+    await touch.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: y + distance * fraction }] });
+  }
+  await touch.send('Input.dispatchTouchEvent', { type: cancel ? 'touchCancel' : 'touchEnd', touchPoints: [] });
+}
+await swipe(page.locator('#peek'), -65, true);
+check('cancelled upward swipe leaves the card visible', await page.locator('#peek').isVisible());
+check('cancelled swipe does not open details', !(await page.locator('#panel').evaluate(e => e.classList.contains('open'))));
+await swipe(page.locator('#peek'), -65);
+await page.waitForFunction(() => {
+  const r = document.querySelector('#detail').getBoundingClientRect();
+  return r.top >= 0 && r.top < innerHeight;
+}, null, { timeout: 30000 });
+check('swiping the summary up opens details', await page.locator('#panel').evaluate(e => e.classList.contains('open')));
+check('swipe preserves the selected muscle', selectedName.startsWith(await page.textContent('#d-name')));
+check('swiping up reveals the detail section', await page.locator('#detail').evaluate(e => {
+  const r = e.getBoundingClientRect(); return r.top >= 0 && r.top < innerHeight;
+}));
+await page.click('#panel-toggle');
+await page.locator('#panel-toggle').click({ trial: true });
+await swipe(page.locator('#panel-toggle'), -65);
+await page.waitForTimeout(500);
+check('swiping the bottom handle up opens the panel', await page.locator('#panel').evaluate(e => e.classList.contains('open')));
+await page.click('#panel-toggle');
 await page.click('#peek-close');
 
 check('page never scrolls sideways', !(await page.evaluate(

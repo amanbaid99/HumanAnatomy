@@ -8,7 +8,7 @@
  */
 
 import {
-  Group, Mesh, MeshStandardMaterial, Color, Vector3,
+  Group, Mesh, MeshStandardMaterial, MeshBasicMaterial, BackSide, Color, Vector3,
 } from '../../vendor/three.module.min.js';
 import { tubeLoft, sheetLoft } from '../geometry/loft.js';
 import { applyOcclusionToMaterial } from '../geometry/occlusion.js';
@@ -253,7 +253,30 @@ export function buildMuscles(atlas = null) {
       // mirrored counterparts keep the same colour. This is illustrative tint.
       const hash = [...def.id].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 0);
       mat.color.offsetHSL(0, 0, ((hash % 101) / 100 - .5) * .07);
+      // Distinguish neighbouring torso structures, where broad flat surfaces
+      // otherwise merge despite being separate meshes. Both sides share a tint.
+      const torsoTints = {
+        'pectoralis-major': 0xb45d52,
+        'rectus-abdominis': 0xb66c58,
+        'external-oblique': 0x984a40,
+        'serratus-anterior': 0xa95b47,
+      };
+      if (torsoTints[def.id]) mat.color.setHex(torsoTints[def.id]);
       const mesh = new Mesh(geo, mat);
+      // A thin back-face shell marks the silhouette of each actual muscle,
+      // including contacts between overlapping structures. No invented divisions.
+      if (atlasGeometry) {
+        const borderMaterial = new MeshBasicMaterial({ color: 0x492b28, side: BackSide });
+        borderMaterial.onBeforeCompile = (shader) => {
+          shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>',
+            '#include <begin_vertex>\n transformed += normal * 0.0010;');
+        };
+        const border = new Mesh(geo, borderMaterial);
+        border.name = 'muscle-boundary';
+        border.raycast = () => {};
+        mesh.add(border);
+        mesh.userData.boundary = border;
+      }
 
       const side = def.mirror ? (flip ? 'left' : 'right') : null;
       mesh.name = def.mirror ? `${def.id}.${side}` : def.id;
