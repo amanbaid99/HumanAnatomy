@@ -408,17 +408,19 @@
     #masthead p{display:none;}
   }
 </style>
+<link rel="stylesheet" href="./src/interface.css">
 </head>
 <body>
 
 <div id="app">
   <div id="stage">
     <div id="masthead">
-      <h1>Human Anatomy Explorer</h1>
+      <span class="eyebrow">THE ANATOMY ATLAS <span aria-hidden="true">/</span> INTERACTIVE STUDY</span>
+      <h1>A closer look at the human body.</h1>
       <p>Drag to rotate &middot; scroll to zoom &middot; click any muscle</p>
     </div>
 
-    <div class="dock" id="view-dock">
+    <div class="dock" id="view-dock" role="group" aria-label="Camera views and study presets">
       <button data-view="front">Front</button>
       <button data-view="back">Back</button>
       <button data-view="left">Left</button>
@@ -437,20 +439,22 @@
     <div id="stats"><span id="stat-visible">0</span> of <span id="muscle-total">0</span> muscles shown</div>
   </div>
 
-  <aside id="panel">
-    <button id="panel-toggle">Details &amp; controls</button>
+  <aside id="panel" aria-label="Anatomy study controls">
+    <button id="panel-toggle" aria-expanded="false" aria-controls="panel-content">Explore &amp; muscle details</button>
+    <div class="panel-intro"><span class="eyebrow">YOUR STUDY DESK</span><h2>Explore the anatomy</h2><p>Start with a muscle. Follow your curiosity.</p></div>
+    <div id="panel-content">
 
     <div class="sec">
       <h2>Find a muscle</h2>
       <div class="search-wrap">
         <input id="search" type="text" autocomplete="off" spellcheck="false"
-               placeholder="supraspinatus, rotator cuff, calf&hellip;">
+               aria-label="Find a muscle" placeholder="Try shoulder, calf, or a muscle name&hellip;">
         <div id="results" hidden></div>
       </div>
     </div>
 
     <div class="sec">
-      <h2>Layers <span class="tools"><span>peel with 1 &middot; 2 &middot; 3</span></span></h2>
+      <h2>01 &nbsp; Tissue layers <span class="tools"><span>keys 1 / 2 / 3</span></span></h2>
       <label class="layer">
         <input type="checkbox" data-layer="1" checked>
         <span class="sw" style="background:var(--l1)"></span>
@@ -488,7 +492,7 @@
     </div>
 
     <div class="sec">
-      <h2>Regions
+      <h2>02 &nbsp; Body regions
         <span class="tools">
           <button id="regions-all">All</button>
           <button id="regions-none">None</button>
@@ -499,9 +503,11 @@
 
     <div id="detail-pane">
       <div id="detail-empty">
-        Click any muscle to see what it does, where it attaches and which nerve drives it.
-        Uncheck a layer to peel it away, or drag the see-through slider to fade the outer
-        layers and look underneath. Press <kbd>/</kbd> to search, <kbd>Esc</kbd> to deselect.
+        <span class="eyebrow">A PLACE TO BEGIN</span>
+        <h3>Every muscle has a story.</h3>
+        <p>Select one on the model to discover how it moves you, where it attaches, and the nerve behind it.</p>
+        <p class="study-tip">Try the <strong>Rotator cuff</strong> view for a closer look beneath the shoulder.</p>
+        <div class="shortcuts"><kbd>/</kbd> Search <span><kbd>Esc</kbd> Clear selection</span></div>
       </div>
 
       <div id="detail" hidden>
@@ -524,6 +530,7 @@
     <div id="disclaimer">
       Geometry is anatomically approximated from standard attachment descriptions and
       proportional landmarks, not from medical imaging. A study aid, not a clinical tool.
+    </div>
     </div>
   </aside>
 </div>

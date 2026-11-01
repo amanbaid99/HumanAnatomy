@@ -32,8 +32,8 @@ const scene = new Scene();
 // the body fades into the page rather than into a different colour. The
 // figure itself - tissue, bone, lights - is the same in both.
 const THEMES = {
-  dark: { page: 0x0d1116, ghost: 0x241e1d },
-  light: { page: 0xe9ecef, ghost: 0xd6d1cb },
+  dark: { page: 0x171c1c, ghost: 0x241e1d },
+  light: { page: 0xf1eee7, ghost: 0xd6d1cb },
 };
 const themeNow = () => (document.documentElement.dataset.theme === 'light' ? 'light' : 'dark');
 scene.background = new Color(THEMES[themeNow()].page);
@@ -708,6 +708,7 @@ document.addEventListener('click', (e) => {
 // Panel toggle on small screens
 $('#panel-toggle').addEventListener('click', () => {
   const open = $('#panel').classList.toggle('open');
+  $('#panel-toggle').setAttribute('aria-expanded', String(open));
   // The card and the panel say the same thing; never show both.
   if (open) $('#peek').hidden = true;
   else if (state.selected) showPeek(state.selected);
@@ -780,6 +781,7 @@ $('#peek-close').addEventListener('click', () => select(null));
 $('#peek-more').addEventListener('click', () => {
   $('#peek').hidden = true;
   $('#panel').classList.add('open');
+  $('#panel-toggle').setAttribute('aria-expanded', 'true');
   requestAnimationFrame(revealDetail);
 });
 
