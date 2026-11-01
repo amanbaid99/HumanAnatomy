@@ -324,6 +324,9 @@ const state = {
   focus: true,
   selected: null,
   hovered: null,
+  // Set by a link (see "Links" below): muscles to light up, and how much each was trained.
+  marked: new Set(),
+  heat: new Map(),
 };
 
 function meshVisible(rec) {
@@ -342,6 +345,8 @@ function applyVisibility() {
   // With something selected, everything else drops back so the picked muscle
   // is readable even when it sits under three other layers.
   const focusing = state.focus && !!state.selected;
+  // A link that names muscles drops everything else back the same way.
+  const marking = !focusing && state.marked.size > 0;
 
   records.forEach((rec) => {
     rec.mesh.visible = meshVisible(rec);
@@ -358,6 +363,8 @@ function applyVisibility() {
     // Dimming darkens rather than fades. Fading 180 overlapping surfaces just
     // stacks their alpha back up to opaque, and looks like fog.
     if (focusing && !isSelected) mat.color.copy(_tint.setHex(rec.baseColor)).lerp(GHOST_TINT, 0.56);
+    else if (marking && !state.marked.has(rec.id)) mat.color.copy(_tint.setHex(rec.baseColor)).lerp(GHOST_TINT, 0.86);
+    else if (marking) mat.color.copy(_tint.setHex(rec.baseColor)).lerp(heatColor(state.heat.get(rec.id) ?? 1), 0.85);
     else mat.color.setHex(rec.baseColor);
 
     // The selection is drawn again in the overlay pass, on top of everything.
@@ -367,6 +374,13 @@ function applyVisibility() {
 
   // The skeleton stays as orientation, but recedes.
   boneMat.color.copy(_tint.setHex(BONE_BASE)).lerp(GHOST_TINT, focusing ? 0.42 : 0);
+
+  // Facial muscles recede with the rest when a link names muscles.
+  face.children.forEach((m) => {
+    if (!m.isMesh || !m.material?.color) return;
+    m.userData.baseColor ??= m.material.color.getHex();
+    m.material.color.copy(_tint.setHex(m.userData.baseColor)).lerp(GHOST_TINT, marking ? 0.86 : 0);
+  });
 
   head.visible = !state.skeletonFilter;
   face.visible = state.layers[1] && !state.skeletonFilter;
@@ -390,6 +404,8 @@ function updateCounts() {
 function setHighlight(rec, on, strong) {
   renderDirty = true;
   if (!rec) return;
+  // A muscle named in the link keeps its mark when hover or selection leaves it.
+  if (!on && state.marked.has(rec.id)) { on = true; strong = true; }
   // A selection lights both sides of a mirrored pair; a hover lights only the
   // mesh under the cursor.
   const targets = strong || !on
@@ -1046,7 +1062,48 @@ systemLight?.addEventListener?.('change', (e) => {
   try { saved = localStorage.getItem('theme'); } catch (err) { /* ignore */ }
   if (!saved) setTheme(e.matches ? 'light' : 'dark', false);
 });
-setTheme(themeNow(), false);
+// ---------------------------------------------------------------- links ----
+//
+// Other apps (the Repd workout tracker) open the atlas at a set of muscles:
+//   ?muscles=latissimus-dorsi,biceps-long   light these up, dim the rest;
+//                                           the first is described in the card
+//   ?heat=pectoralis-major:1,soleus:0.2     tint by how much each was trained,
+//                                           from pale amber (little) to red (most)
+//   ?view=front|back   ?theme=light|dark    ?embed=1 hides the masthead
+// Unknown ids are ignored, so an old link never breaks the page.
+
+const HEAT_COOL = new Color(0xf3c44f);
+const HEAT_HOT = new Color(0xe5372a);
+const _heat = new Color();
+function heatColor(h) {
+  return _heat.copy(HEAT_COOL).lerp(HEAT_HOT, Math.min(1, Math.max(0, h)));
+}
+
+const params = new URLSearchParams(location.search);
+const knownIds = new Set(records.map((r) => r.id));
+const listParam = (name) => (params.get(name) || '').split(',').map((s) => s.trim()).filter(Boolean);
+const linked = listParam('muscles').filter((id) => knownIds.has(id));
+for (const pair of listParam('heat')) {
+  const [id, value] = pair.split(':');
+  if (knownIds.has(id) && Number.isFinite(+value)) state.heat.set(id, Math.min(1, Math.max(0, +value)));
+}
+state.marked = new Set([...linked, ...state.heat.keys()]);
+if (params.get('embed') === '1') document.documentElement.dataset.embed = '1';
+const linkTheme = params.get('theme');
+
+if (state.marked.size) {
+  records.filter((r) => state.marked.has(r.id)).forEach((r) => setHighlight(r, true, true));
+  // Face the side most of the named muscles are on, unless the link says.
+  const marked = records.filter((r) => state.marked.has(r.id));
+  const back = marked.filter((r) => { r.mesh.geometry.computeBoundingSphere(); return r.mesh.geometry.boundingSphere.center.z < 0; }).length;
+  const view = params.get('view') || (back > marked.length / 2 ? 'back' : 'front');
+  const [theta, phi] = VIEWS[view] || VIEWS.front;
+  controls.flyTo(new Vector3(0, 0.94, 0), HOME.radius, theta, phi);
+  const main = records.find((r) => r.id === linked[0]);
+  if (main) { showDetail(main); showPeek(main); }
+}
+
+setTheme(linkTheme === 'light' || linkTheme === 'dark' ? linkTheme : themeNow(), false);
 
 applyVisibility();
 $('#muscle-total').textContent = records.length;
