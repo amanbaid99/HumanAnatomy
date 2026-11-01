@@ -412,7 +412,7 @@
   /* Opened inside another app (?embed=1): the title and counter give way to the model. */
   [data-embed="1"] #masthead, [data-embed="1"] #stats{display:none;}
 </style>
-<link rel="stylesheet" href="./src/interface.css?v=muscle-boundaries-2">
+<link rel="stylesheet" href="./src/interface.css?v=peel-muscles-1">
 </head>
 <body>
 
@@ -426,6 +426,7 @@
     </div>
 
     <div class="dock" id="view-dock" role="group" aria-label="Camera views and study presets">
+      <button id="restore-muscles" hidden>Restore hidden</button>
       <button data-view="front">Front</button>
       <button data-view="back">Back</button>
       <button data-view="left">Left</button>
@@ -534,6 +535,13 @@
       <div id="regions"></div>
     </div>
 
+    <section id="hidden-muscles" class="sec" hidden aria-label="Hidden muscles">
+      <h2>Hidden muscles · <span id="hidden-count">0</span></h2>
+      <p class="peel-hint">Restore a muscle individually, or bring them all back.</p>
+      <div id="hidden-muscle-list"></div>
+      <button id="restore-all-muscles" class="peel-action">Restore all hidden muscles</button>
+    </section>
+
     <div id="detail-pane">
       <div id="detail-empty">
         <span class="eyebrow">A PLACE TO BEGIN</span>
@@ -546,6 +554,7 @@
       <div id="detail" hidden>
         <button id="detail-full-body">← Back to full body</button>
         <h3 id="d-name"></h3>
+        <button id="hide-muscle" class="peel-action">Hide this muscle · see underneath</button>
         <div class="badges">
           <span class="badge layer" id="d-layer"></span>
           <span class="badge" id="d-region"></span>
@@ -586,7 +595,7 @@
     <p class="peek-region" id="peek-region"></p>
     <p class="peek-fn" id="peek-fn"></p>
   </div>
-  <div class="peek-actions"><button id="peek-more" aria-label="Open complete muscle details">Muscle details &rarr;</button><button id="peek-motion" hidden>Movement ↗</button></div>
+  <div class="peek-actions"><button id="peek-more" aria-label="Open complete muscle details">Muscle details &rarr;</button><button id="peek-hide">Hide muscle</button><button id="peek-motion" hidden>Movement ↗</button></div>
 </div>
 
 <section id="quiz-card" hidden aria-label="Anatomy quiz">
@@ -622,7 +631,7 @@
   <button id="load-retry" hidden>Try again</button>
 </div>
 
-<script type="module" src="./src/app.js?v=muscle-boundaries-2"></script>
+<script type="module" src="./src/app.js?v=peel-muscles-1"></script>
 <noscript>
   <p style="padding:24px;color:var(--text-2)">This anatomy explorer renders in 3D and needs JavaScript enabled.</p>
 </noscript>

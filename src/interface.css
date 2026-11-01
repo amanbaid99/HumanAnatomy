@@ -288,3 +288,13 @@ input[type=range]:focus-visible{outline-offset:5px;}
  #panel.open #panel-toggle::before{content:"↓";}
  #panel.open,#panel-content{overscroll-behavior:contain;}
 }
+
+.peel-action{color:var(--accent);border:1px solid var(--line);border-radius:6px;min-height:44px;padding:9px 12px;text-align:left;font-size:12px;}
+#hide-muscle{margin:10px 0 14px;width:100%;}
+.peel-hint{font-size:12px;line-height:1.5;color:var(--text-3);margin:0 0 10px;}
+#hidden-muscle-list{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;max-height:220px;overflow-y:auto;}
+#hidden-muscle-list button{min-height:44px;text-align:left;font-size:12px;padding:8px 10px;background:var(--wash);border-radius:4px;color:var(--text-2);}
+#hidden-muscles[hidden],#restore-muscles[hidden]{display:none;}
+@media(max-width:860px){#peek-hide{min-height:40px;font-size:12px;color:var(--accent);padding:8px 0 0;} .peek-actions{gap:14px;}}
+
+#view-dock button{flex-shrink:0;}

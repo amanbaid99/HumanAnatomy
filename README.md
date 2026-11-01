@@ -166,3 +166,14 @@ BodyParts3D attribution preserved in [NOTICE.md](assets/anatomy/NOTICE.md).
 Linked muscle and heatmap highlights are temporarily suspended during studies and
 quizzes, then restored on exit. Embedded phone views use a compact header and
 reserve space for their cards. `npm run test:links` verifies these entry points.
+
+## Peeling away muscles
+
+Select a muscle and choose **Hide this muscle** (or **Hide muscle** on the mobile
+card) to remove that side while keeping the current camera position. Continue
+selecting exposed muscles to peel further. The hidden-muscle list restores
+individual structures, and **Restore hidden** in the view dock restores them all.
+Searching for a hidden muscle brings it back. Full body and starting a quiz
+restore the complete model. Hiding within a guided study exits the guide.
+
+`npm run test:peel` checks desktop and mobile peeling and restoration.

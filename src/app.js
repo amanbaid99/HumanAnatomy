@@ -20,9 +20,9 @@ import { createQuizRounds } from './quiz.js';
 import { createMovementController } from './movement.js';
 
 import { OrbitControls } from './controls.js?v=study-views-1';
-import { buildMuscles, LAYERS, GROUPS } from './anatomy/build.js?v=muscle-boundaries-2';
-import { loadAtlas } from './anatomy/atlas.js?v=muscle-boundaries-2';
-import { abdominalCutaway } from './anatomy/cutaway.js?v=muscle-boundaries-2';
+import { buildMuscles, LAYERS, GROUPS } from './anatomy/build.js?v=peel-muscles-1';
+import { loadAtlas } from './anatomy/atlas.js?v=peel-muscles-1';
+import { abdominalCutaway } from './anatomy/cutaway.js?v=peel-muscles-1';
 import { bakeOcclusion } from './geometry/occlusion.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -355,6 +355,7 @@ let activeStudy = null;
 let studyStep = 0;
 
 const state = {
+  hiddenMuscles: new Set(),
   layers: { 1: true, 2: true, 3: true },
   groups: new Set(GROUPS.map((g) => g.id)),
   skeleton: true,
@@ -371,6 +372,7 @@ const state = {
 };
 
 function meshVisible(rec) {
+  if (state.hiddenMuscles.has(rec.uid)) return false;
   if (!state.layers[rec.layer]) return false;
   if (!state.groups.has(rec.group)) return false;
   if (state.sideFilter && rec.side && rec.side !== state.sideFilter) return false;
@@ -440,6 +442,7 @@ function applyVisibility() {
   skeleton.visible = state.skeleton;
   setSkeletonFilter(state.skeletonFilter, state.sideFilter);
   updateCounts();
+  updatePeelControls();
 }
 
 function updateCounts() {
@@ -488,6 +491,7 @@ function announceLinkHighlights() {
 }
 
 function select(rec, fly = true) {
+  if (rec) state.hiddenMuscles.delete(rec.uid);
   if (state.selected) setHighlight(state.selected, false);
   state.selected = rec;
   $('#return-body').hidden = !rec && !activeStudy;
@@ -816,6 +820,7 @@ function restoreFullBody({ fly = true } = {}) {
   state.skeletonFilter = null;
   state.sideFilter = null;
   state.xray = 1; $('#xray').value = 100; $('#xray-val').textContent = '100%';
+  state.hiddenMuscles.clear();
   select(null);
   setLinkHighlights(true);
   announceLinkHighlights();
@@ -828,6 +833,53 @@ function restoreFullBody({ fly = true } = {}) {
 $('#reset').addEventListener('click', () => restoreFullBody());
 $('#return-body').addEventListener('click', () => restoreFullBody());
 $('#detail-full-body').addEventListener('click', () => restoreFullBody());
+
+// Peel away one side at a time, retaining the camera for inspection underneath.
+function updatePeelControls() {
+  const hidden = records.filter(rec => state.hiddenMuscles.has(rec.uid));
+  $('#hidden-muscles').hidden = !hidden.length;
+  $('#restore-muscles').hidden = !hidden.length;
+  $('#restore-muscles').textContent = `Restore hidden (${hidden.length})`;
+  $('#hidden-count').textContent = String(hidden.length);
+  const list = $('#hidden-muscle-list');
+  list.replaceChildren();
+  for (const rec of hidden) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = `Restore ${rec.name}${rec.sideLabel}`;
+    button.addEventListener('click', () => {
+      state.hiddenMuscles.delete(rec.uid);
+      applyVisibility();
+      $('#selection-status').textContent = `${rec.name}${rec.sideLabel} restored.`;
+    });
+    list.append(button);
+  }
+}
+function hideSelectedMuscle() {
+  const rec = state.selected;
+  if (!rec || quiz) return;
+  if (activeStudy) restoreFullBody({ fly: false });
+  state.hiddenMuscles.add(rec.uid);
+  if (state.hovered) setHighlight(state.hovered, false);
+  state.hovered = null;
+  tooltip.hidden = true;
+  renderer.domElement.style.cursor = 'grab';
+  $('#panel').classList.remove('open');
+  $('#panel-toggle').setAttribute('aria-expanded', 'false');
+  select(null, false);
+  $('#selection-status').textContent = `${rec.name}${rec.sideLabel} hidden. Select an exposed muscle to explore underneath.`;
+  renderer.domElement.focus({ preventScroll: true });
+}
+function restoreHiddenMuscles() {
+  state.hiddenMuscles.clear();
+  applyVisibility();
+  $('#selection-status').textContent = 'All hidden muscles restored.';
+}
+$('#hide-muscle').addEventListener('click', hideSelectedMuscle);
+$('#peek-hide').addEventListener('click', hideSelectedMuscle);
+$('#restore-muscles').addEventListener('click', restoreHiddenMuscles);
+$('#restore-all-muscles').addEventListener('click', restoreHiddenMuscles);
+
 $('#study-exit').addEventListener('click', () => restoreFullBody());
 
 function runStudyStep() {
