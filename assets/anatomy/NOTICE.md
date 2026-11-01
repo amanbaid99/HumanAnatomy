@@ -35,3 +35,6 @@ blender -b --python tools/export-atlas.py -- path/to/Startup.blend
 The selected source objects and muscle identifiers are recorded in
 `source-selection.json`. Semispinalis capitis is absent from the imported source;
 the viewer retains its original procedural approximation on both sides.
+
+`atlas.bin.gz` is a gzip-compressed copy of `atlas.bin`; it reproduces the same
+geometry byte for byte and carries the same model license and attribution.

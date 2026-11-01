@@ -16,18 +16,22 @@ import {
 } from '../vendor/three.module.min.js';
 
 import { STUDIES } from './studies.js';
+import { createQuizRounds } from './quiz.js';
+import { createMovementController } from './movement.js';
 
 import { OrbitControls } from './controls.js?v=study-views-1';
-import { buildMuscles, LAYERS, GROUPS } from './anatomy/build.js?v=study-views-1';
-import { loadAtlas } from './anatomy/atlas.js';
+import { buildMuscles, LAYERS, GROUPS } from './anatomy/build.js?v=mobile-quiz-1';
+import { loadAtlas } from './anatomy/atlas.js?v=mobile-quiz-1';
 import { bakeOcclusion } from './geometry/occlusion.js';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
+const movement = createMovementController();
 
 // ---------------------------------------------------------------- scene ----
 
 const wrap = $('#stage');
+const viewport = $('#scene');
 let renderDirty = true;
 const scene = new Scene();
 // The page behind the figure, per theme. The fog matches it so the far end of
@@ -44,7 +48,7 @@ scene.fog = new Fog(THEMES[themeNow()].page, 3.6, 9.5);
 const camera = new PerspectiveCamera(36, 1, 0.05, 60);
 
 const renderer = new WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, matchMedia('(max-width: 860px)').matches ? 1.5 : 2));
 renderer.outputColorSpace = SRGBColorSpace;
 // The filmic curve is kept: it rolls the brightest tissue off toward white
 // instead of letting it go to a hot red, which is what keeps the palette
@@ -54,14 +58,19 @@ renderer.toneMapping = ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.02;
 // Two passes share one frame, so clearing is done by hand.
 renderer.autoClear = false;
-wrap.appendChild(renderer.domElement);
+viewport.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 
 // A phone in portrait is tall and narrow; pull back so the whole figure fits.
 const narrowQuery = window.matchMedia('(max-width: 860px)');
 const isNarrow = () => narrowQuery.matches;
-const HOME = { radius: isNarrow() ? 3.95 : 3.0, theta: 0.30, phi: 1.36 };
+function homeRadius() {
+  const aspect = viewport.clientWidth / Math.max(1, viewport.clientHeight);
+  const halfHorizontal = Math.atan(Math.tan(camera.fov * Math.PI / 360) * aspect);
+  return isNarrow() ? Math.max(3.3, .42 / Math.sin(halfHorizontal)) : 3.0;
+}
+const HOME = { radius: homeRadius(), theta: 0.30, phi: 1.36 };
 controls.target.set(0, 0.94, 0);
 controls._goalTarget.copy(controls.target);
 controls.spherical.radius = HOME.radius;
@@ -169,10 +178,19 @@ scene.add(figure);
 
 let atlas;
 try {
-  atlas = await loadAtlas();
+  atlas = await loadAtlas({ onProgress: ({ loaded, total, preparing }) => {
+    const progress = $('#load-progress');
+    if (total) progress.value = Math.min(100, loaded / total * 100);
+    else progress.removeAttribute('value');
+    $('#loading p').textContent = preparing ? 'Preparing 3D anatomy…'
+      : `Downloading model · ${(loaded / 1048576).toFixed(1)} MB${total ? ` of ${(total / 1048576).toFixed(1)} MB` : ''}`;
+  } });
 } catch (error) {
   $('#loading .spin').hidden = true;
-  $('#loading p').textContent = error.message;
+  $('#loading p').textContent = 'The model couldn’t load. Check your connection and try again.';
+  $('#load-progress').hidden = true;
+  $('#load-retry').hidden = false;
+  $('#load-retry').onclick = () => location.reload();
   throw error;
 }
 const { group: muscleGroup, records } = buildMuscles(atlas.muscles);
@@ -292,7 +310,7 @@ function positionLabels() {
   [[originDot, labelOrigin], [insertionDot, labelInsertion]].forEach(([m, el]) => {
     _proj.copy(m.position).project(camera);
     // Behind the camera, or off screen: hide rather than pinning to an edge.
-    if (_proj.z > 1 || Math.abs(_proj.x) > 1.15 || Math.abs(_proj.y) > 1.15) {
+    if (_proj.z > 1 || Math.abs(_proj.x) > (isNarrow() ? .98 : 1.15) || Math.abs(_proj.y) > (isNarrow() ? .98 : 1.15)) {
       el.hidden = true;
       return;
     }
@@ -310,6 +328,7 @@ function positionLabels() {
 
 // ---------------------------------------------------------------- state ----
 
+let quiz = null;
 let activeStudy = null;
 let studyStep = 0;
 
@@ -404,6 +423,8 @@ function setHighlight(rec, on, strong) {
     mat.emissiveIntensity = on ? (strong ? 0.8 : 0.5) : 0;
     const level = on ? (strong ? 0.40 : 0.12) : 0;
     mat.userData.rim = level;
+    mat.userData.tissueDetail = on && strong ? 1 : 0;
+    if (mat.userData.shader?.uniforms.uFiberDetail) mat.userData.shader.uniforms.uFiberDetail.value = mat.userData.tissueDetail;
     if (mat.userData.shader) mat.userData.shader.uniforms.uRim.value = level;
   });
 }
@@ -412,19 +433,29 @@ function select(rec, fly = true) {
   if (state.selected) setHighlight(state.selected, false);
   state.selected = rec;
   $('#return-body').hidden = !rec && !activeStudy;
-  $('#selection-status').textContent = rec ? `${rec.name}${rec.sideLabel} selected.` : 'Selection cleared.';
+  $('#selection-status').textContent = rec ? quiz ? 'Quiz muscle highlighted. Rotate to inspect it.' : `${rec.name}${rec.sideLabel} selected.` : 'Selection cleared.';
   if (!rec) {
+    movement.stop();
     $('#detail').hidden = true;
     $('#detail-empty').hidden = false;
     $('#peek').hidden = true;
     markers.visible = false;
+    updateSceneLayout(); resize();
     applyVisibility();
     return;
   }
   setHighlight(rec, true, true);
+  if (quiz) {
+    $('#detail').hidden = true; $('#peek').hidden = true; markers.visible = false;
+    updateSceneLayout(); resize();
+    if (fly) frame(rec);
+    applyVisibility();
+    return;
+  }
   showDetail(rec);
   showPeek(rec);
   showAttachments(rec);
+  updateSceneLayout(); resize();
   if (fly) frame(rec);
   applyVisibility();
 }
@@ -452,7 +483,7 @@ function frame(rec) {
   // of view is far narrower than the vertical one.
   // Enough padding that a small deep muscle is seen in context rather than
   // filling the frame from the inside.
-  const want = Math.max(bs.radius, 0.05) * 3.0;
+  const want = Math.max(bs.radius, isNarrow() ? .10 : .05) * (isNarrow() ? 1.5 : 3.0);
   const vFov = (camera.fov * Math.PI) / 180;
   const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
   const radius = Math.max(
@@ -465,7 +496,7 @@ function frame(rec) {
   const theta = Math.abs(centre.x) < 0.025 ? 0 : (centre.x > 0 ? 0.85 : -0.85);
   const front = centre.z >= 0;
   const target = centre.clone();
-  if (isNarrow()) target.y -= radius * 0.16;
+
   controls.flyTo(target, radius, front ? theta : Math.PI - theta * 0.6, 1.42);
 }
 
@@ -479,6 +510,7 @@ function revealDetail() {
 }
 
 function showDetail(rec) {
+  movement.update(rec);
   $('#detail-empty').hidden = true;
   const d = $('#detail');
   d.hidden = false;
@@ -591,6 +623,7 @@ renderer.domElement.addEventListener('pointerup', (e) => {
   const gesture = downAt;
   downAt = null;
   if (Math.max(gesture.travelled, Math.hypot(e.clientX - gesture.x, e.clientY - gesture.y)) > 6) return;
+  if (quiz) return;
   const rec = pick(e.clientX, e.clientY);
   if (e.pointerType === 'touch' && (!rec || performance.now() - gesture.t > 450)) {
     const candidates = nearbyMuscles(e.clientX, e.clientY);
@@ -602,7 +635,7 @@ renderer.domElement.addEventListener('pointerup', (e) => {
 
 renderer.domElement.addEventListener('pointermove', (e) => {
   if (downAt) downAt.travelled = Math.max(downAt.travelled, Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y));
-  if (e.pointerType === 'touch' || downAt) { tooltip.hidden = true; return; }
+  if (quiz || e.pointerType === 'touch' || downAt) { tooltip.hidden = true; return; }
   const rec = pick(e.clientX, e.clientY);
   if (rec !== state.hovered) {
     if (state.hovered && state.hovered !== state.selected) setHighlight(state.hovered, false);
@@ -705,6 +738,7 @@ $$('[data-view]').forEach((btn) => {
 });
 
 function restoreFullBody({ fly = true } = {}) {
+  if (quiz) closeQuiz();
   activeStudy = null;
   studyStep = 0;
   $('#study-guide').hidden = true;
@@ -725,7 +759,7 @@ function restoreFullBody({ fly = true } = {}) {
   select(null);
   applyVisibility();
   if (fly) {
-    controls.flyTo(new Vector3(0, 0.94, 0), isNarrow() ? 3.95 : 3.0, HOME.theta, HOME.phi);
+    controls.flyTo(new Vector3(0, 0.94, 0), HOME.radius, HOME.theta, HOME.phi);
     $('#study-picker summary').focus({ preventScroll: true });
   }
 }
@@ -758,9 +792,8 @@ function runStudyStep() {
   select(rec, false);
   const anchor = skeleton.children.find((bone) => bone.name === study.anchor);
   const target = new Box3().setFromObject(anchor || rec.mesh).getCenter(new Vector3());
-  const radius = study.radius * (isNarrow() ? 1.8 : 1);
-  // Keep the joint in the open space between the guide and the detail card.
-  if (isNarrow()) target.y += radius * .05;
+  const radius = study.radius;
+  // The mobile viewport already excludes both cards, so its centre is usable.
   controls.flyTo(target, radius, step.angle, 1.42, 850);
 }
 
@@ -777,6 +810,94 @@ $('#study-prev').addEventListener('click', () => { if (studyStep > 0) { studySte
 $('#study-next').addEventListener('click', () => {
   if (studyStep === STUDIES[activeStudy].steps.length - 1) restoreFullBody();
   else { studyStep++; runStudyStep(); }
+});
+
+// --------------------------------------------------------------- quiz ----
+function closeQuiz() {
+  quiz = null;
+  document.body.classList.remove('quiz-mode');
+  $('#quiz-card').hidden = true;
+  $('#quiz-start').textContent = 'Quiz';
+  $('#panel-toggle').textContent = 'Explore & muscle details';
+  $('.panel-intro h2').textContent = 'Explore the anatomy';
+  $('.panel-intro p').textContent = 'Start with a muscle. Follow your curiosity.';
+}
+function startQuiz() {
+  restoreFullBody({ fly: false });
+  quiz = { rounds: createQuizRounds(records), index: 0, score: 0, answered: false };
+  document.body.classList.add('quiz-mode');
+  $('#quiz-card').hidden = false;
+  $('#quiz-start').textContent = 'End quiz';
+  $('#panel-toggle').textContent = 'Exit quiz & explore';
+  $('.panel-intro h2').textContent = 'Test your anatomy';
+  $('.panel-intro p').textContent = 'Five muscles. Take your time.';
+  tooltip.hidden = true;
+  if (state.hovered) setHighlight(state.hovered, false);
+  state.hovered = null;
+  renderQuizQuestion();
+}
+function renderQuizQuestion() {
+  const round = quiz.rounds[quiz.index];
+  quiz.answered = false;
+  $('#quiz-progress').textContent = `Question ${quiz.index + 1} of ${quiz.rounds.length}`;
+  $('#quiz-question').textContent = 'Which muscle is highlighted?';
+  $('#quiz-instruction').textContent = 'Rotate the model if you need another angle.';
+  $('#quiz-feedback').hidden = true;
+  $('#quiz-next').hidden = true;
+  $('#quiz-restart').hidden = true;
+  $('#quiz-score').textContent = `${quiz.score} correct so far`;
+  $('#quiz-choices').replaceChildren();
+  for (const option of round.choices) {
+    const button = document.createElement('button');
+    button.textContent = option.name;
+    button.dataset.muscle = option.id;
+    button.addEventListener('click', () => answerQuiz(option.id));
+    $('#quiz-choices').append(button);
+  }
+  $('#quiz-card').scrollTop = 0;
+  setLayers([1, 2, 3]); setRegions('all');
+  state.sideFilter = null; state.skeletonFilter = null;
+  select(round.answer);
+  $('#quiz-question').focus({ preventScroll: true });
+}
+function answerQuiz(id) {
+  if (!quiz || quiz.answered) return;
+  quiz.answered = true;
+  const round = quiz.rounds[quiz.index];
+  const correct = id === round.answer.id;
+  if (correct) quiz.score++;
+  for (const button of $$('#quiz-choices button')) {
+    button.disabled = true;
+    if (button.dataset.muscle === round.answer.id) button.classList.add('answer-correct');
+    else if (button.dataset.muscle === id) button.classList.add('answer-wrong');
+  }
+  $('#quiz-answer').textContent = `${correct ? 'Correct' : 'Not quite'} — ${round.answer.name}`;
+  $('#quiz-action').textContent = round.answer.fn;
+  $('#quiz-nerve').textContent = `Nerve supply: ${round.answer.nerve || 'Not recorded'}`;
+  $('#quiz-feedback').hidden = false;
+  $('#quiz-next').hidden = false;
+  $('#quiz-next').textContent = quiz.index === quiz.rounds.length - 1 ? 'See results →' : 'Next question →';
+  $('#quiz-score').textContent = `${quiz.score} correct from ${quiz.index + 1} answered`;
+  updateSceneLayout(); resize();
+  $('#quiz-card').scrollTop = $('#quiz-card').scrollHeight;
+  $('#quiz-next').focus({ preventScroll: true });
+}
+$('#quiz-start').addEventListener('click', () => quiz ? restoreFullBody() : startQuiz());
+$('#quiz-exit').addEventListener('click', () => restoreFullBody());
+$('#quiz-restart').addEventListener('click', startQuiz);
+$('#quiz-next').addEventListener('click', () => {
+  if (!quiz?.answered) return;
+  if (quiz.index < quiz.rounds.length - 1) { quiz.index++; renderQuizQuestion(); return; }
+  $('#quiz-progress').textContent = 'Quiz complete';
+  $('#quiz-question').textContent = `${quiz.score} out of ${quiz.rounds.length}`;
+  $('#quiz-instruction').textContent = 'Keep exploring, or try five more muscles.';
+  $('#quiz-choices').replaceChildren();
+  $('#quiz-feedback').hidden = true;
+  $('#quiz-next').hidden = true;
+  $('#quiz-restart').hidden = false;
+  $('#quiz-score').textContent = 'Practice at your own pace. There is no time limit.';
+  $('#quiz-card').scrollTop = 0;
+  updateSceneLayout(); resize();
 });
 
 /**
@@ -870,11 +991,15 @@ document.addEventListener('click', (e) => {
 
 // Panel toggle on small screens
 $('#panel-toggle').addEventListener('click', () => {
+  movement.stop();
+  if (quiz) restoreFullBody({ fly: false });
   const open = $('#panel').classList.toggle('open');
   $('#panel-toggle').setAttribute('aria-expanded', String(open));
   // The card and the panel say the same thing; never show both.
   if (open) $('#peek').hidden = true;
   else if (state.selected) showPeek(state.selected);
+  updateSceneLayout(); resize();
+  if (!open && state.selected && !activeStudy) frame(state.selected);
 });
 
 $('#peek-close').addEventListener('click', () => select(null));
@@ -941,15 +1066,21 @@ $('#peek-close').addEventListener('click', () => select(null));
   peek.addEventListener('pointerup', release);
   peek.addEventListener('pointercancel', release);
 })();
-$('#peek-more').addEventListener('click', () => {
+function openMuscleDetails(showMovement = false) {
   $('#peek').hidden = true;
   $('#panel').classList.add('open');
   $('#panel-toggle').setAttribute('aria-expanded', 'true');
-  requestAnimationFrame(revealDetail);
-});
+  requestAnimationFrame(() => showMovement ? movement.reveal() : revealDetail());
+}
+$('#peek-more').addEventListener('click', () => openMuscleDetails());
+$('#peek-motion').addEventListener('click', () => openMuscleDetails(true));
 
 // Keyboard
 window.addEventListener('keydown', (e) => {
+  if (quiz) {
+    if (e.key === 'Escape') restoreFullBody();
+    return;
+  }
   // Only swallow shortcuts while text is genuinely being typed. A focused
   // checkbox or slider should not disable the layer keys.
   const el = e.target;
@@ -974,16 +1105,57 @@ window.addEventListener('keydown', (e) => {
 
 // ------------------------------------------------------------- lifecycle ---
 
+function updateSceneLayout() {
+  if (!isNarrow()) {
+    wrap.style.setProperty('--scene-left', '0px');
+    wrap.style.setProperty('--scene-top', '0px');
+    wrap.style.setProperty('--scene-bottom', '0px');
+    return;
+  }
+  const actions = $('.stage-actions').getBoundingClientRect();
+  const guide = $('#study-guide');
+  const panelOpen = $('#panel').classList.contains('open');
+  const landscape = innerWidth > innerHeight && innerHeight < 500;
+  let left = 0;
+  if (landscape && quiz) left = $('#quiz-card').getBoundingClientRect().right + 12;
+  else if (landscape && !guide.hidden && !panelOpen) left = guide.getBoundingClientRect().right + 12;
+  wrap.style.setProperty('--scene-left', `${Math.round(left)}px`);
+  let top = actions.bottom - wrap.getBoundingClientRect().top + 10;
+  if (!guide.hidden && !panelOpen && !landscape) top += guide.offsetHeight + 10;
+  const footer = $('#panel-toggle').offsetHeight || 52;
+  const peek = $('#peek');
+  const bottom = panelOpen ? $('#panel').offsetHeight + 8
+    : quiz ? landscape ? footer + 12 : footer + $('#quiz-card').offsetHeight + 20
+    : !peek.hidden ? footer + peek.offsetHeight + 20 : footer + 76;
+  wrap.style.setProperty('--scene-top', `${Math.round(top)}px`);
+  wrap.style.setProperty('--scene-bottom', panelOpen ? `${Math.round(bottom)}px` : `calc(${Math.round(bottom)}px + env(safe-area-inset-bottom, 0px))`);
+}
 function resize() {
   renderDirty = true;
-  const w = wrap.clientWidth;
-  const h = wrap.clientHeight;
+  const w = Math.max(1, viewport.clientWidth);
+  const h = Math.max(1, viewport.clientHeight);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
+  const ratio = Math.min(devicePixelRatio, isNarrow() ? 1.5 : 2);
+  if (renderer.getPixelRatio() !== ratio) renderer.setPixelRatio(ratio);
   renderer.setSize(w, h, false);
+  HOME.radius = homeRadius();
 }
-window.addEventListener('resize', resize);
-resize();
+let layoutQueued = false;
+function scheduleLayout() {
+  if (layoutQueued) return;
+  layoutQueued = true;
+  requestAnimationFrame(() => {
+    layoutQueued = false;
+    updateSceneLayout(); resize();
+  });
+}
+const layoutObserver = new ResizeObserver(scheduleLayout);
+[wrap, $('#peek'), $('#study-guide'), $('#panel'), $('#quiz-card')].forEach((element) => layoutObserver.observe(element));
+new MutationObserver(scheduleLayout).observe($('#panel'), { attributes: true, attributeFilter: ['class'] });
+window.addEventListener('resize', scheduleLayout);
+window.visualViewport?.addEventListener('resize', scheduleLayout);
+updateSceneLayout(); resize();
 
 function animate() {
   requestAnimationFrame(animate);

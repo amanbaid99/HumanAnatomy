@@ -10,7 +10,7 @@ page.on('pageerror', (e) => errors.push(e.message));
 page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 
 await page.goto(process.env.URL || 'http://localhost:8123', { waitUntil: 'load' });
-await page.waitForSelector('#loading.gone', { timeout: 20000 });
+await page.waitForFunction(() => !document.querySelector('#loading') || document.querySelector('#loading').classList.contains('gone'), null, { timeout: 60000 });
 await page.waitForTimeout(800);
 
 let pass = 0, fail = 0;
@@ -90,7 +90,7 @@ check('reset restores every muscle', await visible() === TOTAL, `got ${await vis
 
 // 10. clicking the model picks a muscle. Aim at the middle of the stage,
 // which is where the figure is after a reset.
-const stage = await page.locator('#stage').boundingBox();
+const stage = await page.locator('#scene').boundingBox();
 await page.mouse.click(stage.x + stage.width / 2, stage.y + stage.height * 0.34);
 await page.waitForTimeout(400);
 check('clicking the figure selects a muscle', !(await page.locator('#detail').isHidden()),

@@ -408,15 +408,16 @@
     #masthead p{display:none;}
   }
 </style>
-<link rel="stylesheet" href="./src/interface.css?v=study-views-1">
+<link rel="stylesheet" href="./src/interface.css?v=mobile-quiz-1">
 </head>
 <body>
 
 <div id="app">
   <div id="stage">
+    <div id="scene" aria-label="Anatomy viewport"></div>
     <div id="masthead">
       <span class="eyebrow">THE ANATOMY ATLAS <span aria-hidden="true">/</span> INTERACTIVE STUDY</span>
-      <h1>A closer look at the human body.</h1>
+      <h1><span class="desktop-title">A closer look at the human body.</span><span class="mobile-title">Anatomy Atlas</span></h1>
       <p>Drag to rotate &middot; scroll to zoom &middot; select a muscle</p>
     </div>
 
@@ -432,7 +433,7 @@
     </div>
 
     <div class="stage-actions">
-      <button id="return-body" hidden>← Back to full body</button>
+      <button id="return-body" hidden><span class="desktop-title">← Back to full body</span><span class="mobile-title">← Full body</span></button>
       <details id="study-picker">
         <summary>Study views <span aria-hidden="true">⌄</span></summary>
         <div class="study-menu" aria-label="Guided study views">
@@ -442,6 +443,7 @@
           <div id="study-options"></div>
         </div>
       </details>
+      <button id="quiz-start">Quiz</button>
     </div>
     <section id="study-guide" hidden aria-label="Current study guide">
       <div class="guide-heading"><span class="eyebrow" id="study-progress"></span><button id="study-exit" aria-label="Leave study and return to full body">×</button></div>
@@ -541,6 +543,13 @@
         <div class="field"><label>Origin</label><p id="d-origin"></p></div>
         <div class="field"><label>Insertion</label><p id="d-insertion"></p></div>
         <div class="field"><label>Nerve supply</label><p id="d-nerve"></p></div>
+        <section id="motion-pane" hidden data-playing="false" aria-label="Movement guide">
+          <div class="motion-heading"><h4>Movement guide</h4><span>Schematic</span></div>
+          <p id="motion-caption"></p>
+          <div id="motion-drawing"></div>
+          <p id="motion-poses"></p>
+          <button id="motion-play" aria-pressed="false">Play movement</button>
+        </section>
         <div class="field clinical" id="d-clinical-row" hidden>
           <label>Clinical note</label><p id="d-clinical"></p>
         </div>
@@ -565,8 +574,23 @@
     <p class="peek-region" id="peek-region"></p>
     <p class="peek-fn" id="peek-fn"></p>
   </div>
-  <button id="peek-more">Origin, insertion &amp; nerve &rarr;</button>
+  <div class="peek-actions"><button id="peek-more" aria-label="Open complete muscle details">Muscle details &rarr;</button><button id="peek-motion" hidden>Movement ↗</button></div>
 </div>
+
+<section id="quiz-card" hidden aria-label="Anatomy quiz">
+  <div class="quiz-heading"><span id="quiz-progress" class="eyebrow"></span><button id="quiz-exit" aria-label="Exit quiz">×</button></div>
+  <h2 id="quiz-question" tabindex="-1">Which muscle is highlighted?</h2>
+  <p id="quiz-instruction">Rotate the model if you need another angle.</p>
+  <div id="quiz-choices"></div>
+  <div id="quiz-feedback" hidden role="status" aria-live="polite">
+    <h3 id="quiz-answer"></h3>
+    <p id="quiz-action"></p>
+    <p id="quiz-nerve"></p>
+  </div>
+  <button id="quiz-next" hidden>Next question →</button>
+  <button id="quiz-restart" hidden>Try another five</button>
+  <p id="quiz-score"></p>
+</section>
 
 <div class="attach-label" id="label-origin" hidden><span class="pin"></span>Origin</div>
 <div class="attach-label" id="label-insertion" hidden><span class="pin"></span>Insertion</div>
@@ -581,10 +605,12 @@
 
 <div id="loading">
   <div class="spin"></div>
-  <p>Loading anatomical model&hellip;</p>
+  <p>Downloading anatomical model&hellip;</p>
+  <progress id="load-progress" max="100" aria-label="Model download progress"></progress>
+  <button id="load-retry" hidden>Try again</button>
 </div>
 
-<script type="module" src="./src/app.js?v=study-views-1"></script>
+<script type="module" src="./src/app.js?v=mobile-quiz-1"></script>
 <noscript>
   <p style="padding:24px;color:var(--text-2)">This anatomy explorer renders in 3D and needs JavaScript enabled.</p>
 </noscript>

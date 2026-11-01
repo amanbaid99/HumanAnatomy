@@ -2,13 +2,42 @@
 import { BufferGeometry, BufferAttribute, Group, Mesh, MeshStandardMaterial } from '../../vendor/three.module.min.js';
 import { applyOcclusionToMaterial } from '../geometry/occlusion.js';
 
-export async function loadAtlas() {
+async function downloadModel(response, onProgress) {
+  if (!response.ok) throw new Error('The anatomical model could not be downloaded. Please reload.');
+  const total = response.headers.get('content-encoding') ? 0 : Number(response.headers.get('content-length')) || 0;
+  if (!response.body) return response.arrayBuffer();
+  const reader = response.body.getReader();
+  const chunks = [];
+  let loaded = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value); loaded += value.byteLength;
+    onProgress({ loaded, total });
+  }
+  const binary = new Uint8Array(loaded);
+  let offset = 0;
+  for (const chunk of chunks) { binary.set(chunk, offset); offset += chunk.byteLength; }
+  return binary.buffer;
+}
+
+export async function loadAtlas({ onProgress = () => {} } = {}) {
+  const compressed = typeof DecompressionStream === 'function';
   const [manifestResponse, binaryResponse] = await Promise.all([
     fetch(new URL('../../assets/anatomy/atlas.json', import.meta.url)),
-    fetch(new URL('../../assets/anatomy/atlas.bin', import.meta.url)),
+    fetch(new URL(`../../assets/anatomy/atlas.bin${compressed ? '.gz' : ''}`, import.meta.url)),
   ]);
-  if (!manifestResponse.ok || !binaryResponse.ok) throw new Error('The anatomical model could not be downloaded. Please reload.');
-  const [manifest, binary] = await Promise.all([manifestResponse.json(), binaryResponse.arrayBuffer()]);
+  if (!manifestResponse.ok) throw new Error('The anatomical model index could not be downloaded. Please reload.');
+  const [manifest, download] = await Promise.all([manifestResponse.json(), downloadModel(binaryResponse, onProgress)]);
+  // A server may already decode HTTP compression, or wrap the .gz asset in
+  // another transport encoding. Inspect the remaining payload, not its header.
+  const signature = new Uint8Array(download, 0, Math.min(3, download.byteLength));
+  const stillCompressed = signature[0] === 0x1f && signature[1] === 0x8b && signature[2] === 8;
+  const binary = compressed && stillCompressed
+    ? await new Response(new Blob([download]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()
+    : download;
+  onProgress({ loaded: download.byteLength, total: download.byteLength, preparing: true });
+  await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
   const muscles = new Map();
   const skeleton = new Group();
   const head = new Group();

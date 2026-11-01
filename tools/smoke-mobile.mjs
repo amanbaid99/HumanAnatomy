@@ -15,7 +15,7 @@ page.on('pageerror', (e) => errors.push(e.message));
 page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 
 await page.goto(process.env.URL || 'http://localhost:8123', { waitUntil: 'load' });
-await page.waitForSelector('#loading.gone', { timeout: 60000 });
+await page.waitForFunction(() => !document.querySelector('#loading') || document.querySelector('#loading').classList.contains('gone'), null, { timeout: 60000 });
 await page.waitForTimeout(2000);
 
 let pass = 0; let fail = 0;
@@ -24,7 +24,7 @@ const check = (name, ok, detail = '') => {
   else { fail++; console.log(`  FAIL  ${name} ${detail}`); }
 };
 
-const stage = await page.locator('#stage').boundingBox();
+const stage = await page.locator('#scene').boundingBox();
 await page.touchscreen.tap(stage.x + stage.width / 2, stage.y + stage.height * 0.40);
 await page.waitForTimeout(1200);
 

@@ -1,4 +1,4 @@
-import bpy,bmesh,json,os,sys
+import bpy,bmesh,json,os,sys,gzip
 from array import array
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
@@ -50,3 +50,5 @@ with open(root/'assets/anatomy/atlas.bin','wb') as f:
   f.write(p.tobytes());f.write(inds.tobytes());f.write(tendon.tobytes());offset+=len(p)*4+len(inds)*4+len(tendon)*4;manifest.append(out)
 (root/'assets/anatomy/atlas.json').write_text(json.dumps(manifest,separators=(',',':')))
 print('Saved',len(manifest),'meshes',offset,'bytes',flush=True)
+
+(root/'assets/anatomy/atlas.bin.gz').write_bytes(gzip.compress((root/'assets/anatomy/atlas.bin').read_bytes(),compresslevel=9,mtime=0))

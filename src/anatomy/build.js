@@ -8,7 +8,7 @@
  */
 
 import {
-  Group, Mesh, MeshStandardMaterial, Color,
+  Group, Mesh, MeshStandardMaterial, Color, Vector3,
 } from '../../vendor/three.module.min.js';
 import { tubeLoft, sheetLoft } from '../geometry/loft.js';
 import { applyOcclusionToMaterial } from '../geometry/occlusion.js';
@@ -93,11 +93,40 @@ function muscleMaterial(layer, anatomical = false) {
       shader.uniforms.uTendonColor = { value: TENDON_COLOR };
       shader.uniforms.uRim = { value: mat.userData.rim || 0 };
       shader.uniforms.uRimColor = { value: RIM_COLOR };
+      shader.uniforms.uFiberDetail = { value: mat.userData.tissueDetail || 0 };
+      shader.uniforms.uFiberAxis = { value: mat.userData.fiberAxis };
+      shader.uniforms.uFiberAcross = { value: mat.userData.fiberAcross };
       mat.userData.shader = shader;
-      shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nattribute float tendon; varying float vTendon;')
-        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvTendon = tendon;');
-      shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vTendon; uniform vec3 uTendonColor; uniform float uRim; uniform vec3 uRimColor;')
-        .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb = mix(diffuseColor.rgb, uTendonColor, smoothstep(0.1, 0.9, vTendon) * 0.93);')
+      shader.vertexShader = shader.vertexShader.replace('#include <common>', `#include <common>
+        attribute float tendon; varying float vTendon; varying vec2 vTissueUv;
+        uniform float uFiberDetail; uniform vec3 uFiberAxis; uniform vec3 uFiberAcross;`)
+        .replace('#include <begin_vertex>', `#include <begin_vertex>
+          vTendon = tendon;
+          vTissueUv = uFiberDetail > 0.5 ? vec2(dot(position, uFiberAcross), dot(position, uFiberAxis)) : vec2(0.0);`);
+      shader.fragmentShader = shader.fragmentShader.replace('#include <common>', `#include <common>
+        varying float vTendon; varying vec2 vTissueUv; uniform float uFiberDetail;
+        uniform vec3 uTendonColor; uniform float uRim; uniform vec3 uRimColor;`)
+        .replace('#include <color_fragment>', `#include <color_fragment>
+          diffuseColor.rgb = mix(diffuseColor.rgb, uTendonColor, smoothstep(0.1, 0.9, vTendon) * 0.93);
+          if (uFiberDetail > 0.5) {
+            float phase = vTissueUv.x * 2500.0 + sin(vTissueUv.y * 37.0) * 0.6;
+            float resolved = 1.0 - smoothstep(0.7, 3.0, fwidth(phase));
+            float grain = sin(vTissueUv.y * 83.0 + sin(vTissueUv.x * 59.0) * 0.7) * sin(vTissueUv.x * 41.0 + vTissueUv.y * 13.0);
+            diffuseColor.rgb *= 1.0 + (1.0 - vTendon) * (0.025 * grain + 0.015 * sin(phase) * resolved);
+          }`)
+        .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+          if (uFiberDetail > 0.5) {
+            float fiberPhase = vTissueUv.x * 2500.0 + sin(vTissueUv.y * 37.0) * 0.6;
+            float fiberResolved = 1.0 - smoothstep(0.7, 3.0, fwidth(fiberPhase));
+            float fiberSlope = 0.00010 * (1.0 - vTendon) * fiberResolved * cos(fiberPhase);
+            vec3 tissueDx = dFdx(-vViewPosition), tissueDy = dFdy(-vViewPosition);
+            vec3 tissueCrossX = cross(tissueDy, normal), tissueCrossY = cross(normal, tissueDx);
+            float tissueDet = dot(tissueDx, tissueCrossX);
+            vec3 tissueGradient = fiberSlope * (dFdx(fiberPhase) * tissueCrossX + dFdy(fiberPhase) * tissueCrossY);
+            if (abs(tissueDet) > 0.0000000001) normal = normalize(abs(tissueDet) * normal - sign(tissueDet) * tissueGradient);
+          }`)
+        .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+          roughnessFactor = mix(roughnessFactor, 0.62, smoothstep(0.15, 0.9, vTendon));`)
         .replace('#include <opaque_fragment>', `
           float edge = 1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0);
           outgoingLight += uRimColor * smoothstep(0.58, 0.94, edge) * uRim;
@@ -225,6 +254,13 @@ export function buildMuscles(atlas = null) {
         from = closestVertex(geo, from);
         to = closestVertex(geo, to);
       }
+      const fiberAxis = new Vector3(...to).sub(new Vector3(...from));
+      if (fiberAxis.lengthSq() < 1e-8) fiberAxis.set(0, 1, 0);
+      fiberAxis.normalize();
+      const fiberAcross = new Vector3(0, 0, 1).cross(fiberAxis);
+      if (fiberAcross.lengthSq() < 1e-8) fiberAcross.set(1, 0, 0);
+      mat.userData.fiberAxis = fiberAxis;
+      mat.userData.fiberAcross = fiberAcross.normalize();
       const record = {
         ...def,
         uid: mesh.name,

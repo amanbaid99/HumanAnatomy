@@ -14,6 +14,10 @@ layers, search muscles, and inspect actions, attachment descriptions and nerve s
 - Three muscle layers, transparency, region filters, isolation and selection highlighting.
 - Origin and insertion markers, clinical notes, and a dedicated rotator cuff view.
 - Light and dark themes, keyboard controls and a mobile details sheet.
+- A dedicated mobile canvas area, compact cards and safe-area-aware controls.
+- Labelled movement schematics for supported shoulder, elbow, knee, ankle and hip actions.
+- Close-up tissue shading on the selected muscle, with distance-filtered detail.
+- Five-question identification quizzes with scores, action and nerve-supply feedback.
 - Three-step shoulder, knee, hip and spine studies with automatic framing and peeling.
 - Touch targeting assistance, a hold-to-choose muscle menu, and full-body return shortcuts.
 
@@ -29,8 +33,10 @@ npm test        # desktop, mobile, study and selection checks; requires Playwrig
 npm run shot    # screenshots in tools/shots/
 ```
 
-The local anatomical binary is approximately 18 MB. No external model host or CDN
-is required. Model loading errors are displayed on the loading screen.
+The compressed model download is approximately 8.1 MB (54% smaller than the
+17.7 MB binary). Browsers without DecompressionStream load the original binary.
+Download progress and a retry action are shown during loading. No external model
+host or CDN is required.
 
 ## Guided studies and touch selection
 
@@ -46,6 +52,39 @@ for structures that are hidden or too small to pick comfortably.
 
 `src/studies.js` contains the guide prompts and presets. Run `npm run test:studies`
 to verify guide navigation, filtering, keyboard dismissal and touch targeting.
+
+## Quiz mode
+
+Choose **Quiz** for five highlighted-muscle identification questions. Each question
+has four choices and scores the first answer only. The reveal includes the action
+and nerve supply from the existing muscle records. Scores last for the current
+quiz; there is no time limit or account requirement. Use End quiz, Escape or the
+Explore control to return to the atlas.
+
+On phones, the model has a separate viewport between the compact header and cards.
+Landscape guides and quiz cards sit beside it. Safari safe areas and dynamic
+viewport changes are accounted for, and mobile rendering is capped at 1.5× pixel
+ratio to reduce GPU work while keeping interface text at native resolution.
+
+`npm run test:quiz` verifies scoring, mobile geometry, compressed loading, the
+older-browser fallback and retry after a failed download. `npm run test:loading`
+also checks HTTP compression variants used by static hosts.
+
+## Movement guides and surface detail
+
+Supported muscle details include **Movement guide** diagrams, explicitly labelled
+Schematic. They illustrate one action of the muscle without deforming the atlas
+meshes. Play/Stop controls the diagram; reduced-motion preferences use static start
+and end positions instead. Closing details or starting a quiz stops the diagram.
+The compact mobile card has a Movement shortcut when a guide is available.
+
+Selected atlas muscles use subtle procedural fascicle shading, approximately aligned
+to their attachment direction. Screen-space filtering suppresses unresolved detail
+at a distance. This is an illustrative material treatment, not photographic tissue
+texturing. The extra shading is disabled on unselected muscles.
+
+`npm run test:movement` verifies action mappings, play/stop, reduced motion, the
+mobile shortcut and the tissue shader.
 
 ## Geometry and rendering
 
@@ -64,7 +103,8 @@ To regenerate the assets from the upstream `Startup.blend` file:
 blender -b --python tools/export-atlas.py -- path/to/Startup.blend
 ```
 
-The exporter loads only selected structures, reduces mesh density, transforms
+The exporter writes both the binary and a reproducible gzip copy. It loads only
+selected structures, reduces mesh density, transforms
 coordinates and triangle winding, and combines components by muscle selection. Tendon weights are retained from source
 material assignments.
 `assets/anatomy/source-selection.json` records every selected source object.
