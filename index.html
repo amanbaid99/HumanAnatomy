@@ -408,7 +408,7 @@
     #masthead p{display:none;}
   }
 </style>
-<link rel="stylesheet" href="./src/interface.css">
+<link rel="stylesheet" href="./src/interface.css?v=study-views-1">
 </head>
 <body>
 
@@ -417,7 +417,7 @@
     <div id="masthead">
       <span class="eyebrow">THE ANATOMY ATLAS <span aria-hidden="true">/</span> INTERACTIVE STUDY</span>
       <h1>A closer look at the human body.</h1>
-      <p>Drag to rotate &middot; scroll to zoom &middot; click any muscle</p>
+      <p>Drag to rotate &middot; scroll to zoom &middot; select a muscle</p>
     </div>
 
     <div class="dock" id="view-dock" role="group" aria-label="Camera views and study presets">
@@ -428,8 +428,27 @@
       <button data-view="top">Top</button>
       <span class="sep"></span>
       <button id="cuff-view" title="Peel to the deep layer and frame the rotator cuff">Rotator cuff</button>
-      <button id="reset" title="Reset everything">Reset</button>
+      <button id="reset" title="Restore all muscles and return to the full body">Full body</button>
     </div>
+
+    <div class="stage-actions">
+      <button id="return-body" hidden>← Back to full body</button>
+      <details id="study-picker">
+        <summary>Study views <span aria-hidden="true">⌄</span></summary>
+        <div class="study-menu" aria-label="Guided study views">
+          <span class="eyebrow">EXPLORE ONE AREA</span>
+          <p>Three stops. A closer look.</p>
+          <p class="touch-help">Tip: hold a touch on the model to choose nearby muscles.</p>
+          <div id="study-options"></div>
+        </div>
+      </details>
+    </div>
+    <section id="study-guide" hidden aria-label="Current study guide">
+      <div class="guide-heading"><span class="eyebrow" id="study-progress"></span><button id="study-exit" aria-label="Leave study and return to full body">×</button></div>
+      <h2 id="study-muscle"></h2>
+      <p id="study-hint"></p>
+      <div class="guide-navigation"><button id="study-prev">← Previous</button><button id="study-next">Next →</button></div>
+    </section>
 
     <button id="theme-toggle" type="button" aria-label="Switch to light mode" title="Switch to light mode">
       <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
@@ -511,6 +530,7 @@
       </div>
 
       <div id="detail" hidden>
+        <button id="detail-full-body">← Back to full body</button>
         <h3 id="d-name"></h3>
         <div class="badges">
           <span class="badge layer" id="d-layer"></span>
@@ -551,6 +571,12 @@
 <div class="attach-label" id="label-origin" hidden><span class="pin"></span>Origin</div>
 <div class="attach-label" id="label-insertion" hidden><span class="pin"></span>Insertion</div>
 
+<div id="pick-choices" hidden role="dialog" aria-labelledby="pick-title">
+  <div class="pick-heading"><h2 id="pick-title">Choose a muscle</h2><button id="pick-close" aria-label="Close muscle choices">×</button></div>
+  <div id="pick-options"></div>
+</div>
+<div id="selection-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
 <div id="tooltip" hidden></div>
 
 <div id="loading">
@@ -558,7 +584,7 @@
   <p>Loading anatomical model&hellip;</p>
 </div>
 
-<script type="module" src="./src/app.js"></script>
+<script type="module" src="./src/app.js?v=study-views-1"></script>
 <noscript>
   <p style="padding:24px;color:var(--text-2)">This anatomy explorer renders in 3D and needs JavaScript enabled.</p>
 </noscript>
