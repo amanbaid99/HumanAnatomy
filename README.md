@@ -98,7 +98,11 @@ The compact mobile card has a Movement shortcut when a guide is available.
 Selected atlas muscles use subtle procedural fascicle shading, approximately aligned
 to their attachment direction. Screen-space filtering suppresses unresolved detail
 at a distance. This is an illustrative material treatment, not photographic tissue
-texturing. The extra shading is disabled on unselected muscles.
+texturing. The extra fascicle shading is disabled on unselected muscles.
+
+The **Surface definition** control strengthens contour and ambient-occlusion
+shading across atlas muscles. Subtle per-muscle colour variation separates adjacent
+structures, while camera-relative key, fill and rim lights keep rotated views readable.
 
 `npm run test:movement` verifies action mappings, play/stop, reduced motion, the
 mobile shortcut and the tissue shader.

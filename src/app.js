@@ -20,7 +20,7 @@ import { createQuizRounds } from './quiz.js';
 import { createMovementController } from './movement.js';
 
 import { OrbitControls } from './controls.js?v=study-views-1';
-import { buildMuscles, LAYERS, GROUPS } from './anatomy/build.js?v=mobile-quiz-1';
+import { buildMuscles, LAYERS, GROUPS } from './anatomy/build.js?v=surface-definition-1';
 import { loadAtlas } from './anatomy/atlas.js?v=mobile-quiz-1';
 import { bakeOcclusion } from './geometry/occlusion.js';
 
@@ -109,7 +109,7 @@ function buildEnvironment() {
 scene.environment = buildEnvironment();
 // The dome does more of the work than it used to: soft wraparound light is
 // what keeps both sides of the face readable.
-scene.environmentIntensity = 0.52;
+scene.environmentIntensity = 0.40;
 
 // Near-neutral lights. Anything with a hue in it shifts the tissue colour,
 // and tissue colour is information here.
@@ -118,20 +118,32 @@ scene.add(new AmbientLight(0xffffff, 0.07));
 
 // Key: frontal and only a little off to one side, so it models the form
 // without throwing half the face into shadow.
-const key = new DirectionalLight(0xfffaf4, 1.12);
+const key = new DirectionalLight(0xfffaf4, 1.45);
 key.position.set(2.1, 2.9, 3.5);
 scene.add(key);
 
-// Fill is deliberately close to the key in strength. A 1.5:1 ratio reads as
-// even clinical illumination; the 3:1 it was reads as a portrait.
-const fill = new DirectionalLight(0xf4f7fa, 0.50);
+// Softer fill keeps recessed muscles readable while the key defines their form.
+const fill = new DirectionalLight(0xf4f7fa, 0.55);
 fill.position.set(-2.2, 1.00, 3.05);
 scene.add(fill);
 
 // Just enough edge to separate the figure from the background.
-const rim = new DirectionalLight(0xeef2f5, 0.26);
+const rim = new DirectionalLight(0xeef2f5, 0.40);
 rim.position.set(0.0, 2.0, -3.2);
 scene.add(rim);
+// Camera-relative studio lighting keeps the back and side views equally legible.
+scene.add(key.target, fill.target, rim.target);
+const keyOffset = new Vector3(-2.2, 2.0, 3.0);
+const fillOffset = new Vector3(2.0, .5, 2.0);
+const rimOffset = new Vector3(0, .8, -2.5);
+const lightOffset = new Vector3();
+function positionStudyLights() {
+  for (const [light, offset] of [[key, keyOffset], [fill, fillOffset], [rim, rimOffset]]) {
+    light.target.position.copy(controls.target);
+    light.position.copy(controls.target).add(lightOffset.copy(offset).applyQuaternion(camera.quaternion));
+    light.target.updateMatrixWorld();
+  }
+}
 
 // A little bounce from below so undersides do not go to black.
 const under = new DirectionalLight(0xe4e9ee, 0.20);
@@ -375,6 +387,8 @@ function applyVisibility() {
     const fade = rec.layer === 3 ? 1 : rec.layer === 2 ? 0.55 : 0;
     const opacity = 1 - (1 - state.xray) * (1 - fade);
     const mat = rec.mesh.material;
+    mat.userData.definition = $('#toggle-definition').checked ? 1 : 0;
+    if (mat.userData.shader?.uniforms.uDefinition) mat.userData.shader.uniforms.uDefinition.value = mat.userData.definition;
     mat.userData.tissueDetail = state.selected?.id === rec.id ? 1 : 0;
     if (mat.userData.shader?.uniforms.uFiberDetail) mat.userData.shader.uniforms.uFiberDetail.value = mat.userData.tissueDetail;
     mat.opacity = opacity;
@@ -736,6 +750,7 @@ $('#xray').addEventListener('input', (e) => {
 });
 
 // Toggles
+$('#toggle-definition').addEventListener('change', applyVisibility);
 $('#toggle-skeleton').addEventListener('change', (e) => {
   state.skeleton = e.target.checked;
   applyVisibility();
@@ -1202,6 +1217,7 @@ function animate() {
   if (!renderDirty && !moving) return;
   renderDirty = false;
 
+  positionStudyLights();
   renderer.clear();
   camera.layers.set(0);
   renderer.render(scene, camera);

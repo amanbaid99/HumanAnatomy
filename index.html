@@ -412,7 +412,7 @@
   /* Opened inside another app (?embed=1): the title and counter give way to the model. */
   [data-embed="1"] #masthead, [data-embed="1"] #stats{display:none;}
 </style>
-<link rel="stylesheet" href="./src/interface.css?v=mobile-quiz-1">
+<link rel="stylesheet" href="./src/interface.css?v=surface-definition-1">
 </head>
 <body>
 
@@ -502,6 +502,10 @@
         <span class="val" id="xray-val">100%</span>
       </div>
 
+      <div class="row">
+        <input type="checkbox" id="toggle-definition" checked>
+        <label for="toggle-definition">Surface definition</label>
+      </div>
       <div class="row">
         <input type="checkbox" id="toggle-skeleton" checked>
         <label for="toggle-skeleton">Show skeleton</label>
@@ -614,7 +618,7 @@
   <button id="load-retry" hidden>Try again</button>
 </div>
 
-<script type="module" src="./src/app.js?v=mobile-quiz-1"></script>
+<script type="module" src="./src/app.js?v=surface-definition-1"></script>
 <noscript>
   <p style="padding:24px;color:var(--text-2)">This anatomy explorer renders in 3D and needs JavaScript enabled.</p>
 </noscript>

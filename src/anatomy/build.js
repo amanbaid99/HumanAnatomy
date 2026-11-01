@@ -91,12 +91,16 @@ function muscleMaterial(layer, anatomical = false) {
     mat.onBeforeCompile = (shader) => {
       applyOcclusionToMaterial(shader);
       shader.uniforms.uTendonColor = { value: TENDON_COLOR };
+      shader.uniforms.uDefinition = { value: mat.userData.definition ?? 1 };
       shader.uniforms.uRim = { value: mat.userData.rim || 0 };
       shader.uniforms.uRimColor = { value: RIM_COLOR };
       shader.uniforms.uFiberDetail = { value: mat.userData.tissueDetail || 0 };
       shader.uniforms.uFiberAxis = { value: mat.userData.fiberAxis };
       shader.uniforms.uFiberAcross = { value: mat.userData.fiberAcross };
       mat.userData.shader = shader;
+      shader.fragmentShader = shader.fragmentShader
+        .replace('reflectedLight.indirectDiffuse *= vAO;', 'reflectedLight.indirectDiffuse *= mix(vAO, pow(vAO, 1.5), uDefinition);')
+        .replace('reflectedLight.indirectSpecular *= vAO;', 'reflectedLight.indirectSpecular *= mix(vAO, pow(vAO, 1.5), uDefinition);');
       shader.vertexShader = shader.vertexShader.replace('#include <common>', `#include <common>
         attribute float tendon; varying float vTendon; varying vec2 vTissueUv;
         uniform float uFiberDetail; uniform vec3 uFiberAxis; uniform vec3 uFiberAcross;`)
@@ -105,7 +109,7 @@ function muscleMaterial(layer, anatomical = false) {
           vTissueUv = uFiberDetail > 0.5 ? vec2(dot(position, uFiberAcross), dot(position, uFiberAxis)) : vec2(0.0);`);
       shader.fragmentShader = shader.fragmentShader.replace('#include <common>', `#include <common>
         varying float vTendon; varying vec2 vTissueUv; uniform float uFiberDetail;
-        uniform vec3 uTendonColor; uniform float uRim; uniform vec3 uRimColor;`)
+        uniform vec3 uTendonColor; uniform float uDefinition; uniform float uRim; uniform vec3 uRimColor;`)
         .replace('#include <color_fragment>', `#include <color_fragment>
           diffuseColor.rgb = mix(diffuseColor.rgb, uTendonColor, smoothstep(0.1, 0.9, vTendon) * 0.93);
           if (uFiberDetail > 0.5) {
@@ -129,6 +133,7 @@ function muscleMaterial(layer, anatomical = false) {
           roughnessFactor = mix(roughnessFactor, 0.62, smoothstep(0.15, 0.9, vTendon));`)
         .replace('#include <opaque_fragment>', `
           float edge = 1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0);
+          outgoingLight *= 1.0 - uDefinition * 0.18 * pow(edge, 3.0);
           outgoingLight += uRimColor * smoothstep(0.58, 0.94, edge) * uRim;
           #include <opaque_fragment>`);
     };
@@ -244,6 +249,10 @@ export function buildMuscles(atlas = null) {
       const atlasGeometry = atlas?.get(`${def.id}.${sideKey}`);
       const geo = atlasGeometry || geometryFor(variant);
       const mat = muscleMaterial(def.layer, !!atlasGeometry);
+      // Small, deterministic variations distinguish adjacent structures while
+      // mirrored counterparts keep the same colour. This is illustrative tint.
+      const hash = [...def.id].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 0);
+      mat.color.offsetHSL(0, 0, ((hash % 101) / 100 - .5) * .07);
       const mesh = new Mesh(geo, mat);
 
       const side = def.mirror ? (flip ? 'left' : 'right') : null;
@@ -269,7 +278,7 @@ export function buildMuscles(atlas = null) {
         side,
         sideLabel: side ? ` (${side})` : '',
         mesh,
-        baseColor: LAYERS[def.layer].color,
+        baseColor: mat.color.getHex(),
       };
       mesh.userData.record = record;
       records.push(record);
