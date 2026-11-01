@@ -146,3 +146,7 @@ web. The viewer does not depict all anatomical structures or individual variatio
 Application code: MIT. Vendored three.js: MIT.
 Adapted anatomical model assets: CC BY-SA 4.0, with Z-Anatomy and original
 BodyParts3D attribution preserved in [NOTICE.md](assets/anatomy/NOTICE.md).
+
+Linked muscle and heatmap highlights are temporarily suspended during studies and
+quizzes, then restored on exit. Embedded phone views use a compact header and
+reserve space for their cards. `npm run test:links` verifies these entry points.

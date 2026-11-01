@@ -365,7 +365,7 @@ function applyVisibility() {
   // is readable even when it sits under three other layers.
   const focusing = state.focus && !!state.selected;
   // A link that names muscles drops everything else back the same way.
-  const marking = !focusing && state.marked.size > 0;
+  const marking = !quiz && !state.skeletonFilter && !focusing && state.marked.size > 0;
 
   records.forEach((rec) => {
     rec.mesh.visible = meshVisible(rec);
@@ -375,6 +375,8 @@ function applyVisibility() {
     const fade = rec.layer === 3 ? 1 : rec.layer === 2 ? 0.55 : 0;
     const opacity = 1 - (1 - state.xray) * (1 - fade);
     const mat = rec.mesh.material;
+    mat.userData.tissueDetail = state.selected?.id === rec.id ? 1 : 0;
+    if (mat.userData.shader?.uniforms.uFiberDetail) mat.userData.shader.uniforms.uFiberDetail.value = mat.userData.tissueDetail;
     mat.opacity = opacity;
     mat.transparent = opacity < 0.995;
     mat.depthWrite = opacity > 0.72;
@@ -424,7 +426,7 @@ function setHighlight(rec, on, strong) {
   renderDirty = true;
   if (!rec) return;
   // A muscle named in the link keeps its mark when hover or selection leaves it.
-  if (!on && state.marked.has(rec.id)) { on = true; strong = true; }
+  if (!on && !quiz && !state.skeletonFilter && state.marked.has(rec.id)) { on = true; strong = true; }
   // A selection lights both sides of a mirrored pair; a hover lights only the
   // mesh under the cursor.
   const targets = strong || !on
@@ -439,10 +441,18 @@ function setHighlight(rec, on, strong) {
     mat.emissiveIntensity = on ? (strong ? 0.8 : 0.5) : 0;
     const level = on ? (strong ? 0.40 : 0.12) : 0;
     mat.userData.rim = level;
-    mat.userData.tissueDetail = on && strong ? 1 : 0;
-    if (mat.userData.shader?.uniforms.uFiberDetail) mat.userData.shader.uniforms.uFiberDetail.value = mat.userData.tissueDetail;
     if (mat.userData.shader) mat.userData.shader.uniforms.uRim.value = level;
   });
+}
+
+function setLinkHighlights(on) {
+  const seen = new Set();
+  for (const rec of records) {
+    if (state.marked.has(rec.id) && !seen.has(rec.id)) { seen.add(rec.id); setHighlight(rec, on, on); }
+  }
+}
+function announceLinkHighlights() {
+  if (state.marked.size) $('#selection-status').textContent = `Showing ${state.marked.size} highlighted muscles from link.`;
 }
 
 function select(rec, fly = true) {
@@ -773,6 +783,8 @@ function restoreFullBody({ fly = true } = {}) {
   state.sideFilter = null;
   state.xray = 1; $('#xray').value = 100; $('#xray-val').textContent = '100%';
   select(null);
+  setLinkHighlights(true);
+  announceLinkHighlights();
   applyVisibility();
   if (fly) {
     controls.flyTo(new Vector3(0, 0.94, 0), HOME.radius, HOME.theta, HOME.phi);
@@ -792,6 +804,7 @@ function runStudyStep() {
   setRegions(study.groups);
   state.sideFilter = study.bothSides ? null : 'right';
   state.skeletonFilter = study.bones;
+  setLinkHighlights(false);
   state.skeleton = true; $('#toggle-skeleton').checked = true;
   state.focus = true; $('#toggle-focus').checked = true;
   state.isolate = false; $('#toggle-isolate').checked = false;
@@ -841,6 +854,7 @@ function closeQuiz() {
 function startQuiz() {
   restoreFullBody({ fly: false });
   quiz = { rounds: createQuizRounds(records), index: 0, score: 0, answered: false };
+  setLinkHighlights(false);
   document.body.classList.add('quiz-mode');
   $('#quiz-card').hidden = false;
   $('#quiz-start').textContent = 'End quiz';
@@ -929,6 +943,7 @@ $('#cuff-view').addEventListener('click', () => {
   $('#toggle-skeleton').checked = true;
   state.skeletonFilter = SHOULDER_GIRDLE;
   state.sideFilter = 'right';
+  setLinkHighlights(false);
   state.xray = 1; $('#xray').value = 100; $('#xray-val').textContent = '100%';
   applyVisibility();
   const sup = byId.get('supraspinatus.right');
@@ -981,6 +996,7 @@ function runSearch() {
         $('#study-guide').hidden = true;
         setLayers([1, 2, 3]); setRegions('all');
         state.sideFilter = null; state.skeletonFilter = null;
+        setLinkHighlights(true);
       }
       // Make sure the muscle is actually showing before we fly to it.
       if (!state.layers[rec.layer]) {
@@ -1137,6 +1153,7 @@ function updateSceneLayout() {
   else if (landscape && !guide.hidden && !panelOpen) left = guide.getBoundingClientRect().right + 12;
   wrap.style.setProperty('--scene-left', `${Math.round(left)}px`);
   let top = actions.bottom - wrap.getBoundingClientRect().top + 10;
+  wrap.style.setProperty('--guide-top', `${Math.round(top)}px`);
   if (!guide.hidden && !panelOpen && !landscape) top += guide.offsetHeight + 10;
   const footer = $('#panel-toggle').offsetHeight || 52;
   const peek = $('#peek');
@@ -1272,7 +1289,9 @@ if (state.marked.size) {
   const [theta, phi] = VIEWS[view] || VIEWS.front;
   controls.flyTo(new Vector3(0, 0.94, 0), HOME.radius, theta, phi);
   const main = records.find((r) => r.id === linked[0]);
-  if (main) { showDetail(main); showPeek(main); }
+  if (main) { showDetail(main); showPeek(main); $('#return-body').hidden = false; }
+  announceLinkHighlights();
+  updateSceneLayout(); resize();
 }
 
 setTheme(linkTheme === 'light' || linkTheme === 'dark' ? linkTheme : themeNow(), false);

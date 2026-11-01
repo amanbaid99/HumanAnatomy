@@ -12,10 +12,12 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#129452;</text></svg>">
 <script>
   // Pick the theme before the first paint, so a light-mode visitor never
-  // sees a dark flash: a saved choice wins, otherwise follow the system.
+  // sees a dark flash: a linked theme wins, then a saved choice, then the system.
   (function () {
-    var t = null;
-    try { t = localStorage.getItem('theme'); } catch (e) {}
+    var linked = new URLSearchParams(location.search);
+    var t = linked.get('theme');
+    if (linked.get('embed') === '1') document.documentElement.dataset.embed = '1';
+    if (t !== 'light' && t !== 'dark') { try { t = localStorage.getItem('theme'); } catch (e) {} }
     if (t !== 'light' && t !== 'dark') {
       t = window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
     }

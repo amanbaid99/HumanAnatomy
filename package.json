@@ -5,12 +5,13 @@
   "scripts": {
     "shot": "node tools/screenshot.mjs",
     "serve": "node tools/serve.mjs",
-    "test": "node tools/smoke.mjs && node tools/smoke-mobile.mjs && node tools/smoke-studies.mjs && node tools/smoke-quiz-mobile.mjs && node tools/smoke-movement.mjs && node tools/smoke-load-encoding.mjs",
+    "test": "node tools/smoke.mjs && node tools/smoke-mobile.mjs && node tools/smoke-studies.mjs && node tools/smoke-quiz-mobile.mjs && node tools/smoke-movement.mjs && node tools/smoke-load-encoding.mjs && node tools/smoke-links.mjs",
     "test:mobile": "node tools/smoke-mobile.mjs",
     "test:studies": "node tools/smoke-studies.mjs",
     "test:quiz": "node tools/smoke-quiz-mobile.mjs",
     "test:movement": "node tools/smoke-movement.mjs",
-    "test:loading": "node tools/smoke-load-encoding.mjs"
+    "test:loading": "node tools/smoke-load-encoding.mjs",
+    "test:links": "node tools/smoke-links.mjs"
   },
   "repository": {
     "type": "git",
