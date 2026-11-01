@@ -21,6 +21,23 @@ layers, search muscles, and inspect actions, attachment descriptions and nerve s
 - Three-step shoulder, knee, hip and spine studies with automatic framing and peeling.
 - Touch targeting assistance, a hold-to-choose muscle menu, and full-body return shortcuts.
 
+## Links from other apps
+
+The atlas can be opened at a set of muscles, which is how the Repd workout
+tracker shows the muscles an exercise works and a heatmap of training:
+
+| Parameter | Example | Effect |
+| --- | --- | --- |
+| `muscles` | `?muscles=latissimus-dorsi,biceps-long` | Lights these up and dims the rest; the first is described in the card |
+| `heat` | `?heat=pectoralis-major:1,rectus-femoris:0.3` | Tints each muscle by a value from 0 (pale amber) to 1 (red) and dims the rest |
+| `view` | `?view=back` | Starts from `front`, `back`, `left`, `right` or `top`; otherwise the side most named muscles are on |
+| `theme` | `?theme=dark` | `light` or `dark` for this visit, without changing the saved choice |
+| `embed` | `?embed=1` | Hides the title and counter, for use inside another app |
+
+Ids are the `id` fields in `src/anatomy/muscles.js` (both sides share one id).
+Unknown ids are ignored, so an old link never breaks the page. Clicking still
+selects and explains any muscle.
+
 ## Run and verify
 
 This is a static site without a build step. Serve it over HTTP so the browser can
