@@ -15,14 +15,15 @@ import {
   PMREMGenerator, EquirectangularReflectionMapping,
 } from '../vendor/three.module.min.js';
 
-import { STUDIES } from './studies.js';
+import { STUDIES } from './studies.js?v=guided-labels-1';
+import { createModelLabels } from './model-labels.js?v=guided-labels-1';
 import { createQuizRounds } from './quiz.js';
 import { createMovementController } from './movement.js';
 
 import { OrbitControls } from './controls.js?v=study-views-1';
-import { buildMuscles, LAYERS, GROUPS } from './anatomy/build.js?v=peel-muscles-1';
-import { loadAtlas } from './anatomy/atlas.js?v=peel-muscles-1';
-import { abdominalCutaway } from './anatomy/cutaway.js?v=peel-muscles-1';
+import { buildMuscles, LAYERS, GROUPS } from './anatomy/build.js?v=guided-labels-1';
+import { loadAtlas } from './anatomy/atlas.js?v=guided-labels-1';
+import { abdominalCutaway } from './anatomy/cutaway.js?v=guided-labels-1';
 import { bakeOcclusion } from './geometry/occlusion.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -886,13 +887,15 @@ function runStudyStep() {
   const study = STUDIES[activeStudy];
   const step = study.steps[studyStep];
   const rec = byId.get(`${step.muscle}.right`);
+  state.hiddenMuscles.clear();
+  for (const id of step.peel || []) state.hiddenMuscles.add(`${id}.right`);
   setLayers(step.layers);
   setRegions(study.groups);
   state.sideFilter = study.bothSides ? null : 'right';
   state.skeletonFilter = study.bones;
   setLinkHighlights(false);
   state.skeleton = true; $('#toggle-skeleton').checked = true;
-  state.focus = true; $('#toggle-focus').checked = true;
+  state.focus = !study.dissection; $('#toggle-focus').checked = state.focus;
   state.isolate = false; $('#toggle-isolate').checked = false;
   state.xray = 1; $('#xray').value = 100; $('#xray-val').textContent = '100%';
   $('#panel').classList.remove('open');
@@ -903,7 +906,7 @@ function runStudyStep() {
   $('#study-muscle').textContent = rec.name;
   $('#study-hint').textContent = step.hint;
   $('#study-prev').disabled = studyStep === 0;
-  $('#study-next').textContent = studyStep === study.steps.length - 1 ? 'Finish study →' : 'Next →';
+  $('#study-next').textContent = studyStep === study.steps.length - 1 ? 'Finish study →' : (step.next || 'Next →');
   select(rec, false);
   const anchor = skeleton.children.find((bone) => bone.name === study.anchor);
   const target = new Box3().setFromObject(anchor || rec.mesh).getCenter(new Vector3());
@@ -1282,6 +1285,7 @@ function updateSceneLayout() {
   wrap.style.setProperty('--scene-top', `${Math.round(top)}px`);
   wrap.style.setProperty('--scene-bottom', panelOpen ? `${Math.round(bottom)}px` : `calc(${Math.round(bottom)}px + env(safe-area-inset-bottom, 0px))`);
 }
+const drawingSize = new Vector2();
 function resize() {
   renderDirty = true;
   const w = Math.max(1, viewport.clientWidth);
@@ -1290,7 +1294,8 @@ function resize() {
   camera.updateProjectionMatrix();
   const ratio = Math.min(devicePixelRatio, isNarrow() ? 1.5 : 2);
   if (renderer.getPixelRatio() !== ratio) renderer.setPixelRatio(ratio);
-  renderer.setSize(w, h, false);
+  renderer.getSize(drawingSize);
+  if (drawingSize.x !== w || drawingSize.y !== h) renderer.setSize(w, h, false);
   HOME.radius = homeRadius();
 }
 let layoutQueued = false;
@@ -1303,12 +1308,18 @@ function scheduleLayout() {
   });
 }
 const layoutObserver = new ResizeObserver(scheduleLayout);
-[wrap, $('#peek'), $('#study-guide'), $('#panel'), $('#quiz-card')].forEach((element) => layoutObserver.observe(element));
+[wrap, viewport, $('#peek'), $('#study-guide'), $('#panel'), $('#quiz-card')].forEach((element) => layoutObserver.observe(element));
 new MutationObserver(scheduleLayout).observe($('#panel'), { attributes: true, attributeFilter: ['class'] });
 window.addEventListener('resize', scheduleLayout);
 window.visualViewport?.addEventListener('resize', scheduleLayout);
 updateSceneLayout(); resize();
 
+const modelLabels = createModelLabels({
+  camera, canvas: renderer.domElement, records,
+  references: [skeleton, head, face], container: $('#model-labels'),
+  onSelect: rec => select(rec),
+});
+$('#toggle-labels').addEventListener('change', () => { renderDirty = true; });
 function animate() {
   requestAnimationFrame(animate);
   const moving = controls.isMoving;
@@ -1316,6 +1327,7 @@ function animate() {
   // Labels also follow moving sheets even when the 3D scene is idle.
   camera.updateMatrixWorld();
   positionLabels();
+  modelLabels.update({ enabled: $('#toggle-labels').checked && !quiz, selected: state.selected });
   // Static anatomy needs no repeated GPU work while idle. This also keeps
   // the mobile sheet responsive on devices with a slower graphics processor.
   if (!renderDirty && !moving) return;

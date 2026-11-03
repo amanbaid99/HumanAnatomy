@@ -412,13 +412,14 @@
   /* Opened inside another app (?embed=1): the title and counter give way to the model. */
   [data-embed="1"] #masthead, [data-embed="1"] #stats{display:none;}
 </style>
-<link rel="stylesheet" href="./src/interface.css?v=peel-muscles-1">
+<link rel="stylesheet" href="./src/interface.css?v=guided-labels-1">
 </head>
 <body>
 
 <div id="app">
   <div id="stage">
     <div id="scene" aria-label="Anatomy viewport"></div>
+    <div id="model-labels" hidden aria-label="Visible muscle labels"></div>
     <div id="masthead">
       <span class="eyebrow">THE ANATOMY ATLAS <span aria-hidden="true">/</span> INTERACTIVE STUDY</span>
       <h1><span class="desktop-title">A closer look at the human body.</span><span class="mobile-title">Anatomy Atlas</span></h1>
@@ -443,7 +444,7 @@
         <summary>Study views <span aria-hidden="true">⌄</span></summary>
         <div class="study-menu" aria-label="Guided study views">
           <span class="eyebrow">EXPLORE ONE AREA</span>
-          <p>Three stops. A closer look.</p>
+          <p>Guided views and step-by-step dissections.</p>
           <p class="touch-help">Tip: hold a touch on the model to choose nearby muscles.</p>
           <div id="study-options"></div>
         </div>
@@ -506,6 +507,10 @@
       <div class="row">
         <input type="checkbox" id="toggle-cutaway" checked>
         <label for="toggle-cutaway" title="Removes the fascia covering the rectus abdominis for study">Abdominal fascia cutaway</label>
+      </div>
+      <div class="row">
+        <input type="checkbox" id="toggle-labels">
+        <label for="toggle-labels">Muscle name labels</label>
       </div>
       <div class="row">
         <input type="checkbox" id="toggle-definition" checked>
@@ -631,7 +636,7 @@
   <button id="load-retry" hidden>Try again</button>
 </div>
 
-<script type="module" src="./src/app.js?v=peel-muscles-1"></script>
+<script type="module" src="./src/app.js?v=guided-labels-1"></script>
 <noscript>
   <p style="padding:24px;color:var(--text-2)">This anatomy explorer renders in 3D and needs JavaScript enabled.</p>
 </noscript>

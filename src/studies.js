@@ -1,5 +1,25 @@
 // Study prompts follow the muscle descriptions already used by the atlas.
 export const STUDIES = {
+  'chest-dissection': {
+    title: 'Chest dissection', description: 'Peel the chest to reveal its deeper structures', dissection: true,
+    groups: ['chest', 'shoulder', 'arm'], bones: /^(.*-rib|costal|sternum|clavicle|scapula|humerus)/,
+    anchor: 'sternum', radius: .9,
+    steps: [
+      { muscle: 'pectoralis-major', layers: [1,2,3], angle: .55, peel: [], next: 'Peel pectoralis major →', hint: 'Pectoralis major is the broad superficial chest muscle. Peel it away on the right to expose pectoralis minor beneath it.' },
+      { muscle: 'pectoralis-minor', layers: [1,2,3], angle: .55, peel: ['pectoralis-major'], next: 'Peel pectoralis minor →', hint: 'Pectoralis minor runs from ribs 3–5 to the coracoid process of the scapula. Unlike pectoralis major, it acts on the scapula rather than directly on the arm.' },
+      { muscle: 'serratus-anterior', layers: [1,2,3], angle: 1.0, peel: ['pectoralis-major','pectoralis-minor'], hint: 'The chest wall is now exposed. Find the finger-like slips of serratus anterior along the ribs. It helps hold the scapula against the rib cage.' },
+    ],
+  },
+  'hip-dissection': {
+    title: 'Gluteal dissection', description: 'From gluteus maximus to gluteus minimus', dissection: true,
+    groups: ['hip'], bones: /^(hip-bone|femur|sacrum|coccyx)/,
+    anchor: 'hip-bone.r', radius: .98,
+    steps: [
+      { muscle: 'gluteus-maximus', layers: [1,2,3], angle: 2.5, peel: [], next: 'Peel gluteus maximus →', hint: 'Begin with gluteus maximus, the large superficial hip extensor. Peel it away on the right to inspect the muscles beneath it.' },
+      { muscle: 'gluteus-medius', layers: [1,2,3], angle: 1.8, peel: ['gluteus-maximus'], next: 'Peel gluteus medius →', hint: 'Gluteus medius lies over gluteus minimus on the lateral pelvis. Both help abduct the hip and stabilise the pelvis while walking.' },
+      { muscle: 'gluteus-minimus', layers: [1,2,3], angle: 1.5, peel: ['gluteus-maximus','gluteus-medius'], hint: 'Gluteus minimus is the deepest of these three gluteal muscles. Follow it from the outer ilium toward the greater trochanter of the femur.' },
+    ],
+  },
   shoulder: {
     title: 'Shoulder', description: 'From the deltoid to the rotator cuff',
     groups: ['shoulder'], bones: /^(scapula|clavicle|humerus)/,

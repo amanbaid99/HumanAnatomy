@@ -177,3 +177,16 @@ Searching for a hidden muscle brings it back. Full body and starting a quiz
 restore the complete model. Hiding within a guided study exits the guide.
 
 `npm run test:peel` checks desktop and mobile peeling and restoration.
+
+## Guided dissections and model labels
+
+In **Study views**, choose **Chest dissection** or **Gluteal dissection**. Each
+Peel step removes a named muscle on the right while explaining the newly exposed
+structure. Previous replaces the layer; Finish restores the full body. These
+are educational model explorations, not surgical instructions.
+
+Enable **Muscle name labels** in the controls for a small set of clickable labels
+with leader lines. Labels are checked against visible geometry, avoid interface
+controls and one another, and are limited to six on desktop or three on phones.
+They are suppressed during quizzes. `npm run test:guided-labels` verifies both
+viewport sizes, reverse steps, restoration, label selection and quiz suppression.
