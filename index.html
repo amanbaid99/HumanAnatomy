@@ -412,7 +412,7 @@
   /* Opened inside another app (?embed=1): the title and counter give way to the model. */
   [data-embed="1"] #masthead, [data-embed="1"] #stats{display:none;}
 </style>
-<link rel="stylesheet" href="./src/interface.css?v=guided-labels-1">
+<link rel="stylesheet" href="./src/interface.css?v=movement-explainer-1">
 </head>
 <body>
 
@@ -572,9 +572,16 @@
         <section id="motion-pane" hidden data-playing="false" aria-label="Movement guide">
           <div class="motion-heading"><h4>Movement guide</h4><span>Schematic</span></div>
           <p id="motion-caption"></p>
+          <p id="motion-role"></p>
           <div id="motion-drawing"></div>
+          <div class="motion-legend"><span id="motion-fixed-label"></span><span id="motion-moving-label"></span></div>
+          <label for="motion-progress" class="motion-slider-label">Drag to explore <output id="motion-position" for="motion-progress" aria-live="off">Start position</output></label>
+          <input id="motion-progress" type="range" min="0" max="100" value="0" step="1" aria-label="Movement progress">
+          <div class="motion-pose-buttons"><button id="motion-start">Go to start</button><button id="motion-end">Go to finish</button></div>
           <p id="motion-poses"></p>
           <button id="motion-play" aria-pressed="false">Play movement</button>
+          <div id="motion-snapshots" aria-label="Start and finish poses"></div>
+          <p class="motion-example">Try picturing this: <span id="motion-example"></span></p>
         </section>
         <div class="field clinical" id="d-clinical-row" hidden>
           <label>Clinical note</label><p id="d-clinical"></p>
@@ -636,7 +643,7 @@
   <button id="load-retry" hidden>Try again</button>
 </div>
 
-<script type="module" src="./src/app.js?v=guided-labels-1"></script>
+<script type="module" src="./src/app.js?v=movement-explainer-1"></script>
 <noscript>
   <p style="padding:24px;color:var(--text-2)">This anatomy explorer renders in 3D and needs JavaScript enabled.</p>
 </noscript>

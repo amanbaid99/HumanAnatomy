@@ -91,7 +91,7 @@ also checks HTTP compression variants used by static hosts.
 
 Supported muscle details include **Movement guide** diagrams, explicitly labelled
 Schematic. They illustrate one action of the muscle without deforming the atlas
-meshes. Play/Stop controls the diagram; reduced-motion preferences use static start
+meshes. Play/Pause controls the diagram; reduced-motion preferences use static start
 and end positions instead. Closing details or starting a quiz stops the diagram.
 The compact mobile card has a Movement shortcut when a guide is available.
 
@@ -116,7 +116,7 @@ can be selected directly.
 On phones, swipe the summary card or bottom handle upward to open full details.
 The card still dismisses downward, and the expanded panel scrolls normally.
 
-`npm run test:movement` verifies action mappings, play/stop, reduced motion, the
+`npm run test:movement` verifies action mappings, play/pause, replay, reduced motion, the
 mobile shortcut and the tissue shader.
 
 ## Geometry and rendering
@@ -190,3 +190,12 @@ with leader lines. Labels are checked against visible geometry, avoid interface
 controls and one another, and are limited to six on desktop or three on phones.
 They are suppressed during quizzes. `npm run test:guided-labels` verifies both
 viewport sizes, reverse steps, restoration, label selection and quiz suppression.
+
+## Exploring movement
+
+Movement guides now include a highlighted joint, a direction arrow, a stationary
+and moving-part legend, a muscle-role explanation and an everyday example. Use
+**Drag to explore** to scrub the diagram, or jump to the start and finish.
+Comparison poses remain visible below the controls. Playback moves once to the
+finish, supports pause/resume and replay, and honours reduced motion with static
+pose changes. These remain simplified schematics; the 3D anatomy mesh is not rigged.

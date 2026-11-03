@@ -246,12 +246,10 @@ input[type=range]:focus-visible{outline-offset:5px;}
 .motion-ghost{stroke:var(--accent-dim);stroke-width:5;stroke-dasharray:5 7;stroke-linecap:round;opacity:.5;}
 .motion-joint{fill:var(--panel);stroke:var(--accent);stroke-width:3;}
 .motion-tip{fill:var(--accent);}
-.motion-limb{transform-origin:0 0;transform:rotate(var(--from-angle));}
-#motion-pane[data-playing="true"] .motion-limb{animation:joint-demo 2.6s ease-in-out infinite alternate;}
+.motion-limb{transform-origin:0 0;}
 #motion-poses{font-size:11px;line-height:1.5;color:var(--text-3);margin:0 0 12px;}
 #motion-play{min-height:44px;width:100%;border:1px solid var(--accent-dim);border-radius:5px;font-size:12px;color:var(--accent);}
-@keyframes joint-demo{from{transform:rotate(var(--from-angle));}to{transform:rotate(var(--to-angle));}}
-@media(prefers-reduced-motion:reduce){#motion-pane[data-playing="true"] .motion-limb{animation:none!important;transform:rotate(var(--to-angle));}}
+
 @media(max-width:860px){
  .peek-actions{display:flex;gap:12px;align-items:center;border-top:1px solid var(--line-soft);margin-top:7px;}
  #peek-more,#peek-motion{border:0;margin:0;min-height:40px;padding:8px 0 0;font-size:12px;color:var(--accent);}
@@ -306,3 +304,31 @@ input[type=range]:focus-visible{outline-offset:5px;}
 .model-name{position:absolute;height:38px;pointer-events:auto;padding:5px 8px;border:1px solid var(--line);border-radius:5px;background:var(--float);color:var(--text);font-size:11px;line-height:13px;text-align:left;overflow:hidden;box-shadow:0 2px 8px var(--shadow);}
 .model-name:hover,.model-name:focus-visible{border-color:var(--accent);background:var(--hover);}
 @media(max-width:860px){.model-name{font-size:10px;line-height:12px;}}
+
+#motion-drawing svg{max-height:none;min-height:210px;}
+#motion-role{font-size:13px;line-height:1.6;color:var(--text-2);margin:10px 0 0;}
+.motion-joint-halo{fill:var(--accent);opacity:.14;}
+.motion-direction{fill:none;stroke:var(--accent);stroke-width:2;}
+#motion-arrow path{fill:var(--accent);}
+.motion-joint-name{fill:var(--text);font:12px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+.motion-legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:11px;line-height:1.5;color:var(--text-2);}
+.motion-legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--text-3);}
+.motion-legend span+span::before{background:var(--accent);}
+.motion-example{font-size:12px;line-height:1.6;color:var(--text-3);margin:12px 0;}
+.motion-example span{color:var(--text-2);}
+#motion-snapshots{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0;}
+#motion-snapshots>div{border:1px solid var(--line-soft);border-radius:5px;padding:8px;text-align:center;}
+#motion-snapshots span{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);}
+#motion-snapshots svg{display:block;width:100%;height:100px;}
+#motion-snapshots p{font-size:11px;line-height:1.5;margin:4px 0;color:var(--text-2);}
+.motion-slider-label{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--text-2);}
+#motion-position{font-size:10px;color:var(--accent);}
+#motion-progress{width:100%;min-height:44px;margin:0;accent-color:var(--accent);touch-action:pan-y;}
+.motion-pose-buttons{display:flex;justify-content:space-between;margin-bottom:10px;gap:10px;}
+.motion-pose-buttons button{min-height:44px;padding:5px 8px;color:var(--accent);font-size:11px;}
+#motion-progress{height:44px;background:transparent;appearance:none;-webkit-appearance:none;cursor:ew-resize;}
+#motion-progress::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--line);}
+#motion-progress::-webkit-slider-thumb{width:20px;height:20px;margin-top:-8px;border:2px solid var(--panel);border-radius:50%;background:var(--accent);-webkit-appearance:none;}
+#motion-progress::-moz-range-track{height:4px;border-radius:2px;background:var(--line);}
+#motion-progress::-moz-range-thumb{width:18px;height:18px;border:2px solid var(--panel);border-radius:50%;background:var(--accent);}
+@media(max-width:860px){#motion-pane{scroll-margin-top:64px;}}

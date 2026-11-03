@@ -18,7 +18,7 @@ import {
 import { STUDIES } from './studies.js?v=guided-labels-1';
 import { createModelLabels } from './model-labels.js?v=guided-labels-1';
 import { createQuizRounds } from './quiz.js';
-import { createMovementController } from './movement.js';
+import { createMovementController } from './movement.js?v=movement-explainer-1';
 
 import { OrbitControls } from './controls.js?v=study-views-1';
 import { buildMuscles, LAYERS, GROUPS } from './anatomy/build.js?v=guided-labels-1';
